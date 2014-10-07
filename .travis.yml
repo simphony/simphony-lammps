@@ -3,12 +3,23 @@ python:
   - "2.7"
 before_install:
   - sudo apt-get update -qq
-    # TODO lammps
-    # TODO simphony
+  - sudo apt-get install mpi-default-bin mpi-default-dev
+
+  # LAMMPS
+  #  - build lammps as shared library
+  #  - and install LAMMPS python wrapper
+  - git clone git://git.lammps.org/lammps-ro.git mylammps
+  # checkout a recent stable version (from 28 June 2014)
+  - cd mylammps/src && git checkout r12164
+  - make makeshlib && make -f Makefile.shlib ubuntu_simple
+  - cd ../python && sudo python install.py /usr/lib/ $VIRTUAL_ENV/lib/python2.7/site-packages/
+  - cd $TRAVIS_BUILD_DIR
+
 install:
   - pip install -r requirements.txt
   - pip install -r dev_requirements.txt
   - python setup.py develop
+
 script:
   - flake8 .
   - coverage run -m unittest discover
