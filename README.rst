@@ -3,8 +3,8 @@ simphony-lammps
 
 The lammps wrapper for the simphony framework
 
-.. image: https://travis-ci.org/simphony/simphony-common.svg?branch=master
-    :target: https://travis-ci.org/simphony/simphony-common
+.. image:: https://travis-ci.org/simphony/simphony-lammps-md.svg?branch=master
+    :target: https://travis-ci.org/simphony/simphony-lammps-md
 
 Repository
 ----------
