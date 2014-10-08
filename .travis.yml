@@ -15,7 +15,7 @@ before_install:
   - cd ../python && sudo python install.py /usr/lib/ $VIRTUAL_ENV/lib/python2.7/site-packages/
   - cd $TRAVIS_BUILD_DIR
   - wget https://github.com/simphony/simphony-common/archive/master.zip
-  - pip install master.zip
+  - pip install master.zip && rm -f master.zip
 
 install:
   - pip install -r requirements.txt
