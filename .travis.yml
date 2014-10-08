@@ -14,8 +14,9 @@ before_install:
   - make makeshlib && make -f Makefile.shlib ubuntu_simple
   - cd ../python && sudo python install.py /usr/lib/ $VIRTUAL_ENV/lib/python2.7/site-packages/
   - cd $TRAVIS_BUILD_DIR
-  - wget https://github.com/simphony/simphony-common/archive/master.zip
-  - pip install master.zip && rm -f master.zip
+
+  # use current master of simphony
+  - pip install git+git://github.com/simphony/simphony-common.git#egg=simphony
 
 install:
   - pip install -r requirements.txt
