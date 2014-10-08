@@ -14,6 +14,8 @@ before_install:
   - make makeshlib && make -f Makefile.shlib ubuntu_simple
   - cd ../python && sudo python install.py /usr/lib/ $VIRTUAL_ENV/lib/python2.7/site-packages/
   - cd $TRAVIS_BUILD_DIR
+  - wget https://github.com/simphony/simphony-common/archive/master.zip
+  - pip install master.zip
 
 install:
   - pip install -r requirements.txt
@@ -24,3 +26,6 @@ script:
   - flake8 .
   - coverage run -m unittest discover
   - coverage report
+
+  # running example (as there are no unit tests)
+  - python simlammps/example/flow_pois.py 
