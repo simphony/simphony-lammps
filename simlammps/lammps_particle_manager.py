@@ -14,12 +14,13 @@ class LammpsParticleManager(object):
         self.dimension = 2  # TODO derive from LAMMPS
         self.number_types = 3  # TODO derive from LAMMPS
 
-    def update(self):
-        # id-to-index map
+        # id-to-lammps-index map
         self._id_to_index = {}
 
-        # index-to-id map
+        # lammps-index-to-id map
         self._index_to_id = {}
+
+    def update(self):
 
         ids = self._lammps.gather_atoms("id", 0, 1)
         for index, id_value in enumerate(ids):
