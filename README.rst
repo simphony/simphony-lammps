@@ -22,7 +22,7 @@ The package requires python 2.7.x, installation is based on setuptools::
 or::
 
     # build for inplace development
-    python setup.py install
+    python setup.py develop
 
 Testing
 -------
