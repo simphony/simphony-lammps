@@ -14,7 +14,7 @@ class LammpsWrapper(object):
 
     """
     def __init__(self):
-        self._lammps = lammps.lammps()
+        self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
         self._particle_manager = LammpsParticleManager(self._lammps)
         self._particle_containers = {}
         self._nsteps = 10  # TODO
