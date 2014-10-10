@@ -21,7 +21,7 @@ The package requires python 2.7.x, installation is based on setuptools::
 
 or::
 
-    # build for inplace development
+    # build for in-place development
     python setup.py develop
 
 Testing
@@ -35,7 +35,8 @@ To run the full test-suite run::
 Directory structure
 -------------------
 
-There are two subpackages:
+There are three subpackages:
 
 - wrapper -- to hold the wrapper implementation
 - bench -- holds basic benchmarking code
+- examples -- holds different examples
