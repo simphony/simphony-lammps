@@ -97,10 +97,26 @@ class LammpsWrapper(object):
         """
         self._particle_manager.flush()
 
-    def run(self):
-        """ Run for a specific amount of time
+    def _mark_as_invalid(self):
+        """ Mark as being invalid
 
         """
+        self._particle_manager.mark_as_invalid()
+
+    def _write_restart_file(self, file_name="restart.lammps"):
+        """ Dump atoms to file
+
+        """
+        self._lammps.command("write_restart {}".format(file_name))
+
+    def run(self):
+        """ Run for a specific amount of steps
+
+        """
+        # before running, we flush any changes to lammps
+        # and mark are cache info as being invalid
         self._flush()
+        self._mark_as_invalid()
+
         run_command = 'run {}'.format(self._nsteps)
         self._lammps.command(run_command)

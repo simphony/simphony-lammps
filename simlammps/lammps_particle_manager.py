@@ -5,7 +5,7 @@ class LammpsParticleManager(object):
     """  Class holding Lammps particle information
 
         Class keeps track of what particles exists
-        in the lamp world and allows user to query
+        in lammps and allows user to query
         and change them.
 
     """
@@ -20,16 +20,17 @@ class LammpsParticleManager(object):
         # lammps-index-to-id map
         self._index_to_id = {}
 
-    def update(self):
+        # cache of point data
+        self._coordinates = []
+        self._types = []
 
-        ids = self._lammps.gather_atoms("id", 0, 1)
-        for index, id_value in enumerate(ids):
-            self._id_to_index[id_value] = index
-            self._index_to_id[index] = id_value
-        self._coordinates = self._lammps.gather_atoms("x", 1, 3)
-        self._types = self._lammps.gather_atoms("type", 0, 1)
-        assert(len(self._types) == len(self._index_to_id))
-        self._up_to_date = True
+        # flags to keep track of current state of this
+        # cache  (e.g. _invalid is True when we no longer
+        # have up-to-date information; _modify is
+        # is False when we changed our copy of the
+        # information)
+        self._invalid = True
+        self._modified = False
 
     def get_particle(self, id):
         self._ensure_up_to_date()
@@ -39,6 +40,21 @@ class LammpsParticleManager(object):
             return p
         else:
             raise KeyError("id ({}) was not found".format(id))
+
+    def update_particle(self, particle):
+        self._ensure_up_to_date()
+        if particle.id in self._id_to_index:
+            self._set_coordinates(particle)
+        else:
+            raise KeyError("id ({}) was not found".format(id))
+
+    def add_particle(self, particle_type, particle):
+        self._ensure_up_to_date()
+        if particle.id not in self._id_to_index:
+            return self._add_atom(particle_type, particle)
+        else:
+            raise KeyError(
+                "particle with same id ({}) alread exists".format(id))
 
     def iter_id_particles(self, particle_type, ids=None):
         """Iterate over the particles of a certain type
@@ -59,20 +75,67 @@ class LammpsParticleManager(object):
                     yield self._index_to_id[i]
 
     def flush(self):
-        self._up_to_date = False
+        self._send_to_lammps()
+
+    def mark_as_invalid(self):
+        self._invalid = True
 
 # Private methods #######################################################
     def _ensure_up_to_date(self):
-        if not self._up_to_date:
-            self.update()
+        if self._invalid:
+            self._update_from_lammps()
+
+    def _update_from_lammps(self):
+
+        self._id_to_index = {}
+        self._index_to_id = {}
+        ids = self._lammps.gather_atoms("id", 0, 1)
+        for index, id_value in enumerate(ids):
+            self._id_to_index[id_value] = index
+            self._index_to_id[index] = id_value
+        self._coordinates = self._lammps.gather_atoms("x", 1, 3)
+        self._types = self._lammps.gather_atoms("type", 0, 1)
+        assert(len(self._types) == len(self._index_to_id))
+        self._invalid = False
+
+    def _send_to_lammps(self):
+        if self._modified:
+            self._lammps.scatter_atoms("x", 1, 3, self._coordinates)
 
     def _get_coordinates(self, id):
-        """ Get coordintes for a point
-
-        Always return a 3-dimenional coordinates
+        """ Get coordinates for a particle
 
         """
-        i = self._id_to_index[id] * self.dimension
-        coords = [0.0] * 3
-        coords[0:self.dimension] = self._coordinates[i:i+self.dimension]
-        return coords
+        i = self._id_to_index[id] * 3
+        coords = self._coordinates[i:i+3]
+        return tuple(coords)
+
+    def _set_coordinates(self, particle):
+        """ Set coordinates for a particle
+
+        """
+        self._modified = True
+        i = self._id_to_index[particle.id] * 3
+        self._coordinates[i:i+3] = particle.coordinates[0:3]
+
+    def _add_atom(self, particle_type, particle):
+        """ Add a atom at point's position to lammps
+
+        """
+        self._modified = True
+        coordinates = ' '.join(map(str, particle.coordinates))
+        self._lammps.command(
+            "create_atoms 1 single {} units box".format(coordinates))
+
+        self.mark_as_invalid()
+
+        # TODO  fix how id is calculated
+        id = self._lammps.get_natoms()
+        return id
+
+    def _dump_atoms_to_file(self, file_name="dump.atom"):
+        """ Dump atoms to file
+
+        """
+        self._lammps.command(
+            "write_dump all custom {} id type x y z".format(file_name))

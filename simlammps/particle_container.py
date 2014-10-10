@@ -33,11 +33,11 @@ class ParticleContainer(ABCParticleContainer):
            if an id is given which already exists.
 
         """
-        pass
+        return self._manager.add_particle(self._particle_type, particle)
 
     def update_particle(self, particle):
         """Update particle"""
-        pass
+        return self._manager.update_particle(particle)
 
     def get_particle(self, id):
         """Get particle"""
