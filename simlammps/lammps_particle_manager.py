@@ -1,4 +1,4 @@
-from simphony.cuds.particle import Particle
+from simphony.cuds.particles import Particle
 
 
 class LammpsParticleManager(object):

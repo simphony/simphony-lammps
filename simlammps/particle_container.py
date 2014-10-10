@@ -1,6 +1,6 @@
 import numpy
 
-from simphony.cuds.abc_particle_container import ABCParticleContainer
+from simphony.cuds.abstractparticles import ABCParticleContainer
 
 MAX_INT = numpy.iinfo(numpy.uint32).max
 
@@ -47,6 +47,10 @@ class ParticleContainer(ABCParticleContainer):
         """Remove particle"""
         pass
 
+    def has_particle(self, id):
+        """Has particle"""
+        pass
+
     def iter_particles(self, ids=None):
         """Get iterator over particles"""
         for id in self._manager.iter_id_particles(
@@ -86,6 +90,9 @@ class ParticleContainer(ABCParticleContainer):
     def remove_bond(self, id):
         """Remove bond"""
         pass
+
+    def has_bond(self, id):
+        """Has bond"""
 
     def iter_bonds(self, ids=None):
         """Get iterator over bonds"""

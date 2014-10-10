@@ -2,7 +2,7 @@ import os
 import unittest
 
 from simlammps.lammps_wrapper import LammpsWrapper
-from simphony.cuds.particle import Particle
+from simphony.cuds.particles import Particle
 
 
 class TestLammpsFileParticleContainer(unittest.TestCase):
