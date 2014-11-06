@@ -71,5 +71,5 @@ wrapper._lammps.command("timestep	0.003")
 wrapper._lammps.command("thermo		500")
 wrapper._lammps.command("thermo_modify	temp mobile")
 
-wrapper._lammps.command("dump            1 all atom 500 dump/dump.*.flow")
+wrapper._lammps.command("dump            1 all atom 500 dump.*.flow")
 wrapper._lammps.command("run 10000")

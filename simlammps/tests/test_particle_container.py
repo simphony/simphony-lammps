@@ -9,7 +9,9 @@ class TestLammpsFileParticleContainer(unittest.TestCase):
 
     def setUp(self):
         self.wrapper = LammpsWrapper()
-        infile = os.path.dirname(__file__) + "/../example/in.flow.pois"
+        # TODO wrapper needs to be properly configured
+        infile = os.path.dirname(__file__) \
+            + "/../../examples/flow/in.flow.pois"
         lines = open(infile, 'r').readlines()
         for line in lines:
             self.wrapper._lammps.command(line)
