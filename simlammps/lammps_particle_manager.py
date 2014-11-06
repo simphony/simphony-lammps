@@ -26,9 +26,9 @@ class LammpsParticleManager(object):
 
         # flags to keep track of current state of this
         # cache  (e.g. _invalid is True when we no longer
-        # have up-to-date information; _modify is
-        # is False when we changed our copy of the
-        # information)
+        # have up-to-date information; _modified is
+        # is True when we changed our copy of the
+        # information, i.e. we have modified the cache)
         self._invalid = True
         self._modified = False
 
