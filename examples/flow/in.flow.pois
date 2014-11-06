@@ -43,13 +43,6 @@ fix	     1 all nve
 fix	     2 flow temp/rescale 200 1.0 1.0 0.02 1.0
 fix_modify   2 temp mobile
 
-# Couette flow
-
-#velocity     lower set 0.0 0.0 0.0
-#velocity     upper set 3.0 0.0 0.0
-#fix	     3 boundary setforce 0.0 0.0 0.0
-#fix	     4 all enforce2d
-
 # Poiseuille flow
 
 velocity     boundary set 0.0 0.0 0.0
@@ -65,14 +58,6 @@ timestep	0.003
 thermo		500
 thermo_modify	temp mobile
 
-dump		1 all atom 500 dump.flow
-
-#dump		2 all image 100 image.*.jpg type type &
-#		zoom 1.6 adiam 1.5
-#dump_modify	2 pad 5
-
-#dump		3 all movie 100 movie.mpg type type &
-#		zoom 1.6 adiam 1.5
-#dump_modify	3 pad 5
-
-#run		10000
+dump		1 all custom 500 dump.*.flow id type x y z
+dump_modify 1 sort id
+run 10000
