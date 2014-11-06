@@ -5,7 +5,8 @@ from simlammps.lammps_wrapper import LammpsWrapper
 wrapper = LammpsWrapper()
 
 # we *workaround* the fact that we cannot
-# configure the wrapper/lammps yet by 
+# configure the wrapper/lammps yet by directly
+# using the LAMMPS python interface.
 
 # LAMMPS: 2-d LJ flow simulation
 
@@ -70,5 +71,5 @@ wrapper._lammps.command("timestep	0.003")
 wrapper._lammps.command("thermo		500")
 wrapper._lammps.command("thermo_modify	temp mobile")
 
-#wrapper._lammps.command("dump            1 all atom 500 dump_org.*.flow")
+wrapper._lammps.command("dump            1 all atom 500 dump/dump.*.flow")
 wrapper._lammps.command("run 10000")
