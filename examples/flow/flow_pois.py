@@ -67,7 +67,8 @@ wrapper._lammps.command("fix	     7 all enforce2d")
 
 wrapper._lammps.command("timestep	0.003")
 
-# (output the thermodynamic information.  See early compute)
+# ( Set options for how thermodynamic information is computed and
+# printed by LAMMPS.  See early compute)
 wrapper._lammps.command("thermo		500")
 wrapper._lammps.command("thermo_modify	temp mobile")
 
