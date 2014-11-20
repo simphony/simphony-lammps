@@ -1,17 +1,17 @@
 from simphony.cuds.particles import Particle
 
 
-class LammpsParticleManager(object):
-    """  Class holding Lammps particle information
+class LammpsFileIoDataManager(object):
+    """  Class managing Lammps data information using
+        FILE-IO communications (i.e. through input and output
+        files).
 
-        Class keeps track of what particles exists
-        in lammps and allows user to query
-        and change them.
+        Class manages data existing in Lammps in lammps
+        and allows user to query and change them.
 
     """
     def __init__(self, lammps):
         self._lammps = lammps
-        self.dimension = 2  # TODO derive from LAMMPS
         self.number_types = 3  # TODO derive from LAMMPS
 
         # id-to-lammps-index map
@@ -132,10 +132,3 @@ class LammpsParticleManager(object):
         # TODO  fix how id is calculated
         id = self._lammps.get_natoms()
         return id
-
-    def _dump_atoms_to_file(self, file_name="dump.atom"):
-        """ Dump atoms to file
-
-        """
-        self._lammps.command(
-            "write_dump all custom {} id type x y z".format(file_name))

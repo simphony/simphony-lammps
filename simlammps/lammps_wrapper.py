@@ -5,23 +5,36 @@ This module provides a wrapper to LAMMPS-md
 
 import lammps
 
+from enum import Enum
+
 from simlammps.particle_container import ParticleContainer
-from simlammps.lammps_particle_manager import LammpsParticleManager
+from simlammps.lammps_internal_data_manager import LammpsInternalDataManager
+from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
+
+
+class WrapperControlType(Enum):
+    FILEIO = 1
+    INTERNAL = 2
 
 
 class LammpsWrapper(object):
     """ Wrapper to LAMMPS-md
 
     """
-    def __init__(self):
+    def __init__(self, control=WrapperControlType.FILEIO):
         self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
-        self._particle_manager = LammpsParticleManager(self._lammps)
+
+        if control == WrapperControlType.FILEIO:
+            self._data_manager = LammpsFileIoDataManager(self._lammps)
+        else:
+            self._data_manager = LammpsInternalDataManager(self._lammps)
+
         self._particle_containers = {}
         self._nsteps = 10  # TODO
 
         # TODO
-        for i in xrange(self._particle_manager.number_types):
-            pc = ParticleContainer(self._particle_manager, i+1)
+        for i in xrange(self._data_manager.number_types):
+            pc = ParticleContainer(self._data_manager, i+1)
             self._particle_containers[str(i+1)] = pc
 
     def add_particle_container(self, name, particle_container=None):
@@ -95,13 +108,13 @@ class LammpsWrapper(object):
         """ Write any changes to lammps
 
         """
-        self._particle_manager.flush()
+        self._data_manager.flush()
 
     def _mark_as_invalid(self):
         """ Mark as being invalid
 
         """
-        self._particle_manager.mark_as_invalid()
+        self._data_manager.mark_as_invalid()
 
     def _write_restart_file(self, file_name="restart.lammps"):
         """ Dump atoms to file
