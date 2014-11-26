@@ -58,6 +58,9 @@ timestep	0.003
 thermo		500
 thermo_modify	temp mobile
 
-dump		1 all custom 500 dump.*.flow id type x y z
-dump_modify 1 sort id
+#dump		1 all custom 500 dump.*.flow id type x y z
+#dump_modify 1 sort id
+
+write_data original_input.data 
 run 10000
+write_data final_data.lammps

@@ -8,6 +8,7 @@ MAX_INT = numpy.iinfo(numpy.uint32).max
 class ParticleContainer(ABCParticleContainer):
     """
     Responsible class to synchronize operations on particles
+
     """
     def __init__(self, manager, particle_type):
         self._manager = manager
@@ -36,26 +37,36 @@ class ParticleContainer(ABCParticleContainer):
         return self._manager.add_particle(self._particle_type, particle)
 
     def update_particle(self, particle):
-        """Update particle"""
+        """Update particle
+
+        """
         return self._manager.update_particle(particle)
 
     def get_particle(self, id):
-        """Get particle"""
+        """Get particle
+
+        """
         return self._manager.get_particle(id)
 
     def remove_particle(self, id):
-        """Remove particle"""
-        pass
+        """Remove particle
+
+        """
+        return self._manager.remove_particle(id)
 
     def has_particle(self, id):
-        """Has particle"""
+        """Has particle
+
+        """
         pass
 
     def iter_particles(self, ids=None):
-        """Get iterator over particles"""
-        for id in self._manager.iter_id_particles(
+        """Get iterator over particles
+
+        """
+        for p in self._manager.iter_id_particles(
                 particle_type=self._particle_type, ids=ids):
-            yield self.get_particle(id)
+            yield p
 
     # Bond methods #######################################################
 
@@ -80,20 +91,30 @@ class ParticleContainer(ABCParticleContainer):
         pass
 
     def update_bond(self, bond):
-        """Update particle"""
+        """Update particle
+
+        """
         pass
 
     def get_bond(self, id):
-        """Get bond"""
+        """Get bond
+
+        """
         pass
 
     def remove_bond(self, id):
-        """Remove bond"""
+        """Remove bond
+
+        """
         pass
 
     def has_bond(self, id):
-        """Has bond"""
+        """Has bond
+
+        """
 
     def iter_bonds(self, ids=None):
-        """Get iterator over bonds"""
+        """Get iterator over bonds
+
+        """
         pass

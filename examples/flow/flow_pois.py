@@ -1,78 +1,79 @@
 from __future__ import print_function
-from simlammps.lammps_wrapper import LammpsWrapper
+import shutil
+import sys
+import numpy.testing as npt
 
+from simlammps.lammps_wrapper import LammpsWrapper
+from simlammps.lammps_process import LammpsProcess
+from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
+from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
+
+# This example is to run a lammps flow
+# problem. This example is to corresponds to the
+# lammps example 'in.flow.pois'
+# In this script, we do the following:
+# (1) run lammps with 'in.flow.pois'
+# (2) run lammps with SimPhoNy (with a similar configuration)
+# (3) compare results
+
+
+# ----------------------------
+# (1) run lammps with in.flow.pois
+# ----------------------------
+lammps = LammpsProcess()
+command = ""
+with open('examples/flow/in.flow.pois', 'r') as script:
+        command = script.read()
+lammps.run(command)
+
+# ----------------------------
+# (2) run lammps with SimPhony
+# ----------------------------
 
 wrapper = LammpsWrapper()
 
-# we *workaround* the fact that we cannot
-# configure the wrapper/lammps yet by directly
-# using the LAMMPS python interface.
+# a hack to use the data (420 atoms laid out in a lattice)
+# produced by in.flow.pois script.  TODO this should be replaced using
+# the available methods (e.g. add_particlecontainer,
+# add_particle, update_particle)
+shutil.copyfile("examples/flow/original_input.data", "data.lammps")
+wrapper.dummy_init_data()
 
-# LAMMPS: 2-d LJ flow simulation
+wrapper.run()
 
-wrapper._lammps.command("dimension	2")
-wrapper._lammps.command("boundary	p s p")
+# ----------------------------
+# (3) compare results
+# ----------------------------
+# TODO this should be done another way.
+#
+# data.lammps should have the final result of the simphony-based
+# calculation while final_data.lammps should have the final result
+# using in.flow.pois script
 
-wrapper._lammps.command("atom_style	atomic")
-wrapper._lammps.command("neighbor	0.3 bin")
-wrapper._lammps.command("neigh_modify	delay 5")
+handler = LammpsSimpleDataHandler()
+parser = LammpsDataFileParser(handler=handler)
 
-# LAMMPS: create geometry
+parser.parse('final_data.lammps')
+atoms_lammps_script = handler.get_atoms()
 
-wrapper._lammps.command("lattice		hex 0.7")
-wrapper._lammps.command("region		box block 0 20 0 10 -0.25 0.25")
-wrapper._lammps.command("create_box	3 box")
-wrapper._lammps.command("create_atoms	1 box")
+parser.parse('data.lammps')
+atoms_lammps_simphony = handler.get_atoms()
 
-wrapper._lammps.command("mass		1 1.0")
-wrapper._lammps.command("mass		2 1.0")
-wrapper._lammps.command("mass		3 1.0")
+assert len(atoms_lammps_script) == len(atoms_lammps_simphony)
 
-# LAMMPS: LJ potentials
+# compare what was produced in each file
+msg = None
+for id, atom_script in atoms_lammps_script.iteritems():
+    atom_simphony = atoms_lammps_simphony[id]
+    try:
+        npt.assert_allclose(
+            atom_simphony, atom_script, rtol=1e-8, atol=0)
+    except AssertionError:
+        if not msg:
+            msg = " Results did not match up.\n"
+        msg += " atom with id={}\n".format(id)
+        msg += "   simphony-based: {}\n".format(atom_simphony)
+        msg += "   script-based  : {}\n".format(atom_script)
 
-wrapper._lammps.command("pair_style	lj/cut 1.12246")
-wrapper._lammps.command("pair_coeff	* * 1.0 1.0 1.12246")
-
-# LAMMPS: define groups
-
-wrapper._lammps.command("region	     1 block INF INF INF 1.25 INF INF")
-wrapper._lammps.command("group	     lower region 1")
-wrapper._lammps.command("region	     2 block INF INF 8.75 INF INF INF")
-wrapper._lammps.command("group	     upper region 2")
-wrapper._lammps.command("group	     boundary union lower upper")
-wrapper._lammps.command("group	     flow subtract all boundary")
-
-wrapper._lammps.command("set	     group lower type 2")
-wrapper._lammps.command("set	     group upper type 3")
-
-# LAMMPS: initial velocities
-
-# (compute thermodynamic information. see thermo )
-wrapper._lammps.command("compute	     mobile flow temp")
-wrapper._lammps.command("velocity     flow create 1.0 482748 temp mobile")
-wrapper._lammps.command("fix	     1 all nve")
-wrapper._lammps.command("fix	     2 flow temp/rescale 200 1.0 1.0 0.02 1.0")
-wrapper._lammps.command("fix_modify   2 temp mobile")
-
-# LAMMPS: Poiseuille flow
-
-wrapper._lammps.command("velocity     boundary set 0.0 0.0 0.0")
-wrapper._lammps.command("fix	     3 lower setforce 0.0 0.0 0.0")
-wrapper._lammps.command("fix	     4 upper setforce 0.0 NULL 0.0")
-wrapper._lammps.command("fix	     5 upper aveforce 0.0 -1.0 0.0")
-wrapper._lammps.command("fix	     6 flow addforce 0.5 0.0 0.0")
-wrapper._lammps.command("fix	     7 all enforce2d")
-
-# LAMMPS: Run
-
-wrapper._lammps.command("timestep	0.003")
-
-# ( Set options for how thermodynamic information is computed and
-# printed by LAMMPS.  See early compute)
-wrapper._lammps.command("thermo		500")
-wrapper._lammps.command("thermo_modify	temp mobile")
-
-wrapper._lammps.command("dump 1 all custom 500 dump.*.flow id type x y z")
-wrapper._lammps.command("dump_modify 1 sort id")
-
-wrapper._lammps.command("run 10000")
+if msg:
+    sys.exit(msg)
