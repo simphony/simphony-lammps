@@ -11,10 +11,15 @@ before_install:
   - git clone git://git.lammps.org/lammps-ro.git mylammps
   # checkout a recent stable version (from 28 June 2014)
   - cd mylammps/src && git checkout r12164
+  # make shared library for python
   - make makeshlib && make -f Makefile.shlib ubuntu_simple
   - cd ../python && sudo python install.py /usr/lib/ $VIRTUAL_ENV/lib/python2.7/site-packages/
+  # make lammps executable and add to path
+  - cd ../src
+  - make ubuntu_simple
+  - ln -s lmp_ubuntu_simple lammps
+  - export PATH=$TRAVIS_BUILD_DIR/mylammps/src/:$PATH
   - cd $TRAVIS_BUILD_DIR
-  - rm -rf mylammps
 
   # use current master of simphony
   - pip install git+git://github.com/simphony/simphony-common.git#egg=simphony
