@@ -60,5 +60,11 @@ class TestLammpsFileParticleContainer(unittest.TestCase):
         with self.assertRaises(Exception):
             self.pc.get_particle(removed_particle)
 
+        self.wrapper.run()
+
+        # check that it stayed removed
+        with self.assertRaises(Exception):
+            self.pc.get_particle(removed_particle)
+
 if __name__ == '__main__':
     unittest.main()
