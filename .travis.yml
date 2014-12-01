@@ -33,6 +33,3 @@ script:
   - flake8 .
   - coverage run -m unittest discover
   - coverage report
-
-  # running example 
-  - python examples/flow/flow_pois.py 

@@ -1,18 +1,24 @@
-import numpy
-
 from simphony.cuds.abstractparticles import ABCParticleContainer
 
-MAX_INT = numpy.iinfo(numpy.uint32).max
 
-
-class ParticleContainer(ABCParticleContainer):
+class LammpsParticleContainer(ABCParticleContainer):
     """
     Responsible class to synchronize operations on particles
 
     """
-    def __init__(self, manager, particle_type):
+    def __init__(self, manager, name):
+        # most of the work is delegated here to this manger
         self._manager = manager
-        self._particle_type = particle_type
+
+        self._name = name
+
+    @property
+    def data(self):
+        return self._manager.get_data(self._name)
+
+    @data.setter
+    def data(self, value):
+        self._manager.set_data(value, self._name)
 
     # Particle methods ######################################################
 
@@ -34,38 +40,37 @@ class ParticleContainer(ABCParticleContainer):
            if an id is given which already exists.
 
         """
-        return self._manager.add_particle(self._particle_type, particle)
+        return self._manager.add_particle(particle, self._name)
 
     def update_particle(self, particle):
         """Update particle
 
         """
-        return self._manager.update_particle(particle)
+        return self._manager.update_particle(particle, self._name)
 
     def get_particle(self, id):
         """Get particle
 
         """
-        return self._manager.get_particle(id)
+        return self._manager.get_particle(id, self._name)
 
     def remove_particle(self, id):
         """Remove particle
 
         """
-        return self._manager.remove_particle(id)
+        return self._manager.remove_particle(id, self._name)
 
     def has_particle(self, id):
         """Has particle
 
         """
-        pass
+        return self._manager.has_particle(id, self._name)
 
     def iter_particles(self, ids=None):
         """Get iterator over particles
 
         """
-        for p in self._manager.iter_id_particles(
-                particle_type=self._particle_type, ids=ids):
+        for p in self._manager.iter_particles(self._name, ids):
             yield p
 
     # Bond methods #######################################################

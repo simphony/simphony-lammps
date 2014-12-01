@@ -1,10 +1,11 @@
 import os
-import copy
 import uuid
+import shutil
+from sets import Set
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from simphony.cuds.particles import Particle
+from simphony.cuds.particles import Particle, ParticleContainer
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
 
@@ -27,63 +28,61 @@ class LammpsFileIoDataManager(object):
         self._data_filename = data_filename
         self._number_types = 0
 
-        # cache particles and their type
-        # and type-specific data (e.g. mass)
-        self._particles = {}
-        self._particle_type = {}
-        self._type_data = {}
+        # cache of particle containers
+        # TODO optimize so smaller number of particles
+        # are stored in memory and if there are too many particles
+        # then stored in a file
+        self._particle_containers = {}
 
-        # map from lammps-id to simphony-id
+        # map from lammps-id to simphony-id (id/name)
         self._lammpsid_to_id = {}
 
         # flags to keep track of current state of this
         # cache  (e.g. _invalid is True when we no longer
         # have up-to-date information)
-        self._invalid = True
+        self._invalid = False
 
-    @property
-    def number_types(self):
-        return self._number_types
+    def get_data(self, name):
+        return self._particle_containers[name].data
 
-    def get_particle(self, id):
+    def set_data(self, data, name):
+        self._particle_containers[name].data = data
+
+    def new_particle_container(self, name):
+        # create empty stand-alone particle container
+        # to use as a cache of for input/output to LAMMPS
+        self._particle_containers[name] = ParticleContainer()
+
+    def get_particle(self, id, name):
         self._ensure_up_to_date()
-        if id in self._particles:
-            return self._particles[id]
+        return self._particle_containers[name].get_particle(id)
+
+    def update_particle(self, particle, name):
+        self._ensure_up_to_date()
+        return self._particle_containers[name].update_particle(particle)
+
+    def add_particle(self, particle, name):
+        self._ensure_up_to_date()
+        # TODO remove once PC is using uuid
+        # and returns that UUID
+        if self._particle_containers[name].has_particle(particle.id):
+            raise KeyError(
+                "particle with same id ({}) alread exists".format(id))
         else:
-            raise KeyError("id ({}) was not found".format(id))
-
-    def update_particle(self, particle):
-        self._ensure_up_to_date()
-        if particle.id in self._particles:
-            self._particles[particle.id] = copy.deepcopy(particle)
-        else:
-            raise KeyError("id ({}) was not found".format(id))
-
-    def add_particle(self, particle_type, particle):
-        self._ensure_up_to_date()
-        if particle.id not in self._particles:
             id = particle.id
             if id is None:
                 id = uuid.uuid4()
             p = Particle(
                 id=id, coordinates=particle.coordinates,
                 data=DataContainer(particle.data))
-            self._particles[id] = p
+            self._particle_containers[name].add_particle(p)
             return id
-        else:
-            raise KeyError(
-                "particle with same id ({}) alread exists".format(id))
 
-    def remove_particle(self, particle):
+    def remove_particle(self, particle, name):
         self._ensure_up_to_date()
-        if particle.id in self._particles:
-            del self._particles[particle.id]
-            del self._particle_type[particle.id]
-        else:
-            raise KeyError(
-                "particle with id ({}) does not exist".format(id))
+        self._particle_containers[name].remove_particle(particle.id)
 
-    def iter_id_particles(self, particle_type, ids=None):
+    def iter_particles(self, name, ids=None):
         """Iterate over the particles of a certain type
 
         Parameters:
@@ -94,20 +93,16 @@ class LammpsFileIoDataManager(object):
 
         """
         self._ensure_up_to_date()
-        if ids:
-            raise NotImplemented()
-        else:
-            for id, p in self._particles.iteritems():
-                if self._particle_type[id] == particle_type:
-                    yield p
+        return self._particle_containers[name].iter_particles()
 
     def flush(self):
-        if self._particles:
+        if self._particle_containers:
             self._write_data_file(self._data_filename)
         else:
             raise Exception(
                 "No particles.  Lammps cannot run without a particle")
-        # TODO handle properly when particles is empty
+        # TODO handle properly when there are no particle containers
+        # or when some of them do not contain any particles
         # (i.e. someone has deleted all the partlces)
 
     def mark_as_invalid(self):
@@ -126,43 +121,41 @@ class LammpsFileIoDataManager(object):
         parser = LammpsDataFileParser(handler)
         parser.parse(self._data_filename)
 
-        self._number_types = handler.get_number_atom_types()
         atoms = handler.get_atoms()
         velocities = handler.get_velocities()
         masses = handler.get_masses()
 
         assert(len(atoms) == len(velocities))
 
-        # TODO what if there are no particles
-
-        self._particles = {}
-        self._particle_type = {}
-        self._type_data = {}
-
-        for atom_type in range(1, self._number_types+1):
-            self._type_data[atom_type] = DataContainer()
+        type_data = {}
 
         for atom_type, mass in masses.iteritems():
-            self._type_data[atom_type][CUBA.MASS] = mass
+            type_data[atom_type] = DataContainer()
+            type_data[atom_type][CUBA.MASS] = mass
 
-        # TODO replace this hack
-        # currently creating uuids for particles
-        if not self._lammpsid_to_id:
-            for lammpsid, atom in atoms.iteritems():
-                self._lammpsid_to_id[lammpsid] = uuid.uuid4()
+        # update each particle container with these
+        # material-specific attributes
+        for _, pc in self._particle_containers.iteritems():
+            data = type_data[pc.data[CUBA.MATERIAL_TYPE]]
+            for key, value in data.iteritems():
+                pc.data[key] = value
 
         for lammpsid, atom in atoms.iteritems():
-            id = self._lammpsid_to_id[lammpsid]
-            atom_type = atom[0]
-            coord = tuple(atom[1:4])
-            p = Particle(id=id, coordinates=coord)
-            self._particles[id] = p
-            self._particle_type[id] = atom_type
+            id, name = self._lammpsid_to_id[lammpsid]
+            p = self._particle_containers[name].get_particle(id)
+            p.coordinates = tuple(atom[1:4])
+            self._particle_containers[name].update_particle(p)
 
-        for lammpsid, vel in velocities.iteritems():
-            id = self._lammpsid_to_id[lammpsid]
-            velocity = tuple(vel)
-            self._particles[id].data[CUBA.VELOCITY] = velocity
+            # TODO
+            atom_type = atom[0]
+            self._particle_containers[name].data[CUBA.MATERIAL_TYPE] = \
+                atom_type
+
+        for lammpsid, velocity in velocities.iteritems():
+            id, name = self._lammpsid_to_id[lammpsid]
+            p = self._particle_containers[name].get_particle(id)
+            p.data[CUBA.VELOCITY] = tuple(velocity)
+            self._particle_containers[name].update_particle(p)
 
     def _write_data_file(self, filename):
         """ Write data file containing current state of simulation
@@ -179,22 +172,30 @@ class LammpsFileIoDataManager(object):
                       "2 1 1\n"
                       "3 1 1\n")
 
-        # TODO handle empty particles
-        assert self._number_types != 0
-
         # recreate map from lammps-id to simphony-id
         self._lammpsid_to_id = {}
+        for name in self._particle_containers:
+            self._lammpsid_to_id[name] = {}
+
+        # TODO improve
+        num_particles = 0
+        types = Set()
+        for _, pc in self._particle_containers.iteritems():
+            types.add(pc.data[CUBA.MATERIAL_TYPE])
+            num_particles = num_particles + sum(1 for _ in pc.iter_particles())
 
         with open(filename, 'w') as f:
             f.write(header)
-            f.write('{} atoms\n'.format(len(self._particles)))
-            f.write('{} atom types\n\n'.format(self._number_types))
+            f.write('{} atoms\n'.format(num_particles))
+            f.write('{} atom types\n\n'.format(len(types)))
             f.write("\n")
             f.write(dumy_box)
             f.write("\n")
             f.write("Masses\n\n")
-            for atom_type, data in self._type_data.iteritems():
-                f.write('{} {}\n'.format(atom_type, data[CUBA.MASS]))
+            material_type_to_mass = self._get_mass()
+            for material_type in sorted(material_type_to_mass):
+                mass = material_type_to_mass[material_type]
+                f.write('{} {}\n'.format(material_type, mass))
             f.write("\n")
             f.write("Pair Coeffs # lj/cut\n\n")
             f.write(dummy_coef)
@@ -202,19 +203,43 @@ class LammpsFileIoDataManager(object):
 
             f.write("Atoms\n\n")
             lammpsid = 0
-            for id, p in self._particles.iteritems():
-                lammpsid = lammpsid + 1
-                self._lammpsid_to_id[id] = lammpsid
-                ptype = self._particle_type[id]
-                coord = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
-                    p.coordinates)
-                f.write('{0} {1} {2} 0 0 0\n'.format(lammpsid, ptype, coord))
+            for name, pc in self._particle_containers.iteritems():
+                for p in pc.iter_particles():
+                    lammpsid = lammpsid + 1
+                    self._lammpsid_to_id[name][p.id] = lammpsid
+                    atom_type = pc.data[CUBA.MATERIAL_TYPE]
+                    coord = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
+                        p.coordinates)
+                    f.write('{0} {1} {2} 0 0 0\n'.format(
+                        lammpsid, atom_type, coord))
             f.write("\n")
 
             f.write("Velocities\n\n")
-            for id, p in self._particles.iteritems():
-                lammpsid = self._lammpsid_to_id[id]
-                vel = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
-                    p.data[CUBA.VELOCITY])
-                f.write('{0} {1}\n'.format(lammpsid, vel))
+            for name, pc in self._particle_containers.iteritems():
+                for p in pc.iter_particles():
+                    lammpsid = self._lammpsid_to_id[name][p.id]
+                    vel = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
+                        p.data[CUBA.VELOCITY])
+                    f.write('{0} {1}\n'.format(lammpsid, vel))
             f.write("\n")
+        shutil.copyfile("data.lammps", "data_input_from_sim.lammps")
+
+    def _get_mass(self):
+        """ Create a dictionary from 'material type' to 'mass'
+
+            Check that fits what LAMMPS can handle as well
+            as ensure that it works with the limitations
+            of how we are currently handling this info
+        """
+        mass = {}
+        for name, pc in self._particle_containers.iteritems():
+            data = pc.data
+            material_type = data[CUBA.MATERIAL_TYPE]
+            if material_type in mass:
+                # check that mass is consistent with an matching type
+                if data[CUBA.MASS] != mass[material_type]:
+                    raise Exception(
+                        "Each material type must have the same mass")
+            else:
+                mass[material_type] = data[CUBA.MASS]
+        return mass
