@@ -3,6 +3,7 @@
 This module provides a wrapper to LAMMPS-md
 """
 from simphony.core.data_container import DataContainer
+from simphony.core.cuba import CUBA
 
 from simlammps.lammps_particle_container import LammpsParticleContainer
 from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
@@ -20,6 +21,10 @@ class LammpsWrapper(object):
             data_filename=self._data_filename)
 
         self._particle_containers = {}
+
+        self.BC = DataContainer()
+        self.CM = DataContainer()
+        self.SP = DataContainer()
 
     def add_particle_container(self, name, particle_container=None):
         """Add particle container.
@@ -114,15 +119,37 @@ class LammpsWrapper(object):
         """ Run for based on configuration
 
         """
+        self._check_configuration()
+
         # before running, we flush any changes to lammps
         # and mark our data manager (cache of particles)
         # as being invalid
         self._data_manager.flush()
         self._data_manager.mark_as_invalid()
 
-        number_steps = 10000
         commands = LammpsDummyConfig.get_configuration().format(
-            DATAFILE=self._data_filename, NUMBER_STEPS=number_steps)
+            DATAFILE=self._data_filename,
+            NUMBER_STEPS=self.CM[CUBA.NUMBEROF_TIME_STEPS])
 
         lammps = LammpsProcess()
         lammps.run(commands)
+
+    def _check_configuration(self):
+        """ Check if everything is configured correctly
+
+        """
+
+        cm_requirements = [CUBA.NUMBEROF_TIME_STEPS]
+
+        cm_msg = ""
+
+        for req in cm_requirements:
+            if req not in self.CM:
+                cm_msg = cm_msg + "Missing {} ".format(req)
+
+        # TODO throw unique exception that
+        # users can catch and then try to fix
+        # their configuration
+        if cm_msg:
+            msg = "Problem with CM component: " + cm_msg
+            raise Exception(msg)

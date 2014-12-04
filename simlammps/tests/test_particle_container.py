@@ -1,5 +1,6 @@
 import unittest
 from simphony.cuds.particles import Particle
+from simphony.core.cuba import CUBA
 
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.dummy import LammpsDummyConfig
@@ -17,6 +18,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
     def setUp(self):
 
         self.wrapper = LammpsWrapper()
+        self.wrapper.CM[CUBA.NUMBEROF_TIME_STEPS] = 10000
 
         # TODO:  change once wrapper cm/sp/bc are being properly
         # configured.

@@ -2,6 +2,8 @@ from __future__ import print_function
 import sys
 from sets import Set
 
+from simphony.core.cuba import CUBA
+
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.lammps_process import LammpsProcess
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
@@ -54,6 +56,8 @@ lammps.run(command)
 # ----------------------------
 
 wrapper = LammpsWrapper()
+wrapper.CM[CUBA.NUMBEROF_TIME_STEPS] = 10000
+
 for i, pc in LammpsDummyConfig.get_particle_containers().iteritems():
     wrapper.add_particle_container(str(i), pc)
 
