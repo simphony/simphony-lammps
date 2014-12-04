@@ -53,17 +53,17 @@ class TestLammpsParticleContainer(unittest.TestCase):
 
     def test_delete_particle(self):
         removed_particle = _get_particle(self.pc)
-        self.pc.remove_particle(removed_particle)
+        self.pc.remove_particle(removed_particle.id)
 
         # check that it was removed
         with self.assertRaises(KeyError):
-            self.pc.get_particle(removed_particle)
+            self.pc.get_particle(removed_particle.id)
 
         self.wrapper.run()
 
         # check that it stayed removed
         with self.assertRaises(KeyError):
-            self.pc.get_particle(removed_particle)
+            self.pc.get_particle(removed_particle.id)
 
 if __name__ == '__main__':
     unittest.main()

@@ -65,8 +65,8 @@ class LammpsWrapper(object):
         name : str
             name of particle container to return
         """
-        if name not in self._particle_containers:
-            return self._particles_containers[name]
+        if name in self._particle_containers:
+            return self._particle_containers[name]
         else:
             raise ValueError(
                 'Particle container \'{}\` does not exist'.format(name))
@@ -80,11 +80,10 @@ class LammpsWrapper(object):
             name of particle container to delete
         """
         if name in self._particle_containers:
-            pc = self._particles_containers[name]
-            all_particle_ids = list(
-                p.id for p in self._particles_containers.iter_particles())
-            for id in all_particle_ids:
-                pc.remove_particle(id)
+            pc = self._particle_containers[name]
+            all_ids = list(p.id for p in pc.iter_particles())
+            for pid in all_ids:
+                pc.remove_particle(pid)
 
             del self._particle_containers[name]
         else:
@@ -109,7 +108,7 @@ class LammpsWrapper(object):
                 yield name, pc
         else:
             for name in names:
-                yield name, self._particle_container.get(name)
+                yield name, self._particle_containers.get(name)
 
     def run(self):
         """ Run for based on configuration

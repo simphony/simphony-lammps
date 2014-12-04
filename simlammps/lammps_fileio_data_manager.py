@@ -78,9 +78,9 @@ class LammpsFileIoDataManager(object):
             self._particle_containers[name].add_particle(p)
             return id
 
-    def remove_particle(self, particle, name):
+    def remove_particle(self, id, name):
         self._ensure_up_to_date()
-        self._particle_containers[name].remove_particle(particle.id)
+        self._particle_containers[name].remove_particle(id)
 
     def iter_particles(self, name, ids=None):
         """Iterate over the particles of a certain type
