@@ -93,7 +93,7 @@ class LammpsFileIoDataManager(object):
 
         """
         self._ensure_up_to_date()
-        return self._particle_containers[name].iter_particles()
+        return self._particle_containers[name].iter_particles(ids)
 
     def flush(self):
         if self._particle_containers:
