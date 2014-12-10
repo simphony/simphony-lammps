@@ -82,9 +82,9 @@ for coord in simphony_positions:
     if coord not in script_positions:
         missing_point = True
 if missing_point:
-    msg = msg + """ Results did not match up.
-Corresponding particle(s) not found. See
-simphony_coordinates.txt and script_coordinates.txt """
+    msg = """ Results did not match up.
+ Corresponding particle(s) not found. See
+ simphony_coordinates.txt and script_coordinates.txt """
     with open('script_coordinates.txt', 'w') as f:
         for c in sorted(script_positions):
             f.write(c + "\n")
@@ -95,5 +95,5 @@ simphony_coordinates.txt and script_coordinates.txt """
 if msg:
     sys.exit(msg)
 else:
-    print ("Results from a simphony-controlled lammps \
-            succesfully matched up with results produced by lammps")
+    print ("Results from a simphony-controlled lammps\
+ succesfully matched up with results produced by lammps")
