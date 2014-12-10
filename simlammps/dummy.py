@@ -91,7 +91,7 @@ group upper type 3
 # initial velocities
 
 compute	     mobile flow temp
-velocity     flow create 1.0 482748 temp mobile
+# velocity     flow create 1.0 482748 temp mobile
 fix	     1 all nve
 fix	     2 flow temp/rescale 200 1.0 1.0 0.02 1.0
 fix_modify   2 temp mobile
