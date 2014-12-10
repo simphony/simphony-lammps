@@ -17,6 +17,8 @@ class LammpsDummyConfig:
     def get_configuration():
         """ Get dummy configuration
 
+        See text below to see what the placeholders in
+        the string.
         """
         return CONFIGURATION
 
@@ -25,7 +27,7 @@ class LammpsDummyConfig:
 
         """ Get particle containers that match configuration
 
-        Creating particle containres with specific types
+        Creating particle container with specific types
         to match how the wrapper is configuring things at the moment
         """
         pcs = []
@@ -107,7 +109,7 @@ fix	     7 all enforce2d
 
 # Run
 
-timestep	0.003
+timestep	{TIME_STEP}
 thermo		500
 thermo_modify	temp mobile
 

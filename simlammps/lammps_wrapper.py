@@ -129,7 +129,8 @@ class LammpsWrapper(object):
 
         commands = LammpsDummyConfig.get_configuration().format(
             DATAFILE=self._data_filename,
-            NUMBER_STEPS=self.CM[CUBA.NUMBEROF_TIME_STEPS])
+            NUMBER_STEPS=self.CM[CUBA.NUMBEROF_TIME_STEPS],
+            TIME_STEP=self.CM[CUBA.TIME_STEP])
 
         lammps = LammpsProcess()
         lammps.run(commands)
@@ -139,17 +140,21 @@ class LammpsWrapper(object):
 
         """
 
-        cm_requirements = [CUBA.NUMBEROF_TIME_STEPS]
+        cm_requirements = [CUBA.NUMBEROF_TIME_STEPS,
+                           CUBA.TIME_STEP]
 
-        cm_msg = ""
+        missing = [str(req) for req in cm_requirements
+                   if req not in self.CM.keys()]
 
-        for req in cm_requirements:
-            if req not in self.CM:
-                cm_msg = cm_msg + "Missing {} ".format(req)
+        msg = ""
+        if missing:
+            msg = "Problem with CM component. "
+            msg += "Missing: " + ', '.join(missing)
 
-        # TODO throw unique exception that
-        # users can catch and then try to fix
-        # their configuration
-        if cm_msg:
-            msg = "Problem with CM component: " + cm_msg
+        # TODO check SP, BC
+
+        if msg:
+            # TODO throw unique exception that
+            # users can catch and then try to fix
+            # their configuration
             raise Exception(msg)

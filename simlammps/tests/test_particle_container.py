@@ -22,6 +22,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
         # TODO:  change once wrapper cm/sp/bc are being properly
         # configured.
         self.wrapper.CM[CUBA.NUMBEROF_TIME_STEPS] = 10000
+        self.wrapper.CM[CUBA.TIME_STEP] = 0.003
 
         # add some particle containers
         pcs_wrapper = []
