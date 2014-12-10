@@ -141,7 +141,7 @@ class LammpsFileIoDataManager(object):
                 pc.data[key] = value
 
         for lammpsid, atom in atoms.iteritems():
-            id, name = self._lammpsid_to_id[lammpsid]
+            name, id = self._lammpsid_to_id[lammpsid]
             p = self._particle_containers[name].get_particle(id)
             p.coordinates = tuple(atom[1:4])
             self._particle_containers[name].update_particle(p)
@@ -152,7 +152,7 @@ class LammpsFileIoDataManager(object):
                 atom_type
 
         for lammpsid, velocity in velocities.iteritems():
-            id, name = self._lammpsid_to_id[lammpsid]
+            name, id = self._lammpsid_to_id[lammpsid]
             p = self._particle_containers[name].get_particle(id)
             p.data[CUBA.VELOCITY] = tuple(velocity)
             self._particle_containers[name].update_particle(p)
@@ -174,8 +174,6 @@ class LammpsFileIoDataManager(object):
 
         # recreate map from lammps-id to simphony-id
         self._lammpsid_to_id = {}
-        for name in self._particle_containers:
-            self._lammpsid_to_id[name] = {}
 
         # TODO improve
         num_particles = 0
@@ -203,10 +201,12 @@ class LammpsFileIoDataManager(object):
 
             f.write("Atoms\n\n")
             lammpsid = 0
+            id_to_lammpsid = {}
             for name, pc in self._particle_containers.iteritems():
                 for p in pc.iter_particles():
                     lammpsid = lammpsid + 1
-                    self._lammpsid_to_id[name][p.id] = lammpsid
+                    self._lammpsid_to_id[lammpsid] = (name, p.id)
+                    id_to_lammpsid[(name, p.id)] = lammpsid
                     atom_type = pc.data[CUBA.MATERIAL_TYPE]
                     coord = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
                         p.coordinates)
@@ -217,7 +217,7 @@ class LammpsFileIoDataManager(object):
             f.write("Velocities\n\n")
             for name, pc in self._particle_containers.iteritems():
                 for p in pc.iter_particles():
-                    lammpsid = self._lammpsid_to_id[name][p.id]
+                    lammpsid = id_to_lammpsid[(name, p.id)]
                     vel = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
                         p.data[CUBA.VELOCITY])
                     f.write('{0} {1}\n'.format(lammpsid, vel))
