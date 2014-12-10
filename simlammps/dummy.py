@@ -88,19 +88,14 @@ read_data {DATAFILE}
 group flow type 1
 group lower type 2
 group upper type 3
-# group boundary union lower upper
-
-# initial velocities
 
 compute	     mobile flow temp
-# velocity     flow create 1.0 482748 temp mobile
 fix	     1 all nve
 fix	     2 flow temp/rescale 200 1.0 1.0 0.02 1.0
 fix_modify   2 temp mobile
 
 # Poiseuille flow
 
-# velocity     boundary set 0.0 0.0 0.0
 fix	     3 lower setforce 0.0 0.0 0.0
 fix	     4 upper setforce 0.0 NULL 0.0
 fix	     5 upper aveforce 0.0 -1.0 0.0
@@ -112,8 +107,6 @@ fix	     7 all enforce2d
 timestep	{TIME_STEP}
 thermo		500
 thermo_modify	temp mobile
-
-write_data input_for_simphony_run.data
 
 run {NUMBER_STEPS}
 
