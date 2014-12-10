@@ -1,7 +1,5 @@
 import unittest
 from simphony.cuds.particles import Particle
-from simphony.core.cuba import CUBA
-
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.dummy import LammpsDummyConfig
 
@@ -19,22 +17,15 @@ class TestLammpsParticleContainer(unittest.TestCase):
 
         self.wrapper = LammpsWrapper()
 
-        # TODO:  change once wrapper cm/sp/bc are being properly
-        # configured.
-        self.wrapper.CM[CUBA.NUMBEROF_TIME_STEPS] = 10000
-        self.wrapper.CM[CUBA.TIME_STEP] = 0.003
-
-        # add some particle containers
-        pcs_wrapper = []
-        pcs = []
-        for i, pc in LammpsDummyConfig.get_particle_containers().iteritems():
-            name = "foo{}".format(i)
-            pcs.append(pc)
-            pcs_wrapper.append(self.wrapper.add_particle_container(name, pc))
+        # configuration is being done by dummy class
+        # the wrapper is properly configured with
+        # CM/SP/BC and given particles
+        LammpsDummyConfig.configure_wrapper(self.wrapper)
 
         # keep track of first wrapper-based particle container
-        # and the particle id it has
-        self.pc = pcs_wrapper[0]
+        # and the particle ids that it contains
+        pcs = [pc for _, pc in self.wrapper.iter_particle_containers()]
+        self.pc = pcs[0]
         self.particle_ids_in_pc = []
         for p in pcs[0].iter_particles():
             self.particle_ids_in_pc.append(p.id)

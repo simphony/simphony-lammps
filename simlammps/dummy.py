@@ -14,6 +14,16 @@ class LammpsDummyConfig:
     """
 
     @staticmethod
+    def configure_wrapper(wrapper):
+        wrapper.CM[CUBA.NUMBEROF_TIME_STEPS] = 10000
+        wrapper.CM[CUBA.TIME_STEP] = 0.003
+
+        # add particle containers
+        for i, pc in LammpsDummyConfig.get_particle_containers().iteritems():
+            name = "foo{}".format(i)
+            wrapper.add_particle_container(name, pc)
+
+    @staticmethod
     def get_configuration():
         """ Get dummy configuration
 
