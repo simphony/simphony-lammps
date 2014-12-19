@@ -24,9 +24,10 @@ def get_set(file_name):
 
     compare what was produced in each file
     each file should have particles with matching
-    positions and velocities.  however, the id's
-    can be totally different.  Here, we just collect
-    all the positions and check if they match
+    positions and types.  however, the id's do not have
+    to match up (they can be totally different).
+    Here, we just collect all the types and positions
+    and check if they match.
     """
 
     handler = LammpsSimpleDataHandler()
@@ -34,13 +35,15 @@ def get_set(file_name):
 
     parser.parse(file_name)
     atoms = handler.get_atoms()
-    vel = handler.get_velocities()
 
-    positions_velocities = Set()
+    # collect types and positions
+    positions = Set()
     for index, atom in atoms.iteritems():
-        positions_velocities.add(
-            str(atom[0]) + str(atom[1:4]) + str(vel[index]))
-    return positions_velocities
+        atom_type = str(atom[0])
+        coords = ' {0[0]:.3e} {0[1]:.3e} {0[2]:.3e}'.format(
+            atom[1:4])
+        positions.add(atom_type + coords)
+    return positions
 
 # ----------------------------
 # (1) run lammps with in.flow.pois
