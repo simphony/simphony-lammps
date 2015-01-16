@@ -17,6 +17,32 @@ class LammpsDummyConfig:
     def configure_wrapper(wrapper):
         wrapper.CM[CUBA.NUMBEROF_TIME_STEPS] = 10000
         wrapper.CM[CUBA.TIME_STEP] = 0.003
+        wrapper.CM[CUBA.PAIR_STYLE] = "lj"
+        wrapper.CM[CUBA.PAIR_STYLE_PARAMETERS] = ("- global_cutoff: 1.12246\n"
+                                                  "- pair: [1, 1]\n"
+                                                  "  epsilon: 1.0\n"
+                                                  "  sigma: 1.0\n"
+                                                  "  cutoff: 1.12246\n"
+                                                  "- pair: [1, 2]\n"
+                                                  "  epsilon: 1.0\n"
+                                                  "  sigma: 1.0\n"
+                                                  "  cutoff: 1.12246\n"
+                                                  "- pair: [1, 3]\n"
+                                                  "  epsilon: 1.0\n"
+                                                  "  sigma: 1.0\n"
+                                                  "  cutoff: 1.12246\n"
+                                                  "- pair: [2, 2]\n"
+                                                  "  epsilon: 1.0\n"
+                                                  "  sigma: 1.0\n"
+                                                  "  cutoff: 1.12246\n"
+                                                  "- pair: [2, 3]\n"
+                                                  "  epsilon: 1.0\n"
+                                                  "  sigma: 1.0\n"
+                                                  "  cutoff: 1.12246\n"
+                                                  "- pair: [3, 3]\n"
+                                                  "  epsilon: 1.0\n"
+                                                  "  sigma: 1.0\n"
+                                                  "  cutoff: 1.12246\n")
 
         # add particle containers
         for i, pc in LammpsDummyConfig.get_particle_containers().iteritems():
@@ -86,12 +112,12 @@ atom_style	atomic
 neighbor	0.3 bin
 neigh_modify	delay 5
 
-# LJ potentials
-
-pair_style lj/cut 1.12246
+{PAIR_STYLE}
 
 # read from simphony-generated file
 read_data {DATAFILE}
+
+{PAIR_COEFF}
 
 # define groups based on type
 
