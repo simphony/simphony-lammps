@@ -168,9 +168,6 @@ class LammpsFileIoDataManager(object):
         dumy_box = ("0.0000000000000000e+00 2.5687134504920127e+01 xlo xhi\n"
                     "-2.2245711031688635e-03 2.2247935602791809e+01 ylo yhi\n"
                     "-3.2108918131150160e-01 3.2108918131150160e-01 zlo zhi\n")
-        dummy_coef = ("1 1 1\n"
-                      "2 1 1\n"
-                      "3 1 1\n")
 
         # recreate map from lammps-id to simphony-id
         self._lammpsid_to_id = {}
@@ -194,9 +191,6 @@ class LammpsFileIoDataManager(object):
             for material_type in sorted(material_type_to_mass):
                 mass = material_type_to_mass[material_type]
                 f.write('{} {}\n'.format(material_type, mass))
-            f.write("\n")
-            f.write("Pair Coeffs # lj/cut\n\n")
-            f.write(dummy_coef)
             f.write("\n")
 
             f.write("Atoms\n\n")

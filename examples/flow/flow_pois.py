@@ -24,9 +24,10 @@ def get_set(file_name):
 
     compare what was produced in each file
     each file should have particles with matching
-    positions and velocities.  however, the id's
-    can be totally different.  Here, we just collect
-    all the positions and check if they match
+    positions and types.  however, the id's do not have
+    to match up (they can be totally different).
+    Here, we just collect all the types and positions
+    and check if they match.
     """
 
     handler = LammpsSimpleDataHandler()
@@ -34,13 +35,15 @@ def get_set(file_name):
 
     parser.parse(file_name)
     atoms = handler.get_atoms()
-    vel = handler.get_velocities()
 
-    positions_velocities = Set()
+    # collect types and positions
+    positions = Set()
     for index, atom in atoms.iteritems():
-        positions_velocities.add(
-            str(atom[0]) + str(atom[1:4]) + str(vel[index]))
-    return positions_velocities
+        atom_type = str(atom[0])
+        coords = ' {0[0]:.3e} {0[1]:.3e} {0[2]:.3e}'.format(
+            atom[1:4])
+        positions.add(atom_type + coords)
+    return positions
 
 # ----------------------------
 # (1) run lammps with in.flow.pois
@@ -58,6 +61,33 @@ lammps.run(command)
 wrapper = LammpsWrapper()
 wrapper.CM[CUBA.NUMBEROF_TIME_STEPS] = 10000
 wrapper.CM[CUBA.TIME_STEP] = 0.003
+wrapper.CM[CUBA.PAIR_POTENTIALS] = ("lj:\n"
+                                    "  global_cutoff: 1.12246\n"
+                                    "  parameters:\n"
+                                    "  - pair: [1, 1]\n"
+                                    "    epsilon: 1.0\n"
+                                    "    sigma: 1.0\n"
+                                    "    cutoff: 1.12246\n"
+                                    "  - pair: [1, 2]\n"
+                                    "    epsilon: 1.0\n"
+                                    "    sigma: 1.0\n"
+                                    "    cutoff: 1.12246\n"
+                                    "  - pair: [1, 3]\n"
+                                    "    epsilon: 1.0\n"
+                                    "    sigma: 1.0\n"
+                                    "    cutoff: 1.12246\n"
+                                    "  - pair: [2, 2]\n"
+                                    "    epsilon: 1.0\n"
+                                    "    sigma: 1.0\n"
+                                    "    cutoff: 1.12246\n"
+                                    "  - pair: [2, 3]\n"
+                                    "    epsilon: 1.0\n"
+                                    "    sigma: 1.0\n"
+                                    "    cutoff: 1.12246\n"
+                                    "  - pair: [3, 3]\n"
+                                    "    epsilon: 1.0\n"
+                                    "    sigma: 1.0\n"
+                                    "    cutoff: 1.12246\n")
 
 for i, pc in LammpsDummyConfig.get_particle_containers().iteritems():
     wrapper.add_particle_container(str(i), pc)

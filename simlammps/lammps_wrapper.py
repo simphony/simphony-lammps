@@ -8,6 +8,7 @@ from simphony.core.cuba import CUBA
 from simlammps.lammps_particle_container import LammpsParticleContainer
 from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
 from simlammps.lammps_process import LammpsProcess
+from simlammps.config.pair_style import PairStyle
 from simlammps.dummy import LammpsDummyConfig
 
 
@@ -121,6 +122,8 @@ class LammpsWrapper(object):
         """
         self._check_configuration()
 
+        pair_style = PairStyle(self.CM)
+
         # before running, we flush any changes to lammps
         # and mark our data manager (cache of particles)
         # as being invalid
@@ -130,8 +133,9 @@ class LammpsWrapper(object):
         commands = LammpsDummyConfig.get_configuration().format(
             DATAFILE=self._data_filename,
             NUMBER_STEPS=self.CM[CUBA.NUMBEROF_TIME_STEPS],
-            TIME_STEP=self.CM[CUBA.TIME_STEP])
-
+            TIME_STEP=self.CM[CUBA.TIME_STEP],
+            PAIR_STYLE=pair_style.get_global_config(),
+            PAIR_COEFF=pair_style.get_pair_coeffs())
         lammps = LammpsProcess()
         lammps.run(commands)
 
