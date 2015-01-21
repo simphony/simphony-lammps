@@ -4,10 +4,16 @@ from simphony.core.cuba import CUBA
 
 # here is the info to create the different pair info handlers
 # TODO add more pair styles for the different types
+# TODO add optional pair params
 _supported_pair_styles = {"lj": {"pair_style": "lj/cut",
                                  "required_global_params": ["global_cutoff"],
                                  "required_pair_params":
-                                 ["epsilon", "sigma", "cutoff"]}}
+                                 ["epsilon", "sigma", "cutoff"]},
+                          "coul": {"pair_style": "coul/cut",
+                                   "required_global_params": ["global_cutoff"],
+                                   "required_pair_params":
+                                   ["cutoff"]},
+                          }
 
 
 class PairStyle(object):
@@ -46,8 +52,13 @@ class PairStyle(object):
                     pair_info.pair_style,
                     " ".join(map(str, pair_info.global_params)))
             else:
-                # TODO do hybrid/overlay style
-                raise NotImplementedError
+                # hybrid/overlay style
+                result = "pair_style hybrid/overlay"
+                for pair_info in self._pair_infos:
+                    result += " {} {}".format(
+                        pair_info.pair_style,
+                        " ".join(map(str, pair_info.global_params)))
+                return result
         else:
             return ""
 
@@ -57,15 +68,21 @@ class PairStyle(object):
         """
         if self._pair_infos:
             coeffs = ""
+            isOverlay = len(self._pair_infos) > 1
             for pair_info in self._pair_infos:
                 for pair, params in pair_info.pair_params.iteritems():
-                    # first list pair info
-                    result = list(map(int, pair))
-                    # then all params
-                    result += params
-                    coeffs = coeffs + "pair_coeff " + \
-                        " ".join(map(str, result)) + "\n"
-            coeffs = coeffs + "\n"
+                    coeffs += "pair_coeff "
+
+                    # first add list pair info
+                    coeffs += " ".join(map(str, pair)) + " "
+
+                    if isOverlay:
+                        # add addtional info for ovelay
+                        coeffs += pair_info.pair_style + " "
+
+                    # then add all params
+                    coeffs += " ".join(map(str, params)) + "\n"
+            coeffs += "\n"
             return coeffs
         else:
             return ""
