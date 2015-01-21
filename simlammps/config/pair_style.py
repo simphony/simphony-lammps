@@ -95,9 +95,9 @@ class PairStyle(object):
 
         """
         styles = []
-        if CUBA.PAIR_STYLE in CM and CM[CUBA.PAIR_STYLE]:
-            keywords = yaml.safe_load(CM[CUBA.PAIR_STYLE])
-            my_pair_style = CM[CUBA.PAIR_STYLE]
+        if CUBA.PAIR_POTENTIALS in CM and CM[CUBA.PAIR_POTENTIALS]:
+            keywords = yaml.safe_load(CM[CUBA.PAIR_POTENTIALS])
+            my_pair_style = CM[CUBA.PAIR_POTENTIALS]
 
             for key in keywords:
                 my_pair_style = key
