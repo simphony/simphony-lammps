@@ -21,8 +21,10 @@ before_install:
   - export PATH=$TRAVIS_BUILD_DIR/mylammps/src/:$PATH
   - cd $TRAVIS_BUILD_DIR
 
-  # use current master of simphony
-  - pip install git+git://github.com/simphony/simphony-common.git#egg=simphony
+  # use special branch on forked repostory of simphony-common
+  # as lammps-md uses some CUDS-keywords (CUBA) that aren't
+  # approved or added to simphony-common yet.
+  - pip install git+git://github.com/nathanfranklin/simphony-common.git@lammps_md_cuba#egg=simphony
 
 install:
   - pip install -r requirements.txt

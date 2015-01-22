@@ -132,7 +132,7 @@ class LammpsWrapper(object):
 
         commands = LammpsDummyConfig.get_configuration().format(
             DATAFILE=self._data_filename,
-            NUMBER_STEPS=self.CM[CUBA.NUMBEROF_TIME_STEPS],
+            NUMBER_STEPS=self.CM[CUBA.NUMBER_OF_TIME_STEPS],
             TIME_STEP=self.CM[CUBA.TIME_STEP],
             PAIR_STYLE=pair_style.get_global_config(),
             PAIR_COEFF=pair_style.get_pair_coeffs())
@@ -144,7 +144,7 @@ class LammpsWrapper(object):
 
         """
 
-        cm_requirements = [CUBA.NUMBEROF_TIME_STEPS,
+        cm_requirements = [CUBA.NUMBER_OF_TIME_STEPS,
                            CUBA.TIME_STEP]
 
         missing = [str(req) for req in cm_requirements

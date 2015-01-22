@@ -15,7 +15,7 @@ class LammpsDummyConfig:
 
     @staticmethod
     def configure_wrapper(wrapper):
-        wrapper.CM[CUBA.NUMBEROF_TIME_STEPS] = 10000
+        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10000
         wrapper.CM[CUBA.TIME_STEP] = 0.003
         wrapper.CM[CUBA.PAIR_POTENTIALS] = ("lj:\n"
                                             "  global_cutoff: 1.12246\n"
