@@ -1,0 +1,139 @@
+# TODO this is an UNTESTED pseudocode developed from a use case
+# that needs to be cleaned up and used as a test example during
+# development
+
+# In this use case we create a simphony model
+# containing an SD for an Atomistic flow problem
+
+from __future__ import print_function
+
+import math
+
+from simphony.core.cuba import CUBA
+from simlammps.lammps_wrapper import LammpsWrapper
+from simphony.cuds.particles import Particle, ParticleContainer
+
+
+# create the data in Python:
+# this is a simple monoatomic system with one
+# particle atomic type, in general we may have two
+# types in the basis of the unit cell.
+a_latt = 1.549
+
+# we use a simple cubic system with basis for the FCC system
+unit_cell = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+N_dup = [4, 4, 4]
+basis = [[0.0, 0.0, 0.0], [0.5, 0.5, 0.0], [0.5, 0.0, 0.5], [0.0, 0.5, 0.5]]
+
+# total number of atoms after duplication
+natoms = len(basis)*N_dup[0]*N_dup[1]*N_dup[2]
+
+pc = ParticleContainer()
+
+i = 0
+pos = [0, 0, 0]
+atoms1 = basis
+atoms = list()
+
+# loop over the super cell (unit cell) directions
+for i in range(0, 3):
+    # loop over the duplicates (repetitions)
+    for idup in range(0, N_dup[i]):
+        # loop over the number of atoms in the basis.
+        for j in range(0, len(atoms1)):
+            pos = [0, 0, 0]
+            for k in range(0, 3):
+                pos[k] = idup * unit_cell[i][k] + atoms1[j][k]
+                # print i, idup, j, k, unit_cell[i][k], basis[j][k], pos
+            atoms.append(pos)
+    atoms1 = atoms
+    atoms = []
+
+for pos in atoms1:
+    p = Particle(coordinates=pos)
+    # should use CUBA.MATERIAL_TYPE or CUBA.ATOM_TYPE
+    # in the future, we would ld like to have CUBA.PERIODIC_ELEMENT
+    p.data[CUBA.MATERIAL_TYPE] = 1
+
+    # or later also CUBA.TOTAL_MASS ...
+    p.data[CUBA.MASS] = 1
+
+    # if this is not specified the MD wrapper assumes its zero at first anyway
+    p.data[CUBA.VELOCITY] = 0.0
+
+    # usually, the user asks the MD program to start
+    # the velocities according to a Maxwell-Boltzmann
+    # distribution.(utility functions to do this
+    # would be ideal).
+    pc.add_particle(p)
+
+# we use the anygmatic SHAPE_LENGTH,
+# but actually it should be "CUBA.SUPER_CELL_VECTORS" or "CUBA.BOX_VECTORS"
+super_cell = unit_cell
+for i in range(0, 3):
+    for j in range(0, 3):
+        super_cell[i][j] = unit_cell[i][j] * N_dup[i]
+pc.data[CUBA.SHAPE_LENGTH] = super_cell
+print(super_cell)
+
+
+wrapper = LammpsWrapper()
+
+# this might change, or CUBA.NVE...
+wrapper.CM[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
+
+# rescale the temperature every so many steps
+N_run_cycles_temperature = 10
+
+# sub cycle steps
+# TODO replace CUBA.NUMBER_OF_TIME_STEPS with NUMBER_OF_STEPS
+wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = N_run_cycles_temperature
+# TODO replace CUBA.TIME_STEP with INTEGRATION_TIME_STEP
+wrapper.CM[CUBA.TIME_STEP] = 0.0025
+
+# could be possibly ["periodic", "periodic", "periodic"]
+wrapper.BC[CUBA.BOX_FACES] = ["periodic", "periodic", "periodic"]
+wrapper.add_particle_container("Test", pc)
+
+# TODO
+# wrapper.SP[CUBA.PAIR_POTENTIALS] = TODO
+# we want the following LJ parameters for this test:
+# eps = sigma = 1.0 (we work with a normalized,
+# reduced LJ model with eps=sigma= 1).
+# rcut = 2.5
+
+T0 = 1.0  # this is the target temperature
+# T, KE are the instantaneous temperature and kinetic energy
+
+# this is the total number of simulation steps.
+N_run_total_cycle_steps = 100
+
+pc_MD = wrapper.get_particle_container("Test")
+
+for run in range(0, N_run_total_cycle_steps):
+    wrapper.run()
+
+    KE = 0.0  # kinetic energy
+    for par in pc_MD.iter_particles():
+        KE += par.data[CUBA.MASS]*(
+            par.data[CUBA.VELOCITY][0]*par.data[CUBA.VELOCITY][0]
+            + par.data[CUBA.VELOCITY][1]*par.data[CUBA.VELOCITY][1]
+            + par.data[CUBA.VELOCITY][2]*par.data[CUBA.VELOCITY][2])
+    # we may also get this from the output of LAMMPS directly...
+    # i.e, either the total temperature or the local kinetic energy..
+    KE *= 0.5
+
+    # actually lets put this in an array, together with
+    # the time step, and the temperature (total) T.
+    print (KE)
+
+    # how to know the number of particles most easily?
+
+    # there is a K_b in the denominator, but it is
+    # assumed to be 1, due to the reduced units.
+    T = 2.0*KE/(3*pc_MD.data[CUBA.NUMBER_OF_POINTS])
+    fac = math.sqrt(T0/T)
+    for par in pc_MD.iter_particles():
+        par.data[CUBA.VELOCITY] *= fac
+        # potentially, other quantities could be related, such as momentum.
+        pc_MD.update_particle(par)
