@@ -9,7 +9,7 @@ from simlammps.lammps_particle_container import LammpsParticleContainer
 from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
 from simlammps.lammps_process import LammpsProcess
 from simlammps.config.pair_style import PairStyle
-from simlammps.dummy import LammpsDummyConfig
+from simlammps.config.script_writer import ScriptWriter
 
 
 class LammpsWrapper(object):
@@ -130,12 +130,12 @@ class LammpsWrapper(object):
         self._data_manager.flush()
         self._data_manager.mark_as_invalid()
 
-        commands = LammpsDummyConfig.get_configuration().format(
-            DATAFILE=self._data_filename,
-            NUMBER_STEPS=self.CM[CUBA.NUMBER_OF_TIME_STEPS],
-            TIME_STEP=self.CM[CUBA.TIME_STEP],
-            PAIR_STYLE=pair_style.get_global_config(),
-            PAIR_COEFF=pair_style.get_pair_coeffs())
+        commands = ScriptWriter.get_configuration(
+            data_file=self._data_filename,
+            number_steps=self.CM[CUBA.NUMBER_OF_TIME_STEPS],
+            time_step=self.CM[CUBA.TIME_STEP],
+            pair_style=pair_style.get_global_config(),
+            pair_coeff=pair_style.get_pair_coeffs())
         lammps = LammpsProcess()
         lammps.run(commands)
 

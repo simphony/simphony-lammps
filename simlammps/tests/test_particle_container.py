@@ -1,7 +1,8 @@
 import unittest
+
 from simphony.cuds.particles import Particle
 from simlammps.lammps_wrapper import LammpsWrapper
-from simlammps.dummy import LammpsDummyConfig
+from simlammps.tests.example_configurator import ExampleConfigurator
 
 
 def _get_particle(particle_container):
@@ -20,7 +21,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
         # configuration is being done by dummy class
         # the wrapper is properly configured with
         # CM/SP/BC and given particles
-        LammpsDummyConfig.configure_wrapper(self.wrapper)
+        ExampleConfigurator.configure_wrapper(self.wrapper)
 
         # keep track of first wrapper-based particle container
         # and the particle ids that it contains

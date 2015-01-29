@@ -31,5 +31,5 @@ setup(
     description='The lammps wrapper for the SimPhoNy framework',
     long_description=README_TEXT,
     packages=find_packages(),
-    install_requires=["simphony"],
+    install_requires=["simphony"]
     )

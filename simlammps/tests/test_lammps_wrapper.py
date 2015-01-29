@@ -3,7 +3,7 @@ from sets import Set
 
 from simphony.cuds.particles import ParticleContainer, Particle
 from simlammps.lammps_wrapper import LammpsWrapper
-from simlammps.dummy import LammpsDummyConfig
+from simlammps.tests.example_configurator import ExampleConfigurator
 
 
 def _create_pc():
@@ -68,8 +68,12 @@ class TestLammpsParticleContainer(unittest.TestCase):
                 ordered_names))
         self.assertEqual(ordered_names, pc_name_list)
 
+    def test_run(self):
+        ExampleConfigurator.configure_wrapper(self.wrapper)
+        self.wrapper.run()
+
     def test_run_incomplete_CM(self):
-        LammpsDummyConfig.configure_wrapper(self.wrapper)
+        ExampleConfigurator.configure_wrapper(self.wrapper)
 
         # remove CM configuration
         self.wrapper.CM.clear()
