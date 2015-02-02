@@ -122,7 +122,7 @@ class LammpsWrapper(object):
         """
         self._check_configuration()
 
-        pair_style = PairStyle(self.CM)
+        pair_style = PairStyle(self.SP)
 
         # before running, we flush any changes to lammps
         # and mark our data manager (cache of particles)

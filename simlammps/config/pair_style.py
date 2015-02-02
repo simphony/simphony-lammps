@@ -19,21 +19,21 @@ _supported_pair_styles = {"lj": {"pair_style": "lj/cut",
 class PairStyle(object):
     """ A PairStyle instance
 
-    The PairStyle object interprets the configuration of the CM
+    The PairStyle object interprets the configuration of the SP
     to determine the pairwise interaction of atoms in LAMMPS
 
 
     """
 
-    def __init__(self, CM):
+    def __init__(self, SP):
         """ Constructor.
 
-         Parses the pair style information in the CM
+         Parses the pair style information in the SP
 
         """
         self._global = ""
         self._pair_coefs = ""
-        self._pair_infos = self._create_pair_infos(CM)
+        self._pair_infos = self._create_pair_infos(SP)
 
     def get_global_config(self):
         """ Returns global configuration text
@@ -89,15 +89,15 @@ class PairStyle(object):
 
     # Private methods #######################################################
 
-    def _create_pair_infos(self, CM):
+    def _create_pair_infos(self, SP):
         """ Creates appropriate pair info handler(s) from information
-            stored in the CM.
+            stored in the SP.
 
         """
         styles = []
-        if CUBA.PAIR_POTENTIALS in CM and CM[CUBA.PAIR_POTENTIALS]:
-            keywords = yaml.safe_load(CM[CUBA.PAIR_POTENTIALS])
-            my_pair_style = CM[CUBA.PAIR_POTENTIALS]
+        if CUBA.PAIR_POTENTIALS in SP and SP[CUBA.PAIR_POTENTIALS]:
+            keywords = yaml.safe_load(SP[CUBA.PAIR_POTENTIALS])
+            my_pair_style = SP[CUBA.PAIR_POTENTIALS]
 
             for key in keywords:
                 my_pair_style = key

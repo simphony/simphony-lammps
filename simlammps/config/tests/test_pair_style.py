@@ -11,8 +11,8 @@ class TestPairStyle(unittest.TestCase):
 
     """
     def test_lj_cut(self):
-        CM = DataContainer()
-        CM[CUBA.PAIR_POTENTIALS] = ("lj:\n"
+        SP = DataContainer()
+        SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
                                     "  global_cutoff: 1.12246\n"
                                     "  parameters:\n"
                                     "  - pair: [1, 1]\n"
@@ -40,7 +40,7 @@ class TestPairStyle(unittest.TestCase):
                                     "    sigma: 1.0\n"
                                     "    cutoff: 1.0001\n")
 
-        pair_style = PairStyle(CM)
+        pair_style = PairStyle(SP)
         self.assertEqual(
             pair_style.get_global_config(), "pair_style lj/cut 1.12246")
 
@@ -53,14 +53,14 @@ class TestPairStyle(unittest.TestCase):
         self.assertTrue("pair_coeff 3 3 1.0 1.0 1.0001" in lines)
 
     def test_lj_cut_error(self):
-        CM = DataContainer()
-        CM[CUBA.PAIR_POTENTIALS] = ("lj:\n")
+        SP = DataContainer()
+        SP[CUBA.PAIR_POTENTIALS] = ("lj:\n")
         with self.assertRaises(Exception):
-            PairStyle(CM)
+            PairStyle(SP)
 
     def test_overlay_lj_coul(self):
-        CM = DataContainer()
-        CM[CUBA.PAIR_POTENTIALS] = ("lj:\n"
+        SP = DataContainer()
+        SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
                                     "  global_cutoff: 1.13\n"
                                     "  parameters:\n"
                                     "  - pair: [1, 1]\n"
@@ -73,7 +73,7 @@ class TestPairStyle(unittest.TestCase):
                                     "  - pair: [1, 1]\n"
                                     "    cutoff: 1.2246\n")
 
-        pair_style = PairStyle(CM)
+        pair_style = PairStyle(SP)
         self.assertEqual(
             pair_style.get_global_config(),
             "pair_style hybrid/overlay lj/cut 1.13 coul/cut 1.12")
