@@ -67,15 +67,9 @@ for pos in atoms1:
     # would be ideal).
     pc.add_particle(p)
 
-# we use the anygmatic SHAPE_LENGTH,
 # but actually it should be "CUBA.SUPER_CELL_VECTORS" or "CUBA.BOX_VECTORS"
-super_cell = unit_cell
-for i in range(0, 3):
-    for j in range(0, 3):
-        super_cell[i][j] = unit_cell[i][j] * N_dup[i]
-pc.data[CUBA.SHAPE_LENGTH] = super_cell
-print(super_cell)
-
+super_cell = [tuple(N_dup[i]*x for x in v) for i, v in enumerate(unit_cell)]
+pc.data[CUBA.BOX_VECTORS] = super_cell
 
 wrapper = LammpsWrapper()
 
