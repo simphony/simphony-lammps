@@ -51,21 +51,20 @@ for i in range(0, 3):
 
 for pos in atoms1:
     p = Particle(coordinates=pos)
-    # should use CUBA.MATERIAL_TYPE or CUBA.ATOM_TYPE
-    # in the future, we would ld like to have CUBA.PERIODIC_ELEMENT
-    p.data[CUBA.MATERIAL_TYPE] = 1
-
-    # or later also CUBA.TOTAL_MASS ...
-    p.data[CUBA.MASS] = 1
 
     # if this is not specified the MD wrapper assumes its zero at first anyway
-    p.data[CUBA.VELOCITY] = 0.0
+    p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
 
     # usually, the user asks the MD program to start
     # the velocities according to a Maxwell-Boltzmann
     # distribution.(utility functions to do this
     # would be ideal).
     pc.add_particle(p)
+
+# should use CUBA.MATERIAL_TYPE or CUBA.ATOM_TYPE
+# in the future, we would ld like to have CUBA.PERIODIC_ELEMENT
+pc.data[CUBA.MATERIAL_TYPE] = 1
+pc.data[CUBA.MASS] = 1
 
 # but actually it should be "CUBA.SUPER_CELL_VECTORS" or "CUBA.BOX_VECTORS"
 super_cell = [tuple(N_dup[i]*x for x in v) for i, v in enumerate(unit_cell)]
