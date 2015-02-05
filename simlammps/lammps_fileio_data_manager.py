@@ -8,6 +8,7 @@ from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle, ParticleContainer
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
+from simlammps.config.domain import get_box
 
 
 class LammpsFileIoDataManager(object):
@@ -165,10 +166,6 @@ class LammpsFileIoDataManager(object):
                   "version 28 Jun 2014, timestep = 0\n\n"
                   "# file written by SimPhony\n\n")
 
-        dumy_box = ("0.0000000000000000e+00 2.5687134504920127e+01 xlo xhi\n"
-                    "-2.2245711031688635e-03 2.2247935602791809e+01 ylo yhi\n"
-                    "-3.2108918131150160e-01 3.2108918131150160e-01 zlo zhi\n")
-
         # recreate map from lammps-id to simphony-id
         self._lammpsid_to_id = {}
 
@@ -179,12 +176,14 @@ class LammpsFileIoDataManager(object):
             types.add(pc.data[CUBA.MATERIAL_TYPE])
             num_particles = num_particles + sum(1 for _ in pc.iter_particles())
 
+        box = get_box(self._particle_containers)
+
         with open(filename, 'w') as f:
             f.write(header)
             f.write('{} atoms\n'.format(num_particles))
             f.write('{} atom types\n\n'.format(len(types)))
             f.write("\n")
-            f.write(dumy_box)
+            f.write(box)
             f.write("\n")
             f.write("Masses\n\n")
             material_type_to_mass = self._get_mass()

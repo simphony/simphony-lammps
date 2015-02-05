@@ -80,6 +80,12 @@ class ExampleConfigurator:
             pc.data[CUBA.MASS] = 1
             pc.data[CUBA.MATERIAL_TYPE] = i
 
+            pc.data[CUBA.BOX_VECTORS] = [(25.0, 0.0, 0.0),
+                                         (0.0, 22.0, 0.0),
+                                         (0.0, 0.0, 1.0)]
+
+            pc.data[CUBA.BOX_ORIGIN] = (0.0, 0.0, 0.0)
+
             random.seed(42)
             for i in range(100):
                 coord = (random.uniform(0.0, 25.0),
