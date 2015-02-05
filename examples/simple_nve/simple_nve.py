@@ -88,12 +88,17 @@ wrapper.CM[CUBA.TIME_STEP] = 0.0025
 wrapper.BC[CUBA.BOX_FACES] = ["periodic", "periodic", "periodic"]
 wrapper.add_particle_container("Test", pc)
 
-# TODO
-# wrapper.SP[CUBA.PAIR_POTENTIALS] = TODO
-# we want the following LJ parameters for this test:
+# following LJ parameters for this test:
 # eps = sigma = 1.0 (we work with a normalized,
 # reduced LJ model with eps=sigma= 1).
 # rcut = 2.5
+wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
+                                    "  global_cutoff: 1.12246\n"
+                                    "  parameters:\n"
+                                    "  - pair: [1, 1]\n"
+                                    "    epsilon: 1.0\n"
+                                    "    sigma: 1.0\n"
+                                    "    cutoff: 2.5\n")
 
 T0 = 1.0  # this is the target temperature
 # T, KE are the instantaneous temperature and kinetic energy
