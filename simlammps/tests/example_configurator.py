@@ -59,11 +59,8 @@ class ExampleConfigurator:
                                             "    cutoff: 1.0001\n")
 
         # add particle containers
-        i = 0
         for pc in ExampleConfigurator.get_particle_containers():
-            name = "foo{}".format(i)
-            wrapper.add_particle_container(name, pc)
-            i += 1
+            wrapper.add_particle_container(pc)
 
     @staticmethod
     def get_particle_containers():
@@ -76,7 +73,7 @@ class ExampleConfigurator:
         """
         pcs = []
         for i in range(1, 4):
-            pc = ParticleContainer()
+            pc = ParticleContainer(name="foo{}".format(i))
             pc.data[CUBA.MASS] = 1
             pc.data[CUBA.MATERIAL_TYPE] = i
 

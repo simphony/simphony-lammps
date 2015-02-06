@@ -47,12 +47,13 @@ class LammpsFileIoDataManager(object):
         return self._particle_containers[name].data
 
     def set_data(self, data, name):
+        # TODO handle possible name changes
         self._particle_containers[name].data = data
 
     def new_particle_container(self, name):
         # create empty stand-alone particle container
         # to use as a cache of for input/output to LAMMPS
-        self._particle_containers[name] = ParticleContainer()
+        self._particle_containers[name] = ParticleContainer(name)
 
     def get_particle(self, id, name):
         self._ensure_up_to_date()

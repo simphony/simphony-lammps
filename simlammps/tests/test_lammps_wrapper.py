@@ -6,9 +6,9 @@ from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.tests.example_configurator import ExampleConfigurator
 
 
-def _create_pc():
+def _create_pc(name):
     """ create particle container with a few particles """
-    pc = ParticleContainer()
+    pc = ParticleContainer(name)
 
     pc.add_particle(Particle(coordinates=(1.01, 1.01, 1.01)))
     pc.add_particle(Particle(coordinates=(1.02, 1.02, 1.02)))
@@ -23,23 +23,20 @@ class TestLammpsParticleContainer(unittest.TestCase):
         self.wrapper = LammpsWrapper()
 
     def test_add_particle_container(self):
-        self.wrapper.add_particle_container("foo")
+        self.wrapper.add_particle_container(_create_pc("foo"))
         self.wrapper.get_particle_container("foo")
 
-        self.wrapper.add_particle_container("bar", _create_pc())
-        self.wrapper.get_particle_container("bar")
-
     def test_add_same_particle_container_twice(self):
-        self.wrapper.add_particle_container("foo")
+        self.wrapper.add_particle_container(_create_pc("foo"))
         with self.assertRaises(Exception):
-            self.wrapper.add_particle_container("foo")
+            self.wrapper.add_particle_container(_create_pc("foo"))
 
     def test_get_non_existing_particle_container(self):
         with self.assertRaises(Exception):
             self.wrapper.get_particle_container("foo")
 
     def test_delete_particle_container(self):
-        self.wrapper.add_particle_container("foo", _create_pc())
+        self.wrapper.add_particle_container(_create_pc("foo"))
         self.wrapper.get_particle_container("foo")
 
         self.wrapper.delete_particle_container("foo")
@@ -52,11 +49,11 @@ class TestLammpsParticleContainer(unittest.TestCase):
             self.wrapper.delete_particle_container("foo")
 
     def test_iter_particle_container(self):
-        self.wrapper.add_particle_container("foo")
-        self.wrapper.add_particle_container("bar")
+        self.wrapper.add_particle_container(_create_pc("foo"))
+        self.wrapper.add_particle_container(_create_pc("bar"))
 
         pc_name_list = list(
-            name for name, _pc in self.wrapper.iter_particle_containers())
+            pc.name for pc in self.wrapper.iter_particle_containers())
         self.assertEqual(len(pc_name_list), 2)
 
         ordered_names = ["bar", "foo", "bar"]
@@ -64,7 +61,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
         self.assertEqual(Set(ordered_names), Set(pc_name_list))
 
         pc_name_list = list(
-            name for name, _pc in self.wrapper.iter_particle_containers(
+            pc.name for pc in self.wrapper.iter_particle_containers(
                 ordered_names))
         self.assertEqual(ordered_names, pc_name_list)
 

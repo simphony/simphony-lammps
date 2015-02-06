@@ -27,16 +27,13 @@ class LammpsWrapper(object):
         self.CM = DataContainer()
         self.SP = DataContainer()
 
-    def add_particle_container(self, name, particle_container=None):
+    def add_particle_container(self, particle_container):
         """Add particle container.
 
         Parameters
         ----------
-        name : str
-            name of particle container
-        particle_container : ABCParticleContainer, optional
-            particle container to be added. If none is give,
-            then an empty particle container is added.
+        particle_container : ABCParticleContainer
+            particle container to be added.
 
         Returns
         ----------
@@ -45,12 +42,13 @@ class LammpsWrapper(object):
             get_particle_container for more information.
 
         """
-        if name in self._particle_containers:
+        name = particle_container.name
+        if particle_container.name in self._particle_containers:
             raise ValueError(
                 'Particle container \'{n}\` already exists'.format(n=name))
         else:
             pc = LammpsParticleContainer(self._data_manager, name)
-            # TODO improve
+            # TODO FIX improve
             self._data_manager.new_particle_container(name)
             self._particle_containers[name] = pc
 
@@ -110,11 +108,11 @@ class LammpsWrapper(object):
 
         """
         if names is None:
-            for name, pc in self._particle_containers.iteritems():
-                yield name, pc
+            for _, pc in self._particle_containers.iteritems():
+                yield pc
         else:
             for name in names:
-                yield name, self._particle_containers.get(name)
+                yield self._particle_containers[name]
 
     def run(self):
         """ Run for based on configuration

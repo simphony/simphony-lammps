@@ -13,6 +13,14 @@ class LammpsParticleContainer(ABCParticleContainer):
         self._name = name
 
     @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+
+    @property
     def data(self):
         return self._manager.get_data(self._name)
 

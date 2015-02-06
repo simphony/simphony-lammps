@@ -25,7 +25,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
 
         # keep track of first wrapper-based particle container
         # and the particle ids that it contains
-        pcs = [pc for _, pc in self.wrapper.iter_particle_containers()]
+        pcs = [pc for pc in self.wrapper.iter_particle_containers()]
         self.pc = pcs[0]
         self.particle_ids_in_pc = []
         for p in pcs[0].iter_particles():
