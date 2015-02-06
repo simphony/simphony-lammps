@@ -7,11 +7,10 @@ before_install:
 
   - chmod +x install_lammps.sh && sudo ./install_lammps.sh
 
-  # use special branch on forked repostory of simphony-common
-  # as lammps-md uses some CUDS-keywords (CUBA) that aren't
-  # approved or added to simphony-common yet.
-  - pip install git+git://github.com/nathanfranklin/simphony-common.git@lammps_md_cuba#egg=simphony
-
+  # install simphony-common and add some CUDS-keywords 
+  # (CUBA) that aren't approved/added to simphony-common yet.
+  - chmod +x install_simphony_common.sh && sudo ./install_simphony_common.sh
+  
 install:
   - pip install -r requirements.txt
   - pip install -r dev_requirements.txt
