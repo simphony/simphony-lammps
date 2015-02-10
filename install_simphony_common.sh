@@ -16,6 +16,6 @@ pushd simphony-common
 pip install numexpr cython==0.20
 pip install -r requirements.txt
 python simphony/scripts/cuba_generate.py python simphony/core/cuba.yml simphony/core/cuba.py
-python setup.py install
+sudo python setup.py install
 popd
 rm -rf simphony-common
