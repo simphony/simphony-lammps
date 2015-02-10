@@ -6,31 +6,10 @@ before_install:
   - sudo apt-get install mpi-default-bin mpi-default-dev
 
 install:
-  #  - chmod +x install_lammps.sh && sudo ./install_lammps.sh
   # install simphony-common and add some CUDS-keywords 
   # (CUBA) that aren't approved/added to simphony-common yet.
+  - chmod +x install_lammps.sh && sudo ./install_lammps.sh
   
-  #- chmod +x install_simphony_common.sh && sudo ./install_simphony_common.sh
-  # START CHECKING INSTALL SIMPHONY-COMMON
-  - sudo apt-get install libhdf5-serial-dev
-
-  - git clone git://github.com/simphony/simphony-common.git
-
-  # add additional cuba keywords to the official list
-  - cat additional_cuba.yml >> simphony-common/simphony/core/cuba.yml
-  - pushd simphony-common
-  - pip install numexpr cython==0.20
-  - pip freeze
-  - pip install -r requirements.txt
-  - pip freeze
-  - python simphony/scripts/cuba_generate.py python simphony/core/cuba.yml simphony/core/cuba.py
-  - python setup.py install
-  - popd
-  - rm -rf simphony-common
-   
-  - pip freeze
-  # END OF CHECKING INSTALL SIMPHONY-COMMON
-
   - pip install -r requirements.txt
   - pip install -r dev_requirements.txt
   - python setup.py develop
