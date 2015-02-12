@@ -85,7 +85,7 @@ class LammpsWrapper(object):
         """
         if name in self._particle_containers:
             pc = self._particle_containers[name]
-            all_ids = list(p.id for p in pc.iter_particles())
+            all_ids = list(p.uid for p in pc.iter_particles())
             for pid in all_ids:
                 pc.remove_particle(pid)
 

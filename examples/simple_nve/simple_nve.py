@@ -28,7 +28,7 @@ basis = [[0.0, 0.0, 0.0], [0.5, 0.5, 0.0], [0.5, 0.0, 0.5], [0.0, 0.5, 0.5]]
 # total number of atoms after duplication
 natoms = len(basis)*N_dup[0]*N_dup[1]*N_dup[2]
 
-pc = ParticleContainer()
+pc = ParticleContainer("Test")
 
 i = 0
 pos = [0, 0, 0]
@@ -86,7 +86,7 @@ wrapper.CM[CUBA.TIME_STEP] = 0.0025
 
 # could be possibly ["periodic", "periodic", "periodic"]
 wrapper.BC[CUBA.BOX_FACES] = ["periodic", "periodic", "periodic"]
-wrapper.add_particle_container("Test", pc)
+wrapper.add_particle_container(pc)
 
 # following LJ parameters for this test:
 # eps = sigma = 1.0 (we work with a normalized,
