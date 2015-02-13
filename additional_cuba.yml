@@ -24,12 +24,12 @@
   key: THERMODYNAMIC_ENSEMBLE
   name: ThermodynamicEnsemble
   number: 103
-  shape: [1]
+  shape: [20]
   type: string
 - description: Pair potentials
   domain: [MD]
   key: PAIR_POTENTIALS
   name: PairPotentials
   number: 104
-  shape: [1]
+  shape: [20]
   type: string
