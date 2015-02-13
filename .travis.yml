@@ -6,9 +6,12 @@ before_install:
   - sudo apt-get install mpi-default-bin mpi-default-dev
 
 install:
+  # build and install lammps
+  - chmod +x install_lammps.sh && sudo ./install_lammps.sh
+  
   # install simphony-common and add some CUDS-keywords 
   # (CUBA) that aren't approved/added to simphony-common yet.
-  - chmod +x install_lammps.sh && sudo ./install_lammps.sh
+  - chmod +x install_simphony_common.sh  && sudo ./install_simphony_common.sh 
   
   - pip install -r requirements.txt
   - pip install -r dev_requirements.txt
