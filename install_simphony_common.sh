@@ -14,7 +14,11 @@ cat additional_cuba.yml >> simphony-common/simphony/core/cuba.yml
 pushd simphony-common
 pip install numpy numexpr cython==0.20
 pip install -r dev_requirements.txt
+
+# generate the code with the altered cuby.yml
 python simphony/scripts/cuba_generate.py python simphony/core/cuba.yml simphony/core/cuba.py
+python simphony/scripts/cuba_generate.py table simphony/core/cuba.yml simphony/io/data_container_description.py
+
 python setup.py install
 popd
 rm -rf simphony-common
