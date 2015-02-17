@@ -6,27 +6,27 @@ class LammpsParticleContainer(ABCParticleContainer):
     Responsible class to synchronize operations on particles
 
     """
-    def __init__(self, manager, name):
+    def __init__(self, manager, uname):
         # most of the work is delegated here to this manger
         self._manager = manager
 
-        self._name = name
+        self._uname = uname
 
     @property
     def name(self):
-        return self._name
+        return self._manager.get_name(self._uname)
 
     @name.setter
     def name(self, value):
-        self._name = value
+        self._manager.rename(self._uname, value)
 
     @property
     def data(self):
-        return self._manager.get_data(self._name)
+        return self._manager.get_data(self._uname)
 
     @data.setter
     def data(self, value):
-        self._manager.set_data(value, self._name)
+        self._manager.set_data(value, self._uname)
 
     # Particle methods ######################################################
 
@@ -48,37 +48,37 @@ class LammpsParticleContainer(ABCParticleContainer):
            if an id is given which already exists.
 
         """
-        return self._manager.add_particle(particle, self._name)
+        return self._manager.add_particle(particle, self._uname)
 
     def update_particle(self, particle):
         """Update particle
 
         """
-        return self._manager.update_particle(particle, self._name)
+        return self._manager.update_particle(particle, self._uname)
 
     def get_particle(self, id):
         """Get particle
 
         """
-        return self._manager.get_particle(id, self._name)
+        return self._manager.get_particle(id, self._uname)
 
     def remove_particle(self, id):
         """Remove particle
 
         """
-        return self._manager.remove_particle(id, self._name)
+        return self._manager.remove_particle(id, self._uname)
 
     def has_particle(self, id):
         """Has particle
 
         """
-        return self._manager.has_particle(id, self._name)
+        return self._manager.has_particle(id, self._uname)
 
     def iter_particles(self, ids=None):
         """Get iterator over particles
 
         """
-        for p in self._manager.iter_particles(self._name, ids):
+        for p in self._manager.iter_particles(self._uname, ids):
             yield p
 
     # Bond methods #######################################################

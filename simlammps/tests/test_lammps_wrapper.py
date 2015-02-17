@@ -48,6 +48,27 @@ class TestLammpsParticleContainer(unittest.TestCase):
         with self.assertRaises(Exception):
             self.wrapper.delete_particle_container("foo")
 
+    def test_particle_container_rename(self):
+        pc = self.wrapper.add_particle_container(_create_pc("foo"))
+        pc.name = "bar"
+
+        # we should not be able to use the old name "foo"
+        with self.assertRaises(ValueError):
+            self.wrapper.get_particle_container("foo")
+        with self.assertRaises(ValueError):
+            self.wrapper.delete_particle_container("foo")
+        with self.assertRaises(ValueError):
+            [_ for _ in self.wrapper.iter_particle_containers(names=["foo"])]
+
+        # we should be able to access using the new "bar" name
+        pc_bar = self.wrapper.get_particle_container("bar")
+        self.assertEqual("bar", pc_bar.name)
+
+        # and we should be able to use the no-longer used
+        # "foo" name when adding another particle container
+        pc = self.wrapper.add_particle_container(
+            ParticleContainer(name="foo"))
+
     def test_iter_particle_container(self):
         self.wrapper.add_particle_container(_create_pc("foo"))
         self.wrapper.add_particle_container(_create_pc("bar"))

@@ -5,7 +5,6 @@ This module provides a wrapper to LAMMPS-md
 from simphony.core.data_container import DataContainer
 from simphony.core.cuba import CUBA
 
-from simlammps.lammps_particle_container import LammpsParticleContainer
 from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
 from simlammps.lammps_process import LammpsProcess
 from simlammps.config.pair_style import PairStyle
@@ -20,8 +19,6 @@ class LammpsWrapper(object):
         self._data_filename = "data.lammps"
         self._data_manager = LammpsFileIoDataManager(
             data_filename=self._data_filename)
-
-        self._particle_containers = {}
 
         self.BC = DataContainer()
         self.CM = DataContainer()
@@ -42,21 +39,13 @@ class LammpsWrapper(object):
             get_particle_container for more information.
 
         """
-        name = particle_container.name
-        if particle_container.name in self._particle_containers:
+        if particle_container.name in self._data_manager:
             raise ValueError(
-                'Particle container \'{n}\` already exists'.format(n=name))
+                'Particle container \'{n}\` already exists'.format(
+                    n=particle_container.name))
         else:
-            pc = LammpsParticleContainer(self._data_manager, name)
-            # TODO FIX improve
-            self._data_manager.new_particle_container(name)
-            self._particle_containers[name] = pc
-
-            if particle_container:
-                pc.data = DataContainer(particle_container.data)
-                for p in particle_container.iter_particles():
-                    pc.add_particle(p)
-            return self._particle_containers[name]
+            return self._data_manager.new_particle_container(
+                particle_container)
 
     def get_particle_container(self, name):
         """Get particle container.
@@ -69,8 +58,8 @@ class LammpsWrapper(object):
         name : str
             name of particle container to return
         """
-        if name in self._particle_containers:
-            return self._particle_containers[name]
+        if name in self._data_manager:
+            return self._data_manager[name]
         else:
             raise ValueError(
                 'Particle container \'{}\` does not exist'.format(name))
@@ -83,13 +72,8 @@ class LammpsWrapper(object):
         name : str
             name of particle container to delete
         """
-        if name in self._particle_containers:
-            pc = self._particle_containers[name]
-            all_ids = list(p.uid for p in pc.iter_particles())
-            for pid in all_ids:
-                pc.remove_particle(pid)
-
-            del self._particle_containers[name]
+        if name in self._data_manager:
+            del self._data_manager[name]
         else:
             raise ValueError(
                 'Particle container \'{n}\` does not exist'.format(n=name))
@@ -108,11 +92,16 @@ class LammpsWrapper(object):
 
         """
         if names is None:
-            for _, pc in self._particle_containers.iteritems():
-                yield pc
+            for name in self._data_manager:
+                yield self._data_manager[name]
         else:
             for name in names:
-                yield self._particle_containers[name]
+                if name in self._data_manager:
+                    yield self._data_manager[name]
+                else:
+                    raise ValueError(
+                        'Particle container \'{n}\` does not exist'.format(
+                            n=name))
 
     def run(self):
         """ Run for based on configuration
