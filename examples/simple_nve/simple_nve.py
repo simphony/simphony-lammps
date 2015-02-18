@@ -101,7 +101,7 @@ wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
                                     "    cutoff: 2.5\n")
 
 T0 = 1.0  # this is the target temperature
-# T, KE are the instantaneous temperature and kinetic energy
+# T, kinetic_energy are the instantaneous temperature and kinetic energy
 
 # this is the total number of simulation steps.
 N_run_total_cycle_steps = 100
@@ -111,27 +111,26 @@ pc_MD = wrapper.get_particle_container("Test")
 for run in range(0, N_run_total_cycle_steps):
     wrapper.run()
 
-    KE = 0.0  # kinetic energy
+    kinetic_energy = 0.0  # kinetic energy
+    number_of_points = 0
     for par in pc_MD.iter_particles():
-        KE += par.data[CUBA.MASS]*(
+        number_of_points += 1
+        kinetic_energy += pc_MD.data[CUBA.MASS]*(
             par.data[CUBA.VELOCITY][0]*par.data[CUBA.VELOCITY][0]
             + par.data[CUBA.VELOCITY][1]*par.data[CUBA.VELOCITY][1]
             + par.data[CUBA.VELOCITY][2]*par.data[CUBA.VELOCITY][2])
     # we may also get this from the output of LAMMPS directly...
     # i.e, either the total temperature or the local kinetic energy..
-    KE *= 0.5
+    kinetic_energy *= 0.5
 
-    # actually lets put this in an array, together with
-    # the time step, and the temperature (total) T.
-    print (KE)
-
-    # how to know the number of particles most easily?
+    print ("kinetic_energy:{} number_of_points:{}  (running {} of {})".format(
+        kinetic_energy, number_of_points, run, N_run_total_cycle_steps))
 
     # there is a K_b in the denominator, but it is
     # assumed to be 1, due to the reduced units.
-    T = 2.0*KE/(3*pc_MD.data[CUBA.NUMBER_OF_POINTS])
+    T = 2.0*kinetic_energy/(3*number_of_points)
     fac = math.sqrt(T0/T)
     for par in pc_MD.iter_particles():
-        par.data[CUBA.VELOCITY] *= fac
+        par.data[CUBA.VELOCITY] = tuple(v*fac for v in par.data[CUBA.VELOCITY])
         # potentially, other quantities could be related, such as momentum.
         pc_MD.update_particle(par)
