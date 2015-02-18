@@ -3,11 +3,9 @@
 This module provides a wrapper to LAMMPS-md
 """
 from simphony.core.data_container import DataContainer
-from simphony.core.cuba import CUBA
 
 from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
 from simlammps.lammps_process import LammpsProcess
-from simlammps.config.pair_style import PairStyle
 from simlammps.config.script_writer import ScriptWriter
 
 
@@ -107,9 +105,6 @@ class LammpsWrapper(object):
         """ Run for based on configuration
 
         """
-        self._check_configuration()
-
-        pair_style = PairStyle(self.SP)
 
         # before running, we flush any changes to lammps
         # and mark our data manager (cache of particles)
@@ -118,34 +113,9 @@ class LammpsWrapper(object):
         self._data_manager.mark_as_invalid()
 
         commands = ScriptWriter.get_configuration(
-            data_file=self._data_filename,
-            number_steps=self.CM[CUBA.NUMBER_OF_TIME_STEPS],
-            time_step=self.CM[CUBA.TIME_STEP],
-            pair_style=pair_style.get_global_config(),
-            pair_coeff=pair_style.get_pair_coeffs())
+            self._data_filename,
+            self.BC,
+            self.CM,
+            self.SP)
         lammps = LammpsProcess()
         lammps.run(commands)
-
-    def _check_configuration(self):
-        """ Check if everything is configured correctly
-
-        """
-
-        cm_requirements = [CUBA.NUMBER_OF_TIME_STEPS,
-                           CUBA.TIME_STEP]
-
-        missing = [str(req) for req in cm_requirements
-                   if req not in self.CM.keys()]
-
-        msg = ""
-        if missing:
-            msg = "Problem with CM component. "
-            msg += "Missing: " + ', '.join(missing)
-
-        # TODO check SP, BC
-
-        if msg:
-            # TODO throw unique exception that
-            # users can catch and then try to fix
-            # their configuration
-            raise Exception(msg)
