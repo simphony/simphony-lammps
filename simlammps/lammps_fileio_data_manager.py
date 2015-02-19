@@ -1,5 +1,4 @@
 import os
-import shutil
 import uuid
 from sets import Set
 
@@ -329,7 +328,6 @@ class LammpsFileIoDataManager(object):
                         p.data[CUBA.VELOCITY])
                     f.write('{0} {1}\n'.format(lammpsid, vel))
             f.write("\n")
-        shutil.copyfile("data.lammps", "data_input_from_sim.lammps")
 
     def _get_mass(self):
         """ Create a dictionary from 'material type' to 'mass'
