@@ -2,6 +2,7 @@
 
 This module provides a wrapper to LAMMPS-md
 """
+from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
 
 from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
@@ -9,7 +10,7 @@ from simlammps.lammps_process import LammpsProcess
 from simlammps.config.script_writer import ScriptWriter
 
 
-class LammpsWrapper(object):
+class LammpsWrapper(ABCModelingEngine):
     """ Wrapper to LAMMPS-md
 
     """
@@ -119,3 +120,27 @@ class LammpsWrapper(object):
             self.SP)
         lammps = LammpsProcess()
         lammps.run(commands)
+
+    def add_lattice(self, lattice):
+        raise NotImplementedError()
+
+    def add_mesh(self, mesh):
+        raise NotImplementedError()
+
+    def delete_lattice(self, name):
+        raise NotImplementedError()
+
+    def delete_mesh(self, name):
+        raise NotImplementedError()
+
+    def get_lattice(self, name):
+        raise NotImplementedError()
+
+    def get_mesh(self, name):
+        raise NotImplementedError()
+
+    def iter_lattices(self, names=None):
+        raise NotImplementedError()
+
+    def iter_meshes(self, names=None):
+        raise NotImplementedError()
