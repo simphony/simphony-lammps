@@ -10,12 +10,12 @@ def get_box(particle_containers):
 
     Parameters:
     -----------
-    particle_containers: map of particle containers
+    particle_containers: list of particle containers
     """
     origin = None
     vectors = None
 
-    for _, pc in particle_containers.iteritems():
+    for pc in particle_containers:
         # find box vectors (and origin) and ensure
         # that they are the same for each particle container
         if CUBA.BOX_VECTORS in pc.data:
