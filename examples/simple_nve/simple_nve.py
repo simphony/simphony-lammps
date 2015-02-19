@@ -116,9 +116,9 @@ for run in range(0, N_run_total_cycle_steps):
     for par in pc_MD.iter_particles():
         number_of_points += 1
         kinetic_energy += pc_MD.data[CUBA.MASS]*(
-            par.data[CUBA.VELOCITY][0]*par.data[CUBA.VELOCITY][0]
-            + par.data[CUBA.VELOCITY][1]*par.data[CUBA.VELOCITY][1]
-            + par.data[CUBA.VELOCITY][2]*par.data[CUBA.VELOCITY][2])
+            par.data[CUBA.VELOCITY][0]*par.data[CUBA.VELOCITY][0] +
+            par.data[CUBA.VELOCITY][1]*par.data[CUBA.VELOCITY][1] +
+            par.data[CUBA.VELOCITY][2]*par.data[CUBA.VELOCITY][2])
     # we may also get this from the output of LAMMPS directly...
     # i.e, either the total temperature or the local kinetic energy..
     kinetic_energy *= 0.5
