@@ -8,6 +8,7 @@ before_install:
 install:
   # build and install lammps
   - chmod +x install_lammps.sh && ./install_lammps.sh
+  - export PATH=$PATH:$PWD/mylammps/src/
   
   # install simphony-common and add some CUDS-keywords 
   # (CUBA) that aren't approved/added to simphony-common yet.

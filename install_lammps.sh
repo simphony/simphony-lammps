@@ -7,5 +7,5 @@ pushd mylammps && git checkout r12164 && popd
 # build lammps executable 
 pushd mylammps/src 
 make ubuntu_simple
+ln -s lmp_ubuntu_simple lammps
 popd
-ln -s mylammps/src/lmp_ubuntu_simple lammps
