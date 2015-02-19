@@ -3,6 +3,10 @@ from simphony.core.cuba import CUBA
 from simlammps.config.pair_style import PairStyle
 
 
+class ConfigurationException(Exception):
+    pass
+
+
 class ScriptWriter(object):
     """ Writer of a LAMMPS-commands script
 
@@ -53,7 +57,7 @@ class ScriptWriter(object):
         boundary = "p p p"
 
         # TODO
-        fixes = "fix      1 all nve\n"
+        fixes = get_thermodynmaic_ensemble(CM)
 
         return CONFIGURATION.format(BOUNDARY=boundary,
                                     DATAFILE=data_file,
@@ -69,7 +73,8 @@ def _check_configuration(CM):
 
     """
     cm_requirements = [CUBA.NUMBER_OF_TIME_STEPS,
-                       CUBA.TIME_STEP]
+                       CUBA.TIME_STEP,
+                       CUBA.THERMODYNAMIC_ENSEMBLE]
 
     missing = [str(req) for req in cm_requirements
                if req not in CM.keys()]
@@ -115,3 +120,13 @@ run {NUMBER_STEPS}
 # write reults to simphony-generated file
 write_data {DATAFILE}
 """
+
+
+def get_thermodynmaic_ensemble(CM):
+    esemble = CM[CUBA.THERMODYNAMIC_ENSEMBLE]
+    if esemble == "NVE":
+        return "fix 1 all nve"
+    else:
+        message = ("Unsupported ensemble was provided "
+                   "CM[CUBA.THERMODYNAMIC_ENSEMBLE] = {}")
+        ConfigurationException(message.format(esemble))

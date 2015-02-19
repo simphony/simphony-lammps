@@ -28,6 +28,7 @@ class ExampleConfigurator:
         # CM
         wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10000
         wrapper.CM[CUBA.TIME_STEP] = 0.003
+        wrapper.CM[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
 
         # SP
         wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
