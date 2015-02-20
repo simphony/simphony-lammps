@@ -278,13 +278,15 @@ class LammpsFileIoDataManager(object):
         """ Write data file containing current state of simulation
 
         """
-        header = ("LAMMPS data file via write_data"
-                  "# file written by SimPhony\n\n")
+        lines = ["LAMMPS data file via write_data"
+                 ", file written by SimPhony\n\n"]
 
         # recreate (and store) map from lammps-id to simphony-id
         self._lammpsid_to_uid = {}
 
-        # TODO improve
+        # determine the number of particles
+        # and collect the different material types
+        # in oder to determine the number of types
         num_particles = 0
         types = Set()
         for _, pc in self._pcs.iteritems():
@@ -293,43 +295,82 @@ class LammpsFileIoDataManager(object):
 
         box = get_box([pc.cache_pc for _, pc in self._pcs.iteritems()])
 
+        lines.append('{} atoms\n'.format(num_particles))
+        lines.append('{} atom types\n\n'.format(len(types)))
+        lines.append("\n")
+        lines.append(box)
+        lines.append("\n")
+        lines.append("Masses\n\n")
+
+        material_type_to_mass = self._get_mass()
+        for material_type in sorted(material_type_to_mass):
+            mass = material_type_to_mass[material_type]
+            lines.append('{} {}\n'.format(material_type, mass))
+        lines.append("\n")
+
         with open(filename, 'w') as f:
-            f.write(header)
-            f.write('{} atoms\n'.format(num_particles))
-            f.write('{} atom types\n\n'.format(len(types)))
-            f.write("\n")
-            f.write(box)
-            f.write("\n")
-            f.write("Masses\n\n")
-            material_type_to_mass = self._get_mass()
-            for material_type in sorted(material_type_to_mass):
-                mass = material_type_to_mass[material_type]
-                f.write('{} {}\n'.format(material_type, mass))
-            f.write("\n")
+            f.writelines(lines)
+
+            # keep track of what uid(for a specific pc)
+            # corresponds to which lammpsid
+            uid_to_lammpsid = {}
 
             f.write("Atoms\n\n")
-            lammpsid = 0
-            id_to_lammpsid = {}
-            for uname, pc in self._pcs.iteritems():
-                for p in pc.cache_pc.iter_particles():
-                    lammpsid += 1
-                    self._lammpsid_to_uid[lammpsid] = (uname, p.uid)
-                    id_to_lammpsid[(uname, p.uid)] = lammpsid
-                    atom_type = pc.cache_pc.data[CUBA.MATERIAL_TYPE]
-                    coord = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
-                        p.coordinates)
-                    f.write('{0} {1} {2} 0 0 0\n'.format(
-                        lammpsid, atom_type, coord))
+            f.writelines(self._generate_atoms_lines(uid_to_lammpsid))
+
+            f.write("\nVelocities\n\n")
+            f.writelines(self._generate_velocities_lines(uid_to_lammpsid))
             f.write("\n")
 
-            f.write("Velocities\n\n")
-            for uname, pc in self._pcs.iteritems():
-                for p in pc.cache_pc.iter_particles():
-                    lammpsid = id_to_lammpsid[(uname, p.uid)]
-                    vel = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
-                        p.data[CUBA.VELOCITY])
-                    f.write('{0} {1}\n'.format(lammpsid, vel))
-            f.write("\n")
+    def _generate_atoms_lines(self, uid_to_lammpsid):
+        """ Generate atom lines for a data file.
+
+        Parameters
+        ----------
+        uid_to_lammpsid : dict
+            empty dictionary which will be filled with uname and uid
+            of each particle as a key and the corresponding lammpsid
+            as the value
+
+        Returns
+        -------
+        generator
+            atom line strings for data file
+
+        """
+        lammpsid = 0
+        for uname, pc in self._pcs.iteritems():
+            for p in pc.cache_pc.iter_particles():
+                lammpsid += 1
+                self._lammpsid_to_uid[lammpsid] = (uname, p.uid)
+                uid_to_lammpsid[(uname, p.uid)] = lammpsid
+                atom_type = pc.cache_pc.data[CUBA.MATERIAL_TYPE]
+                coord = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
+                    p.coordinates)
+                yield '{0} {1} {2} 0 0 0\n'.format(
+                    lammpsid, atom_type, coord)
+
+    def _generate_velocities_lines(self, uid_to_lammpsid):
+        """ Generate velocity lines for a data file.
+
+        Parameters
+        ----------
+        uid_to_lammpsid : dict
+            dictionary filled with uname and uid of each particle as a
+            key and the corresponding lammpsid as the value
+
+        Returns
+        -------
+        generator
+            velocities line strings for data file
+
+        """
+        for uname, pc in self._pcs.iteritems():
+            for p in pc.cache_pc.iter_particles():
+                lammpsid = uid_to_lammpsid[(uname, p.uid)]
+                vel = '{0[0]:.16e} {0[1]:.16e} {0[2]:.16e}'.format(
+                    p.data[CUBA.VELOCITY])
+                yield '{0} {1}\n'.format(lammpsid, vel)
 
     def _get_mass(self):
         """ Create a dictionary from 'material type' to 'mass'
