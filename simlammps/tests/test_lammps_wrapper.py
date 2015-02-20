@@ -28,11 +28,11 @@ class TestLammpsParticleContainer(unittest.TestCase):
 
     def test_add_same_particle_container_twice(self):
         self.wrapper.add_particle_container(_create_pc("foo"))
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             self.wrapper.add_particle_container(_create_pc("foo"))
 
     def test_get_non_existing_particle_container(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             self.wrapper.get_particle_container("foo")
 
     def test_delete_particle_container(self):
@@ -41,11 +41,11 @@ class TestLammpsParticleContainer(unittest.TestCase):
 
         self.wrapper.delete_particle_container("foo")
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             self.wrapper.get_particle_container("foo")
 
     def test_delete_non_existing_particle_container(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(KeyError):
             self.wrapper.delete_particle_container("foo")
 
     def test_particle_container_rename(self):
@@ -53,11 +53,11 @@ class TestLammpsParticleContainer(unittest.TestCase):
         pc.name = "bar"
 
         # we should not be able to use the old name "foo"
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.wrapper.get_particle_container("foo")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             self.wrapper.delete_particle_container("foo")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(KeyError):
             [_ for _ in self.wrapper.iter_particle_containers(names=["foo"])]
 
         # we should be able to access using the new "bar" name
@@ -96,7 +96,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
         # remove CM configuration
         self.wrapper.CM.clear()
 
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             self.wrapper.run()
 
 

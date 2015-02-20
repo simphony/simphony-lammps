@@ -55,7 +55,7 @@ class TestPairStyle(unittest.TestCase):
     def test_lj_cut_error(self):
         SP = DataContainer()
         SP[CUBA.PAIR_POTENTIALS] = ("lj:\n")
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             PairStyle(SP)
 
     def test_overlay_lj_coul(self):

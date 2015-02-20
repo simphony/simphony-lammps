@@ -102,7 +102,7 @@ class PairStyle(object):
             for key in keywords:
                 my_pair_style = key
                 parameters = keywords[key]
-                if my_pair_style in _supported_pair_styles:
+                if parameters and my_pair_style in _supported_pair_styles:
                     handler_info = _supported_pair_styles[my_pair_style]
                     req_global = handler_info["required_global_params"]
                     req_params = handler_info["required_pair_params"]
@@ -114,7 +114,7 @@ class PairStyle(object):
                                       global_params=global_params,
                                       pair_params=pair_params))
                 else:
-                    raise Exception(
+                    raise RuntimeError(
                         "Unsupported pair style: {}".format(my_pair_style))
         return styles
 
@@ -130,7 +130,7 @@ class PairStyle(object):
         if missing_params:
             msg = "The following global parameters are missing: "
             msg += ', '.join(missing_params)
-            raise Exception(msg)
+            raise RuntimeError(msg)
 
         return global_params
 
@@ -143,7 +143,7 @@ class PairStyle(object):
             if "pair" in params:
                 pair = tuple((params["pair"]))
             else:
-                raise Exception("Pair information is missing")
+                raise RuntimeError("Pair information is missing")
 
             pair_dict = []
             missing_params = []
@@ -153,13 +153,13 @@ class PairStyle(object):
                 else:
                     missing_params.append(req)
                     msg = "The pair ({}) is missing {}".format(pair, req)
-                    raise Exception(msg)
+                    raise RuntimeError(msg)
 
             if missing_params:
                 msg = "The pair ({}) is missing the following {}".format(
                     pair, req)
                 msg += ', '.join(missing_params)
-                raise Exception(msg)
+                raise RuntimeError(msg)
 
             pair_params[pair] = pair_dict
         return pair_params

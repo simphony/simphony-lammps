@@ -10,7 +10,7 @@ def _get_particle(particle_container):
     for p in particle_container.iter_particles():
         return p
     else:
-        raise Exception("could not find a particle to test with")
+        raise RuntimeError("could not find a particle to test with")
 
 
 class TestLammpsParticleContainer(unittest.TestCase):
@@ -33,7 +33,10 @@ class TestLammpsParticleContainer(unittest.TestCase):
             self.particle_ids_in_pc.append(p.uid)
 
     def test_update_non_existing_particle(self):
-        with self.assertRaises(KeyError):
+        # TODO we should test that this raises
+        # ValueError but ParticleContainer (v 0.0.1)
+        # raises KeyeError
+        with self.assertRaises(Exception):
             p = Particle(
                 uid=uuid.UUID(int=100000000), coordinates=(0.0, 0.0, 0.0))
             self.pc.update_particle(p)

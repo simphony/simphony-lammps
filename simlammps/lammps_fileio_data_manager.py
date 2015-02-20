@@ -206,7 +206,7 @@ class LammpsFileIoDataManager(object):
         """
         self._ensure_up_to_date()
         if self._pcs[uname].cache_pc.has_particle(particle.uid):
-            raise KeyError(
+            raise ValueError(
                 "particle with same uid ({}) alread exists".format(
                     particle.uid))
         else:
@@ -243,7 +243,7 @@ class LammpsFileIoDataManager(object):
         if self._pcs:
             self._write_data_file(self._data_filename)
         else:
-            raise Exception(
+            raise RuntimeError(
                 "No particles.  Lammps cannot run without a particle")
         # TODO handle properly when there are no particle containers
         # or when some of them do not contain any particles
@@ -414,7 +414,7 @@ class LammpsFileIoDataManager(object):
 
         Raises
         ------
-        Exception :
+        RuntimeError :
             if there are particles' which have the same
             material type (CUBA.MATERIAL_TYPE) but different
             masses (CUBA.MASS)
@@ -427,7 +427,7 @@ class LammpsFileIoDataManager(object):
             if material_type in mass:
                 # check that mass is consistent with an matching type
                 if data[CUBA.MASS] != mass[material_type]:
-                    raise Exception(
+                    raise RuntimeError(
                         "Each material type must have the same mass")
             else:
                 mass[material_type] = data[CUBA.MASS]

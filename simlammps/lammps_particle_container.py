@@ -2,8 +2,7 @@ from simphony.cuds.abstractparticles import ABCParticleContainer
 
 
 class LammpsParticleContainer(ABCParticleContainer):
-    """
-    Responsible class to synchronize operations on particles
+    """ Responsible class to synchronize operations on particles
 
     """
     def __init__(self, manager, uname):
@@ -85,20 +84,6 @@ class LammpsParticleContainer(ABCParticleContainer):
 
     def add_bond(self, bond):
         """Add bond
-
-        If bond has an id then this is used.  If the
-        bond's id is None then a id is generated for the
-        bond.
-
-        Returns
-        -------
-        int
-            id of bond
-
-        Raises
-        -------
-        ValueError
-           if an id is given which already exists.
 
         """
         pass

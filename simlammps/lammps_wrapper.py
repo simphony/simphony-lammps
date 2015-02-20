@@ -60,7 +60,7 @@ class LammpsWrapper(ABCModelingEngine):
         if name in self._data_manager:
             return self._data_manager[name]
         else:
-            raise ValueError(
+            raise KeyError(
                 'Particle container \'{}\` does not exist'.format(name))
 
     def delete_particle_container(self, name):
@@ -74,7 +74,7 @@ class LammpsWrapper(ABCModelingEngine):
         if name in self._data_manager:
             del self._data_manager[name]
         else:
-            raise ValueError(
+            raise KeyError(
                 'Particle container \'{n}\` does not exist'.format(n=name))
 
     def iter_particle_containers(self, names=None):
@@ -98,7 +98,7 @@ class LammpsWrapper(ABCModelingEngine):
                 if name in self._data_manager:
                     yield self._data_manager[name]
                 else:
-                    raise ValueError(
+                    raise KeyError(
                         'Particle container \'{n}\` does not exist'.format(
                             n=name))
 

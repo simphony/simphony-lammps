@@ -21,12 +21,12 @@ def get_box(particle_containers):
         if CUBA.BOX_VECTORS in pc.data:
             if vectors and vectors != pc.data[CUBA.BOX_VECTORS]:
                 # TODO provide more info in exception message
-                raise Exception("Box vectors need to match")
+                raise RuntimeError("Box vectors need to match")
             vectors = pc.data[CUBA.BOX_VECTORS]
         if CUBA.BOX_ORIGIN in pc.data:
             if origin and origin != pc.data[CUBA.BOX_ORIGIN]:
                 # TODO provide more info in exception message
-                raise Exception("Box origin need to match")
+                raise RuntimeError("Box origin need to match")
             origin = pc.data[CUBA.BOX_ORIGIN]
 
     # origin is optional
@@ -44,7 +44,7 @@ def get_box(particle_containers):
     # and c form a complete right-handed basis."
 
     if not vectors:
-        raise Exception("CUBA.BOX_VECTORS was not set")
+        raise RuntimeError("CUBA.BOX_VECTORS was not set")
     else:
         _check_vectors(vectors)
 
@@ -61,7 +61,7 @@ def _check_vectors(vectors):
             if i != j and float(x) != 0.0:
                 msg = ("Box vectors must have the form "
                        "(x, 0, 0), (0, y, 0) and (0, 0, z)")
-                raise Exception(msg)
+                raise RuntimeError(msg)
 
 
 def _get_box_string(vectors, origin):
