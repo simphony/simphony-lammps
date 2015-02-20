@@ -14,12 +14,12 @@ class TestLammpsProcess(unittest.TestCase):
 
     def test_run_problem(self):
         command = "thisisnotalammpscommmand"
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             self.lammps.run(command)
 
     def test_cannot_find_lammps(self):
         lammps_name = "this_is_not_lammps"
-        with self.assertRaises(Exception):
+        with self.assertRaises(RuntimeError):
             self.lammps = LammpsProcess(lammps_name=lammps_name)
 
 
