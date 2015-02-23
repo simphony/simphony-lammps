@@ -22,14 +22,15 @@ class ScriptWriter(object):
     """
 
     @staticmethod
-    def get_configuration(data_file, BC, CM, SP):
+    def get_configuration(input_data_file, output_data_file, BC, CM, SP):
         """ Return configuration command-script
 
         Parameters
         ----------
-        data_file: string
-            name of data file to be read before run (input)
-            and written to after run (output)
+        input_data_file: string
+            name of data file to be read at beginning of run (input)
+        output_data_file: string
+            name of data file to be written after run (output)
         BC : DataContainer
             container of attributes related to the boundary conditions
         CM : DataContainer
@@ -60,7 +61,8 @@ class ScriptWriter(object):
         fixes = _get_thermodynamic_ensemble(CM)
 
         return CONFIGURATION.format(BOUNDARY=boundary,
-                                    DATAFILE=data_file,
+                                    INPUT_DATAFILE=input_data_file,
+                                    OUTPUT_DATAFILE=output_data_file,
                                     FIXES=fixes,
                                     NUMBER_STEPS=number_steps,
                                     TIME_STEP=time_step,
@@ -109,7 +111,7 @@ neigh_modify    delay 5
 {PAIR_STYLE}
 
 # read from SimPhoNy-generated file
-read_data {DATAFILE}
+read_data {INPUT_DATAFILE}
 
 {PAIR_COEFF}
 
@@ -122,7 +124,7 @@ timestep {TIME_STEP}
 run {NUMBER_STEPS}
 
 # write reults to simphony-generated file
-write_data {DATAFILE}
+write_data {OUTPUT_DATAFILE}
 """
 
 

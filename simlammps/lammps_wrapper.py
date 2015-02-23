@@ -15,9 +15,11 @@ class LammpsWrapper(ABCModelingEngine):
 
     """
     def __init__(self):
-        self._data_filename = "data.lammps"
+        self._input_data_filename = "data_in.lammps"
+        self._output_data_filename = "data_out.lammps"
         self._data_manager = LammpsFileIoDataManager(
-            data_filename=self._data_filename)
+            input_data_filename=self._input_data_filename,
+            output_data_filename=self._output_data_filename)
 
         self.BC = DataContainer()
         self.CM = DataContainer()
@@ -114,10 +116,11 @@ class LammpsWrapper(ABCModelingEngine):
         self._data_manager.mark_as_invalid()
 
         commands = ScriptWriter.get_configuration(
-            self._data_filename,
-            self.BC,
-            self.CM,
-            self.SP)
+            input_data_file=self._input_data_filename,
+            output_data_file=self._output_data_filename,
+            BC=self.BC,
+            CM=self.CM,
+            SP=self.SP)
         lammps = LammpsProcess()
         lammps.run(commands)
 

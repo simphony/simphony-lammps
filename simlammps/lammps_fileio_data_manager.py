@@ -32,12 +32,15 @@ class LammpsFileIoDataManager(object):
 
     Parameters
     ----------
-    data_filename :
-        file name of data file where information is read from and written to.
+    intput_data_filename :
+        name of data-file where information is written to (i.e lammps's input).
+    output_data_filename :
+        name of data-file where information read from (i.e lammps's output).
 
     """
-    def __init__(self, data_filename):
-        self._data_filename = data_filename
+    def __init__(self, input_data_filename, output_data_filename):
+        self._input_data_filename = input_data_filename
+        self._output_data_filename = output_data_filename
         self._number_types = 0
 
         # map from name to unique name
@@ -241,7 +244,7 @@ class LammpsFileIoDataManager(object):
 
     def flush(self):
         if self._pcs:
-            self._write_data_file(self._data_filename)
+            self._write_data_file(self._input_data_filename)
         else:
             raise RuntimeError(
                 "No particles.  Lammps cannot run without a particle")
@@ -262,11 +265,11 @@ class LammpsFileIoDataManager(object):
         """Read from file and update cache
 
         """
-        assert os.path.isfile(self._data_filename)
+        assert os.path.isfile(self._output_data_filename)
 
         handler = LammpsSimpleDataHandler()
         parser = LammpsDataFileParser(handler)
-        parser.parse(self._data_filename)
+        parser.parse(self._output_data_filename)
 
         atoms = handler.get_atoms()
         velocities = handler.get_velocities()
