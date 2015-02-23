@@ -13,11 +13,10 @@ class ExampleConfigurator:
     """
 
     @staticmethod
-    def configure_wrapper(wrapper):
-        """ Configure example wrapper with example settings and particles
+    def set_configuration(wrapper):
+        """ Configure example wrapper with example settings
 
         The wrapper is configured with required CM, SP, BC parameters
-        and is given particles (see get_particle_containers)
 
         Parameters
         ----------
@@ -59,13 +58,30 @@ class ExampleConfigurator:
                                             "    sigma: 1.0\n"
                                             "    cutoff: 1.0001\n")
 
+        # BC
+        wrapper.BC[CUBA.BOX_FACES] = ("periodic", "periodic", "periodic")
+
+    @staticmethod
+    def configure_wrapper(wrapper):
+        """ Configure example wrapper with example settings and particles
+
+        The wrapper is configured with required CM, SP, BC parameters
+        and is given particles (see get_particle_containers)
+
+        Parameters
+        ----------
+        wrapper : ABCModelingEngine
+
+        """
+        # configure
+        ExampleConfigurator.set_configuration(wrapper)
+
         # add particle containers
         for pc in ExampleConfigurator.get_particle_containers():
             wrapper.add_particle_container(pc)
 
     @staticmethod
     def get_particle_containers():
-
         """ Get example particle containers
 
         Returns particle container with mass, type/materialtype, and

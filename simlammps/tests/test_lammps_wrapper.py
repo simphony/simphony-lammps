@@ -1,6 +1,7 @@
 import unittest
 from sets import Set
 
+from simphony.core.cuba import CUBA
 from simphony.cuds.particles import ParticleContainer, Particle
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.tests.example_configurator import ExampleConfigurator
@@ -89,6 +90,50 @@ class TestLammpsParticleContainer(unittest.TestCase):
     def test_run(self):
         ExampleConfigurator.configure_wrapper(self.wrapper)
         self.wrapper.run()
+
+    def test_0_step_run(self):
+        ExampleConfigurator.set_configuration(self.wrapper)
+
+        # set pair potentials for one type
+        self.wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
+                                                 "  global_cutoff: 1.12246\n"
+                                                 "  parameters:\n"
+                                                 "  - pair: [1, 1]\n"
+                                                 "    epsilon: 1.0\n"
+                                                 "    sigma: 1.0\n"
+                                                 "    cutoff: 1.2246\n")
+
+        # create a pc with 10 particles
+        foo = ParticleContainer(name="foo")
+        foo.data[CUBA.MATERIAL_TYPE] = 1
+        foo.data[CUBA.MASS] = 1
+        foo.data[CUBA.BOX_VECTORS] = [(2.0, 0.0, 0.0),
+                                      (0.0, 2.0, 0.0),
+                                      (0.0, 0.0, 2.0)]
+
+        for i in range(0, 10):
+            p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 1+0.1*i))
+            p.data[CUBA.VELOCITY] = (1+0.1*i, 1+0.1*i, 1+0.1*i)
+            foo.add_particle(p)
+
+        # add to wrapper
+        foo_wrapper = self.wrapper.add_particle_container(foo)
+
+        # check if information matches up
+        for p in foo.iter_particles():
+            p_w = foo_wrapper.get_particle(p.uid)
+            self.assertEqual(p_w.coordinates, p.coordinates)
+            self.assertEqual(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
+
+        # run lammps-engine for 0 steps
+        self.wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 0
+        self.wrapper.run()
+
+        # check if information matches up
+        for p in foo.iter_particles():
+            p_w = foo_wrapper.get_particle(p.uid)
+            self.assertEqual(p_w.coordinates, p.coordinates)
+            self.assertEqual(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
 
     def test_run_incomplete_CM(self):
         ExampleConfigurator.configure_wrapper(self.wrapper)
