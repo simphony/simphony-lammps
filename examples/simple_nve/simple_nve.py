@@ -1,9 +1,10 @@
-# TODO this is an UNTESTED pseudocode developed from a use case
-# that needs to be cleaned up and used as a test example during
-# development
-
-# In this use case we create a simphony model
-# containing an SD for an Atomistic flow problem
+# A simple molecular NVE MD with LJ and temperature rescaling 
+# the temperature rescaling is done natively in SimPhoNy to demonstrate the way
+# it can change the state of the system without relying on the simulation engine. 
+# The initial configuration is also entirely produced in SimPhoNy, where the 
+# velocities are taken from a uniform distribution. 
+# The results for the temperature are compared with those produced natively by 
+# Lammps (including a fix temp/rescale) for validation.
 
 from __future__ import print_function
 
@@ -12,15 +13,24 @@ import math
 from simphony.core.cuba import CUBA
 from simlammps.lammps_wrapper import LammpsWrapper
 from simphony.cuds.particles import Particle, ParticleContainer
+import numpy as np
 
+# This is the total number of simulation cycles
 
-# create the data in Python:
-# this is a simple monoatomic system with one
+number_NVE_cycles =1000   
+
+# This is the period between temperature rescales, and is the number of steps
+# the wrapper should run.
+
+Temp_rescale_period = 200
+
+# Create the input data in Python:
+# This is a simple mono atomic system with one
 # particle atomic type, in general we may have two
 # types in the basis of the unit cell.
 a_latt = 1.549
 
-# we use a simple cubic system with basis for the FCC system
+# we use a simple cubic (SC) system with basis for the face centered cubic (FCC) system
 unit_cell = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
 N_dup = [4, 4, 4]
 basis = [[0.0, 0.0, 0.0], [0.5, 0.5, 0.0], [0.5, 0.0, 0.5], [0.0, 0.5, 0.5]]
@@ -50,41 +60,57 @@ for i in range(0, 3):
     atoms = []
 
 for pos in atoms1:
-    p = Particle(coordinates=pos)
-
-    # if this is not specified the MD wrapper assumes its zero at first anyway
-    p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
+    pos2=[pos[0]*a_latt, pos[1]*a_latt , pos[2]*a_latt]
+    p = Particle(coordinates=pos2)
 
     # usually, the user asks the MD program to start
     # the velocities according to a Maxwell-Boltzmann
-    # distribution.(utility functions to do this
-    # would be ideal).
+    # distribution.(To DO: utility functions in SimPhoNy).
+    # if this is not specified the MD wrapper assumes its zero 
+    #p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
+    p.data[CUBA.VELOCITY] = [np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5), np.random.uniform(-0.5, 0.5)]
+    
     pc.add_particle(p)
 
+
+# Calculate the velocity of center of mass to make sure it is zero.
+# TODO: move to utility function  
+
+v_cm=[0,0,0]
+number_of_points=0
+for p in pc.iter_particles():
+    v_cm[0] += p.data[CUBA.VELOCITY][0] 
+    v_cm[1] += p.data[CUBA.VELOCITY][1] 
+    v_cm[2] += p.data[CUBA.VELOCITY][2] 
+    number_of_points +=1
+    
+v_cm[0] /= number_of_points
+v_cm[1] /= number_of_points
+v_cm[2] /= number_of_points
+
+for p in pc.iter_particles():
+    p.data[CUBA.VELOCITY][0] -=v_cm[0]  
+    p.data[CUBA.VELOCITY][1] -=v_cm[1]  
+    p.data[CUBA.VELOCITY][2] -=v_cm[2]  
+
+
 # should use CUBA.MATERIAL_TYPE or CUBA.ATOM_TYPE
-# in the future, we would ld like to have CUBA.PERIODIC_ELEMENT
+# TO DO: add CUBA.CHEMICAL_ELEMENT
 pc.data[CUBA.MATERIAL_TYPE] = 1
 pc.data[CUBA.MASS] = 1
 
-# but actually it should be "CUBA.SUPER_CELL_VECTORS" or "CUBA.BOX_VECTORS"
-super_cell = [tuple(N_dup[i]*x for x in v) for i, v in enumerate(unit_cell)]
+# May become: "CUBA.SUPER_CELL_VECTORS" or "CUBA.BOX_VECTORS"
+# convert from lattice to crystal coordinate system.
+super_cell = [tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
+
 pc.data[CUBA.BOX_VECTORS] = super_cell
 
 wrapper = LammpsWrapper()
 
-# this might change, or CUBA.NVE...
 wrapper.CM[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
-
-# rescale the temperature every so many steps
-N_run_cycles_temperature = 10
-
-# sub cycle steps
-# TODO replace CUBA.NUMBER_OF_TIME_STEPS with NUMBER_OF_STEPS
-wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = N_run_cycles_temperature
-# TODO replace CUBA.TIME_STEP with INTEGRATION_TIME_STEP
+wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = Temp_rescale_period
 wrapper.CM[CUBA.TIME_STEP] = 0.0025
 
-# could be possibly ["periodic", "periodic", "periodic"]
 wrapper.BC[CUBA.BOX_FACES] = ["periodic", "periodic", "periodic"]
 wrapper.add_particle_container(pc)
 
@@ -100,37 +126,87 @@ wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
                                     "    sigma: 1.0\n"
                                     "    cutoff: 2.5\n")
 
-T0 = 1.0  # this is the target temperature
+T0 = 1.0  # This is the target temperature
 # T, kinetic_energy are the instantaneous temperature and kinetic energy
-
-# this is the total number of simulation steps.
-N_run_total_cycle_steps = 100
 
 pc_MD = wrapper.get_particle_container("Test")
 
-for run in range(0, N_run_total_cycle_steps):
+
+# Create an extended special xyz file for atomistics. 
+# TODO: Move to an Utility Function
+f = open("input.xyz", "w")
+f.write(str(len(atoms1))+"\n")
+f.write("File generated by SimPhoNy 0.0.1\n")
+# this should be an utility function to print the pc in an extended special xyz format. 
+# SimPhoNy.utilities.save(CUBA.SXYZ, pc, filename="something4*")
+# saves to something0001.sxyz .... and increments the counter in every save.
+for p in pc_MD.iter_particles():
+    f.write("Al {:f} {:f} {:f} ".format(p.coordinates[0], p.coordinates[1], p.coordinates[2]))
+    f.write(" {:f} {:f} {:f}\n".format(p.data[CUBA.VELOCITY][0], p.data[CUBA.VELOCITY][1], p.data[CUBA.VELOCITY][2] ))
+f.write("alat\n"+"{:+f}\n".format(1.0))  # the supercell is already multiplied by the lattice parameter
+f.write("supercell\n {:+f} {:+f} {:+f}\n".format(super_cell[0][0], super_cell[0][1], super_cell[0][2]))  
+f.write(" {:+f} {:+f} {:+f}\n".format(super_cell[1][0], super_cell[1][1], super_cell[1][2]))  
+f.write(" {:+f} {:+f} {:+f}\n".format(super_cell[2][0], super_cell[2][1], super_cell[2][2]) ) 
+f.write(" Mass Ar 1.0 \n")
+f.write("cartesian coordinates\n")
+f.close() 
+
+# Create an extended special xyz file for atomistics. 
+ft = open("temp.dat", "w")
+ft.write("#File generated by SimPhoNy 0.0.1\n")
+ft.write("# Time T K\n")
+
+
+
+for run in range(0, number_NVE_cycles):
     wrapper.run()
+
+    # Save an extended special xyz file for atomistics. 
+    f = open("input"+str(run)+".xyz", "w")
+    f.write(str(len(atoms1))+"\n")
+    f.write("File generated by SimPhoNy 0.0.1\n")
+
+    for p in pc_MD.iter_particles():
+	f.write("Al {:f} {:f} {:f} ".format(p.coordinates[0], p.coordinates[1], p.coordinates[2]))
+	f.write(" {:f} {:f} {:f}\n".format(p.data[CUBA.VELOCITY][0], p.data[CUBA.VELOCITY][1], p.data[CUBA.VELOCITY][2] ))
+    f.write("alat\n"+"{:+f}\n".format(1.0))  # the supercell is already multiplied by the lattice parameter
+    f.write("supercell\n {:+f} {:+f} {:+f}\n".format(super_cell[0][0], super_cell[0][1], super_cell[0][2]))  
+    f.write(" {:+f} {:+f} {:+f}\n".format(super_cell[1][0], super_cell[1][1], super_cell[1][2]))  
+    f.write(" {:+f} {:+f} {:+f}\n".format(super_cell[2][0], super_cell[2][1], super_cell[2][2]) ) 
+    f.write(" Mass Ar 1.0 \n")
+    f.write("cartesian coordinates\n")
+    f.close() 
+
 
     kinetic_energy = 0.0  # kinetic energy
     number_of_points = 0
     for par in pc_MD.iter_particles():
         number_of_points += 1
-        kinetic_energy += pc_MD.data[CUBA.MASS]*(
-            par.data[CUBA.VELOCITY][0]*par.data[CUBA.VELOCITY][0] +
-            par.data[CUBA.VELOCITY][1]*par.data[CUBA.VELOCITY][1] +
-            par.data[CUBA.VELOCITY][2]*par.data[CUBA.VELOCITY][2])
-    # we may also get this from the output of LAMMPS directly...
-    # i.e, either the total temperature or the local kinetic energy..
+        ke = pc_MD.data[CUBA.MASS]*(
+             par.data[CUBA.VELOCITY][0]*par.data[CUBA.VELOCITY][0] +
+             par.data[CUBA.VELOCITY][1]*par.data[CUBA.VELOCITY][1] +
+             par.data[CUBA.VELOCITY][2]*par.data[CUBA.VELOCITY][2])
+        kinetic_energy += ke
+
     kinetic_energy *= 0.5
+    kinetic_energy /= number_of_points
 
     print ("kinetic_energy:{} number_of_points:{}  (running {} of {})".format(
-        kinetic_energy, number_of_points, run, N_run_total_cycle_steps))
-
-    # there is a K_b in the denominator, but it is
-    # assumed to be 1, due to the reduced units.
-    T = 2.0*kinetic_energy/(3*number_of_points)
+        kinetic_energy, number_of_points, run, number_NVE_cycles))
+  
+    T = 2.0*kinetic_energy/(3.0)
+  
+#   Possibly add a window in which the temperature rescale kicks in
+#   if math.fabs( (T0-T)/T0) > 0.1:
     fac = math.sqrt(T0/T)
+  
+    ft.write('{:d} {:f} {:f} {:<2f}\n'.format(run, T, kinetic_energy, fac)) 
+	     
+    print ("kinetic_energy:{} number_of_points:{}, fac:{} T0:{} ".format(
+         kinetic_energy, number_of_points, fac, T0))
+
     for par in pc_MD.iter_particles():
         par.data[CUBA.VELOCITY] = tuple(v*fac for v in par.data[CUBA.VELOCITY])
         # potentially, other quantities could be related, such as momentum.
         pc_MD.update_particle(par)
+ft.close()
