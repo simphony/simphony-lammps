@@ -19,6 +19,12 @@ Requirements
 
 .. _simphony-common: https://github.com/simphony/simphony-common
 
+.. note::
+  simphony-lammps uses additional CUBA-Keywords that are not included in
+  simphony-common (THERMODYNAMIC_ENSEMBLE, PAIR_POTENTIALS, etc). The list of 
+  additional CUBA-keywords can be found in ``additional_cuba.yml``. The steps to
+  add them to simphony-common can be found in ``install_simphony_common.sh``.  
+
 
 Installation
 ------------
@@ -38,7 +44,7 @@ LAMMPS installation
 
 This engine-wrapper uses LAMMPS Molecular Dynamics Simulator. The engine wrapper assumes that there is an executable called "lammps" that can be found in the PATH and an exception is thrown if this is not the case.  
 
-A recent stable version (9 Dec 2014, tagged r12824) of LAMMPS is supported and has been tested. See install_lammps.sh for an example installation instructions.  For further information, see http://lammps.sandia.gov/index.html
+A recent stable version (9 Dec 2014, tagged r12824) of LAMMPS is supported and has been tested. See ``install_lammps.sh`` for an example installation instructions.  For further information, see http://lammps.sandia.gov/index.html
 
 
 Testing
