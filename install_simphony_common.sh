@@ -3,7 +3,7 @@
 #  -install requirements for simphony
 #  -edit cuba list
 #  -install simphony-common
-
+set -e
 sudo apt-get install libhdf5-serial-dev
 
 git clone git://github.com/simphony/simphony-common.git
