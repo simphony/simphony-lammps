@@ -18,7 +18,6 @@ Requirements
  - pyyaml >= 3.11
  - `simphony-common`_ >= 0.0.1 
 
-.. _simphony-common: https://github.com/simphony/simphony-common
 
 .. note::
 
@@ -70,3 +69,5 @@ Directory structure
 
 - simlammps -- hold the lammps-md wrapper implementation
 - examples -- holds different examples
+
+.. _simphony-common: https://github.com/simphony/simphony-common
