@@ -1,2 +1,4 @@
+enum34 >= 1.0.4
+pyyaml >= 3.11
 coverage
 flake8
