@@ -5,6 +5,11 @@ The LAMMPS engine-wrapper for the SimPhoNy framework.
 
 .. image:: https://travis-ci.org/simphony/simphony-lammps-md.svg?branch=master
     :target: https://travis-ci.org/simphony/simphony-lammps-md
+      :alt: Build status
+
+.. image:: https://coveralls.io/repos/simphony/simphony-lammps-md/badge.svg
+   :target: https://coveralls.io/r/simphony/simphony-lammps-md
+      :alt: Test coverage
 
 Repository
 ----------
