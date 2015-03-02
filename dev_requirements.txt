@@ -1,2 +1,4 @@
+enum34
+pyyaml
 coverage
 flake8

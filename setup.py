@@ -33,5 +33,6 @@ setup(
     entry_points={
         'simphony.engine': ['lammps = simlammps']},
     packages=find_packages(),
-    install_requires=["simphony"]
+    install_requires=["simphony",
+                      "pyyaml"]
     )
