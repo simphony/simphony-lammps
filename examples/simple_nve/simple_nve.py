@@ -9,8 +9,8 @@ from __future__ import print_function
 
 import math
 
+from simphony.engine import lammps
 from simphony.core.cuba import CUBA
-from simlammps.lammps_wrapper import LammpsWrapper
 from simphony.cuds.particles import Particle, ParticleContainer
 
 
@@ -70,7 +70,7 @@ pc.data[CUBA.MASS] = 1
 super_cell = [tuple(N_dup[i]*x for x in v) for i, v in enumerate(unit_cell)]
 pc.data[CUBA.BOX_VECTORS] = super_cell
 
-wrapper = LammpsWrapper()
+wrapper = lammps.LammpsWrapper()
 
 # this might change, or CUBA.NVE...
 wrapper.CM[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
