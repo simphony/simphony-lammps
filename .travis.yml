@@ -7,7 +7,7 @@ before_install:
 
 install:
   # build and install lammps
-  - ./install_lammps.sh
+  - ./install_external.sh
   - export PATH=$PATH:$PWD/mylammps/src/
 
   # install simphony-common and add some CUDS-keywords
