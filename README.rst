@@ -1,7 +1,7 @@
 simphony-lammps
 ===============
 
-The LAMMPS engine-wrapper for the SimPhoNy framework.
+The LAMMPS engine-wrapper for the SimPhoNy framework (www.simphony-project.eu).
 
 .. image:: https://travis-ci.org/simphony/simphony-lammps-md.svg?branch=master
     :target: https://travis-ci.org/simphony/simphony-lammps-md
