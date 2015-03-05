@@ -14,9 +14,9 @@ simphony-lammps is hosted on github: https://github.com/simphony/simphony-lammps
 Requirements
 ------------
 
- - enum34 >= 1.0.4
- - pyyaml >= 3.11
- - `simphony-common`_ >= 0.0.1 
+- enum34 >= 1.0.4
+- pyyaml >= 3.11
+- `simphony-common`_ >= 0.0.1 
 
 
 .. note::
