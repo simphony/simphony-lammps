@@ -7,17 +7,21 @@ before_install:
 
 install:
   # build and install lammps
-  - chmod +x install_lammps.sh && ./install_lammps.sh
+  - ./install_external.sh
   - export PATH=$PATH:$PWD/mylammps/src/
-  
-  # install simphony-common and add some CUDS-keywords 
+
+  # install simphony-common and add some CUDS-keywords
   # (CUBA) that aren't approved/added to simphony-common yet.
-  - chmod +x install_simphony_common.sh  && ./install_simphony_common.sh 
-  
+  - chmod +x install_simphony_common.sh  && ./install_simphony_common.sh
+
   - pip install -r dev_requirements.txt
+  - pip install coveralls
   - python setup.py develop
 
 script:
   - flake8 --exclude=mylammps .
   - coverage run -m unittest discover
   - coverage report
+
+after_success:
+  - coveralls
