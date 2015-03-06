@@ -3,6 +3,8 @@ import random
 from simphony.cuds.particles import Particle, ParticleContainer
 from simphony.core.cuba import CUBA
 
+from simlammps.cuba_extension import CUBAExtension
+
 
 class ExampleConfigurator:
     """  Example configuration
@@ -27,39 +29,41 @@ class ExampleConfigurator:
         # CM
         wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10000
         wrapper.CM[CUBA.TIME_STEP] = 0.003
-        wrapper.CM[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
+        wrapper.CM_extension[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
 
         # SP
-        wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
-                                            "  global_cutoff: 1.12246\n"
-                                            "  parameters:\n"
-                                            "  - pair: [1, 1]\n"
-                                            "    epsilon: 1.0\n"
-                                            "    sigma: 1.0\n"
-                                            "    cutoff: 1.2246\n"
-                                            "  - pair: [1, 2]\n"
-                                            "    epsilon: 1.0\n"
-                                            "    sigma: 1.0\n"
-                                            "    cutoff: 1.2246\n"
-                                            "  - pair: [1, 3]\n"
-                                            "    epsilon: 1.0\n"
-                                            "    sigma: 1.0\n"
-                                            "    cutoff: 1.2246\n"
-                                            "  - pair: [2, 2]\n"
-                                            "    epsilon: 1.0\n"
-                                            "    sigma: 1.0\n"
-                                            "    cutoff: 1.2246\n"
-                                            "  - pair: [2, 3]\n"
-                                            "    epsilon: 1.0\n"
-                                            "    sigma: 1.0\n"
-                                            "    cutoff: 1.2246\n"
-                                            "  - pair: [3, 3]\n"
-                                            "    epsilon: 1.0\n"
-                                            "    sigma: 1.0\n"
-                                            "    cutoff: 1.0001\n")
+        pair_potential = ("lj:\n"
+                          "  global_cutoff: 1.12246\n"
+                          "  parameters:\n"
+                          "  - pair: [1, 1]\n"
+                          "    epsilon: 1.0\n"
+                          "    sigma: 1.0\n"
+                          "    cutoff: 1.2246\n"
+                          "  - pair: [1, 2]\n"
+                          "    epsilon: 1.0\n"
+                          "    sigma: 1.0\n"
+                          "    cutoff: 1.2246\n"
+                          "  - pair: [1, 3]\n"
+                          "    epsilon: 1.0\n"
+                          "    sigma: 1.0\n"
+                          "    cutoff: 1.2246\n"
+                          "  - pair: [2, 2]\n"
+                          "    epsilon: 1.0\n"
+                          "    sigma: 1.0\n"
+                          "    cutoff: 1.2246\n"
+                          "  - pair: [2, 3]\n"
+                          "    epsilon: 1.0\n"
+                          "    sigma: 1.0\n"
+                          "    cutoff: 1.2246\n"
+                          "  - pair: [3, 3]\n"
+                          "    epsilon: 1.0\n"
+                          "    sigma: 1.0\n"
+                          "    cutoff: 1.0001\n")
+        wrapper.SP_extension[CUBA.PAIR_POTENTIALS] = pair_potential
 
         # BC
-        wrapper.BC[CUBA.BOX_FACES] = ("periodic", "periodic", "periodic")
+        wrapper.BC_extension[CUBAExtension.BOX_FACES] = (
+            "periodic", "periodic", "periodic")
 
     @staticmethod
     def configure_wrapper(wrapper):

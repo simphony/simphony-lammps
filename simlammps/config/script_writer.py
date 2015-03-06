@@ -1,6 +1,7 @@
 from simphony.core.cuba import CUBA
 
 from simlammps.config.pair_style import PairStyle
+from simlammps.cuba_extension import CUBAExtension
 
 
 class ConfigurationError(RuntimeError):
@@ -80,7 +81,7 @@ def _check_configuration(CM):
     """
     cm_requirements = [CUBA.NUMBER_OF_TIME_STEPS,
                        CUBA.TIME_STEP,
-                       CUBA.THERMODYNAMIC_ENSEMBLE]
+                       CUBAExtension.THERMODYNAMIC_ENSEMBLE]
 
     missing = [str(req) for req in cm_requirements
                if req not in CM.keys()]
@@ -129,12 +130,12 @@ write_data {OUTPUT_DATAFILE}
 
 
 def _get_thermodynamic_ensemble(CM):
-    esemble = CM[CUBA.THERMODYNAMIC_ENSEMBLE]
+    esemble = CM[CUBAExtension.THERMODYNAMIC_ENSEMBLE]
     if esemble == "NVE":
         return "fix 1 all nve"
     else:
         message = ("Unsupported ensemble was provided "
-                   "CM[CUBA.THERMODYNAMIC_ENSEMBLE] = {}")
+                   "CM[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = {}")
         ConfigurationError(message.format(esemble))
 
 
@@ -143,7 +144,7 @@ def _get_boundary(BC):
 
     The boundary command can be either fixed or periodic.
 
-    >> BC[CUBA.BOX_FACES] = ("periodic", "fixed", "periodic"]
+    >> BC[CUBAExtension.BOX_FACES] = ("periodic", "fixed", "periodic"]
 
     """
 
@@ -153,17 +154,17 @@ def _get_boundary(BC):
     # mapping of cuds-value to lammps string
     mappings = {'periodic': 'p', 'fixed': 'f'}
 
-    if len(BC[CUBA.BOX_FACES]) != 3:
+    if len(BC[CUBAExtension.BOX_FACES]) != 3:
         errorMessage += "3 dimensions need to be given.\n"
-    for b in BC[CUBA.BOX_FACES]:
+    for b in BC[CUBAExtension.BOX_FACES]:
         if b in mappings:
             boundaryCommand += " {}".format(mappings[b])
         else:
             errorMessage += "'{}' is not supported\n"
     if errorMessage:
         message = ("Unsupported boundary was provided "
-                   "BC[CUBA.CUBA.BOX_FACES] = {}\n"
+                   "BC[CUBAExtension.BOX_FACES] = {}\n"
                    "{}")
         ConfigurationError(message.format(
-            BC[CUBA.CUBA.BOX_FACES], errorMessage))
+            BC[CUBAExtension.BOX_FACES], errorMessage))
     return boundaryCommand
