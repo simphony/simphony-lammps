@@ -27,7 +27,7 @@ write_version_py()
 setup(
     name='simlammps',
     version=VERSION,
-    author='SimPhoNy FP7 European Project',
+    author='SimPhoNy, EU FP7 Project (Nr. 604005) www.simphony-project.eu',
     description='The lammps wrapper for the SimPhoNy framework',
     long_description=README_TEXT,
     entry_points={
