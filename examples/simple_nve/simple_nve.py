@@ -95,13 +95,13 @@ pc_w.data_extension[lammps.CUBAExtension.BOX_VECTORS] = super_cell
 # reduced LJ model with eps=sigma= 1).
 # rcut = 2.5
 wrapper.SP_extension[lammps.CUBAExtension.PAIR_POTENTIALS] = \
-        ("lj:\n"
-         "  global_cutoff: 1.12246\n"
-         "  parameters:\n"
-         "  - pair: [1, 1]\n"
-         "    epsilon: 1.0\n"
-         "    sigma: 1.0\n"
-         "    cutoff: 2.5\n")
+    ("lj:\n"
+     "  global_cutoff: 1.12246\n"
+     "  parameters:\n"
+     "  - pair: [1, 1]\n"
+     "    epsilon: 1.0\n"
+     "    sigma: 1.0\n"
+     "    cutoff: 2.5\n")
 
 T0 = 1.0  # this is the target temperature
 # T, kinetic_energy are the instantaneous temperature and kinetic energy
