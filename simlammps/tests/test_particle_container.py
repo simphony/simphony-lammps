@@ -1,9 +1,38 @@
 import unittest
 import uuid
 
-from simphony.cuds.particles import Particle
+from simphony.cuds.particles import (
+    Particle, ParticleContainer)
+from simphony.testing.abc_check_particle_containers import (
+    ContainerAddParticlesCheck, ContainerManipulatingParticlesCheck)
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.tests.example_configurator import ExampleConfigurator
+
+
+class TestFileIoParticlesAddParticles(
+        ContainerAddParticlesCheck, unittest.TestCase):
+
+    def container_factory(self, name):
+        return self.pc
+
+    def setUp(self):
+        self.wrapper = LammpsWrapper()
+        ExampleConfigurator.configure_wrapper(self.wrapper)
+        pcs = [pc for pc in self.wrapper.iter_particle_containers()]
+        self.pc = pcs[0]
+        ContainerAddParticlesCheck.setUp(self)
+
+
+class TestFileIoParticlesManipulatingParticles(
+        ContainerManipulatingParticlesCheck, unittest.TestCase):
+
+    def container_factory(self, name):
+        pc = ParticleContainer(name=name)
+        return self.wrapper.add_particle_container(pc)
+
+    def setUp(self):
+        self.wrapper = LammpsWrapper()
+        ContainerManipulatingParticlesCheck.setUp(self)
 
 
 def _get_particle(particle_container):
