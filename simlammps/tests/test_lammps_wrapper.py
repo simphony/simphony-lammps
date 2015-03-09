@@ -3,6 +3,7 @@ from sets import Set
 
 from simphony.core.cuba import CUBA
 from simphony.cuds.particles import ParticleContainer, Particle
+from simlammps.cuba_extension import CUBAExtension
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.tests.example_configurator import ExampleConfigurator
 
@@ -95,13 +96,14 @@ class TestLammpsParticleContainer(unittest.TestCase):
         ExampleConfigurator.set_configuration(self.wrapper)
 
         # set pair potentials for one type
-        self.wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
-                                                 "  global_cutoff: 1.12246\n"
-                                                 "  parameters:\n"
-                                                 "  - pair: [1, 1]\n"
-                                                 "    epsilon: 1.0\n"
-                                                 "    sigma: 1.0\n"
-                                                 "    cutoff: 1.2246\n")
+        potentials = ("lj:\n"
+                      "  global_cutoff: 1.12246\n"
+                      "  parameters:\n"
+                      "  - pair: [1, 1]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.2246\n")
+        self.wrapper.SP_extension[CUBAExtension.PAIR_POTENTIALS] = potentials
 
         # create a pc with 10 particles
         foo = ParticleContainer(name="foo")

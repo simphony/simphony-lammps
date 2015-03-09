@@ -59,7 +59,7 @@ class ExampleConfigurator:
                           "    epsilon: 1.0\n"
                           "    sigma: 1.0\n"
                           "    cutoff: 1.0001\n")
-        wrapper.SP_extension[CUBA.PAIR_POTENTIALS] = pair_potential
+        wrapper.SP_extension[CUBAExtension.PAIR_POTENTIALS] = pair_potential
 
         # BC
         wrapper.BC_extension[CUBAExtension.BOX_FACES] = (

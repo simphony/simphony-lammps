@@ -1,9 +1,7 @@
 import unittest
 
 from simlammps.config.pair_style import PairStyle
-
-from simphony.core.cuba import CUBA
-from simphony.core.data_container import DataContainer
+from simlammps.cuba_extension import CUBAExtension
 
 
 class TestPairStyle(unittest.TestCase):
@@ -11,34 +9,35 @@ class TestPairStyle(unittest.TestCase):
 
     """
     def test_lj_cut(self):
-        SP = DataContainer()
-        SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
-                                    "  global_cutoff: 1.12246\n"
-                                    "  parameters:\n"
-                                    "  - pair: [1, 1]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 1.2246\n"
-                                    "  - pair: [1, 2]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 1.2246\n"
-                                    "  - pair: [1, 3]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 1.2246\n"
-                                    "  - pair: [2, 2]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 1.2246\n"
-                                    "  - pair: [2, 3]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 1.2246\n"
-                                    "  - pair: [3, 3]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 1.0001\n")
+        SP = {}
+        potentials = ("lj:\n"
+                      "  global_cutoff: 1.12246\n"
+                      "  parameters:\n"
+                      "  - pair: [1, 1]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.2246\n"
+                      "  - pair: [1, 2]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.2246\n"
+                      "  - pair: [1, 3]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.2246\n"
+                      "  - pair: [2, 2]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.2246\n"
+                      "  - pair: [2, 3]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.2246\n"
+                      "  - pair: [3, 3]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.0001\n")
+        SP[CUBAExtension.PAIR_POTENTIALS] = potentials
 
         pair_style = PairStyle(SP)
         self.assertEqual(
@@ -53,25 +52,26 @@ class TestPairStyle(unittest.TestCase):
         self.assertTrue("pair_coeff 3 3 1.0 1.0 1.0001" in lines)
 
     def test_lj_cut_error(self):
-        SP = DataContainer()
-        SP[CUBA.PAIR_POTENTIALS] = ("lj:\n")
+        SP = {}
+        SP[CUBAExtension.PAIR_POTENTIALS] = ("lj:\n")
         with self.assertRaises(RuntimeError):
             PairStyle(SP)
 
     def test_overlay_lj_coul(self):
-        SP = DataContainer()
-        SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
-                                    "  global_cutoff: 1.13\n"
-                                    "  parameters:\n"
-                                    "  - pair: [1, 1]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 1.2246\n"
-                                    "coul:\n"
-                                    "  global_cutoff: 1.12\n"
-                                    "  parameters:\n"
-                                    "  - pair: [1, 1]\n"
-                                    "    cutoff: 1.2246\n")
+        SP = {}
+        potentials = ("lj:\n"
+                      "  global_cutoff: 1.13\n"
+                      "  parameters:\n"
+                      "  - pair: [1, 1]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.2246\n"
+                      "coul:\n"
+                      "  global_cutoff: 1.12\n"
+                      "  parameters:\n"
+                      "  - pair: [1, 1]\n"
+                      "    cutoff: 1.2246\n")
+        SP[CUBAExtension.PAIR_POTENTIALS] = potentials
 
         pair_style = PairStyle(SP)
         self.assertEqual(
