@@ -70,7 +70,7 @@ class ExampleConfigurator:
         """ Configure example wrapper with example settings and particles
 
         The wrapper is configured with required CM, SP, BC parameters
-        and is given particles (see get_particle_containers)
+        and is given particles (see add_particle_containers)
 
         Parameters
         ----------
@@ -81,28 +81,25 @@ class ExampleConfigurator:
         ExampleConfigurator.set_configuration(wrapper)
 
         # add particle containers
-        for pc in ExampleConfigurator.get_particle_containers():
-            wrapper.add_particle_container(pc)
+        ExampleConfigurator.add_particle_containers(wrapper)
 
     @staticmethod
-    def get_particle_containers():
-        """ Get example particle containers
+    def add_particle_containers(wrapper):
+        """ Add  particle containers to wrapper
 
-        Returns particle container with mass, type/materialtype, and
-        velocitiy.  They correspond to the configuration performed in
-        configure_wrapper method
+        The wrapper is confugred with particle containers that contain
+        mass, type/materialtype, and velocitiy.  They correspond to
+        the configuration performed in configure_wrapper method
+
+        Parameters
+        ----------
+        wrapper : ABCModelingEngine
+
         """
-        pcs = []
         for i in range(1, 4):
             pc = ParticleContainer(name="foo{}".format(i))
             pc.data[CUBA.MASS] = 1
             pc.data[CUBA.MATERIAL_TYPE] = i
-
-            pc.data[CUBA.BOX_VECTORS] = [(25.0, 0.0, 0.0),
-                                         (0.0, 22.0, 0.0),
-                                         (0.0, 0.0, 1.0)]
-
-            pc.data[CUBA.BOX_ORIGIN] = (0.0, 0.0, 0.0)
 
             random.seed(42)
             for i in range(100):
@@ -112,5 +109,11 @@ class ExampleConfigurator:
                 p = Particle(coordinates=coord)
                 p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
                 pc.add_particle(p)
-            pcs.append(pc)
-        return pcs
+            pc_w = wrapper.add_particle_container(pc)
+
+            vectors = [(25.0, 0.0, 0.0),
+                       (0.0, 22.0, 0.0),
+                       (0.0, 0.0, 1.0)]
+            pc_w.data_extension[CUBAExtension.BOX_VECTORS] = vectors
+
+            pc_w.data_extension[CUBAExtension.BOX_ORIGIN] = (0.0, 0.0, 0.0)
