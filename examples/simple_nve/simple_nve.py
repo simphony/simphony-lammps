@@ -13,7 +13,6 @@ from simphony.engine import lammps
 from simphony.core.cuba import CUBA
 from simphony.cuds.particles import Particle, ParticleContainer
 
-
 # create the data in Python:
 # this is a simple monoatomic system with one
 # particle atomic type, in general we may have two
@@ -66,14 +65,11 @@ for pos in atoms1:
 pc.data[CUBA.MATERIAL_TYPE] = 1
 pc.data[CUBA.MASS] = 1
 
-# but actually it should be "CUBA.SUPER_CELL_VECTORS" or "CUBA.BOX_VECTORS"
-super_cell = [tuple(N_dup[i]*x for x in v) for i, v in enumerate(unit_cell)]
-pc.data[CUBA.BOX_VECTORS] = super_cell
 
 wrapper = lammps.LammpsWrapper()
 
 # this might change, or CUBA.NVE...
-wrapper.CM[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
+wrapper.CM_extension[lammps.CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
 
 # rescale the temperature every so many steps
 N_run_cycles_temperature = 10
@@ -85,20 +81,27 @@ wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = N_run_cycles_temperature
 wrapper.CM[CUBA.TIME_STEP] = 0.0025
 
 # could be possibly ["periodic", "periodic", "periodic"]
-wrapper.BC[CUBA.BOX_FACES] = ["periodic", "periodic", "periodic"]
-wrapper.add_particle_container(pc)
+wrapper.BC_extension[lammps.CUBAExtension.BOX_FACES] = ["periodic",
+                                                        "periodic",
+                                                        "periodic"]
+pc_w = wrapper.add_particle_container(pc)
+
+super_cell = [tuple(N_dup[i]*x for x in v) for i, v in enumerate(unit_cell)]
+pc_w.data_extension[lammps.CUBAExtension.BOX_VECTORS] = super_cell
+
 
 # following LJ parameters for this test:
 # eps = sigma = 1.0 (we work with a normalized,
 # reduced LJ model with eps=sigma= 1).
 # rcut = 2.5
-wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
-                                    "  global_cutoff: 1.12246\n"
-                                    "  parameters:\n"
-                                    "  - pair: [1, 1]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 2.5\n")
+wrapper.SP_extension[lammps.CUBAExtension.PAIR_POTENTIALS] = \
+        ("lj:\n"
+         "  global_cutoff: 1.12246\n"
+         "  parameters:\n"
+         "  - pair: [1, 1]\n"
+         "    epsilon: 1.0\n"
+         "    sigma: 1.0\n"
+         "    cutoff: 2.5\n")
 
 T0 = 1.0  # this is the target temperature
 # T, kinetic_energy are the instantaneous temperature and kinetic energy
