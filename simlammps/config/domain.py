@@ -1,4 +1,4 @@
-from simphony.core.cuba import CUBA
+from simlammps.cuba_extension import CUBAExtension
 
 
 def get_box(particle_containers):
@@ -18,16 +18,17 @@ def get_box(particle_containers):
     for pc in particle_containers:
         # find box vectors (and origin) and ensure
         # that they are the same for each particle container
-        if CUBA.BOX_VECTORS in pc.data:
-            if vectors and vectors != pc.data[CUBA.BOX_VECTORS]:
+        if CUBAExtension.BOX_VECTORS in pc.data_extension:
+            if (vectors and
+                    vectors != pc.data_extension[CUBAExtension.BOX_VECTORS]):
                 # TODO provide more info in exception message
                 raise RuntimeError("Box vectors need to match")
-            vectors = pc.data[CUBA.BOX_VECTORS]
-        if CUBA.BOX_ORIGIN in pc.data:
-            if origin and origin != pc.data[CUBA.BOX_ORIGIN]:
+            vectors = pc.data_extension[CUBAExtension.BOX_VECTORS]
+        if CUBAExtension.BOX_ORIGIN in pc.data:
+            if origin and origin != pc.data[CUBAExtension.BOX_ORIGIN]:
                 # TODO provide more info in exception message
                 raise RuntimeError("Box origin need to match")
-            origin = pc.data[CUBA.BOX_ORIGIN]
+            origin = pc.data_extension[CUBAExtension.BOX_ORIGIN]
 
     # origin is optional
     if not origin:
@@ -44,7 +45,7 @@ def get_box(particle_containers):
     # and c form a complete right-handed basis."
 
     if not vectors:
-        raise RuntimeError("CUBA.BOX_VECTORS was not set")
+        raise RuntimeError("CUBAExtension.BOX_VECTORS was not set")
     else:
         _check_vectors(vectors)
 

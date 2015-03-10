@@ -3,6 +3,7 @@ from sets import Set
 
 from simphony.core.cuba import CUBA
 from simphony.cuds.particles import ParticleContainer, Particle
+from simlammps.cuba_extension import CUBAExtension
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.tests.example_configurator import ExampleConfigurator
 
@@ -95,21 +96,19 @@ class TestLammpsParticleContainer(unittest.TestCase):
         ExampleConfigurator.set_configuration(self.wrapper)
 
         # set pair potentials for one type
-        self.wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
-                                                 "  global_cutoff: 1.12246\n"
-                                                 "  parameters:\n"
-                                                 "  - pair: [1, 1]\n"
-                                                 "    epsilon: 1.0\n"
-                                                 "    sigma: 1.0\n"
-                                                 "    cutoff: 1.2246\n")
+        potentials = ("lj:\n"
+                      "  global_cutoff: 1.12246\n"
+                      "  parameters:\n"
+                      "  - pair: [1, 1]\n"
+                      "    epsilon: 1.0\n"
+                      "    sigma: 1.0\n"
+                      "    cutoff: 1.2246\n")
+        self.wrapper.SP_extension[CUBAExtension.PAIR_POTENTIALS] = potentials
 
         # create a pc with 10 particles
         foo = ParticleContainer(name="foo")
         foo.data[CUBA.MATERIAL_TYPE] = 1
         foo.data[CUBA.MASS] = 1
-        foo.data[CUBA.BOX_VECTORS] = [(2.0, 0.0, 0.0),
-                                      (0.0, 2.0, 0.0),
-                                      (0.0, 0.0, 2.0)]
 
         for i in range(0, 10):
             p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 1+0.1*i))
@@ -118,6 +117,12 @@ class TestLammpsParticleContainer(unittest.TestCase):
 
         # add to wrapper
         foo_wrapper = self.wrapper.add_particle_container(foo)
+
+        # add box vectors to data_extension
+        box_vectors = [(2.0, 0.0, 0.0),
+                       (0.0, 2.0, 0.0),
+                       (0.0, 0.0, 2.0)]
+        foo_wrapper.data_extension[CUBAExtension.BOX_VECTORS] = box_vectors
 
         # check if information matches up
         for p in foo.iter_particles():

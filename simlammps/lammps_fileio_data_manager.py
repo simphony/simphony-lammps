@@ -329,7 +329,7 @@ class LammpsFileIoDataManager(object):
             types.add(pc.cache_pc.data[CUBA.MATERIAL_TYPE])
             num_particles += sum(1 for _ in pc.cache_pc.iter_particles())
 
-        box = get_box([pc.cache_pc for _, pc in self._pcs.iteritems()])
+        box = get_box([pc.lammps_pc for _, pc in self._pcs.iteritems()])
 
         lines.append('{} atoms\n'.format(num_particles))
         lines.append('{} atom types\n\n'.format(len(types)))

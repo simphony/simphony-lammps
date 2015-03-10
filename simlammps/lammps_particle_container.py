@@ -11,6 +11,9 @@ class LammpsParticleContainer(ABCParticleContainer):
 
         self._uname = uname
 
+        # holds non-approved CUBA keywords
+        self.data_extension = {}
+
     @property
     def name(self):
         return self._manager.get_name(self._uname)

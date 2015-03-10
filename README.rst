@@ -24,14 +24,6 @@ Requirements
  - `simphony-common`_ >= 0.0.1
 
 
-.. note::
-
-  simphony-lammps uses additional CUBA-Keywords that are not included in
-  simphony-common (THERMODYNAMIC_ENSEMBLE, PAIR_POTENTIALS, etc). The list of
-  additional CUBA-keywords can be found in ``additional_cuba.yml``. The steps to
-  add them to simphony-common can be found in ``install_simphony_common.sh``.
-
-
 Installation
 ------------
 
