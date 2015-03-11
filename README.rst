@@ -11,6 +11,11 @@ The LAMMPS engine-wrapper for the SimPhoNy framework (www.simphony-project.eu).
    :target: https://coveralls.io/r/simphony/simphony-lammps-md
       :alt: Test coverage
 
+.. image:: https://readthedocs.org/projects/simphony-lammps-md/badge/?version=master
+   :target: https://readthedocs.org/projects/simphony-lammps-md/?badge=master
+      :alt: Documentation Status
+
+
 Repository
 ----------
 
