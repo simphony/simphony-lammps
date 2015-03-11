@@ -6,7 +6,7 @@
 Welcome to Simphony-Lammps's documentation!
 ===========================================
 
-Contents:
+.. include:: ../../README.rst
 
 .. toctree::
    :maxdepth: 2
