@@ -15,6 +15,7 @@ install:
   - chmod +x install_simphony_common.sh  && ./install_simphony_common.sh
 
   - pip install -r dev_requirements.txt
+  - pip install -r doc_requirements.txt
   - pip install coveralls
   - python setup.py develop
 

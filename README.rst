@@ -23,6 +23,13 @@ Requirements
 - pyyaml >= 3.11
 - `simphony-common`_ >= 0.0.1
 
+Optional requirements
+~~~~~~~~~~~~~~~~~~~~~
+
+To support the documentation built you need the following packages:
+
+- sphinx >= 1.2.3
+
 
 Installation
 ------------
