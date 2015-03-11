@@ -15,13 +15,14 @@ install:
   - chmod +x install_simphony_common.sh  && ./install_simphony_common.sh
 
   - pip install -r dev_requirements.txt
+  - pip install -r doc_requirements.txt
   - pip install coveralls
   - python setup.py develop
 
 script:
   - flake8 --exclude=mylammps .
   - coverage run -m unittest discover
-  - coverage report
+  - python setup.py build_sphinx
 
 after_success:
   - coveralls
