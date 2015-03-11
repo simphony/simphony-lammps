@@ -1,0 +1,5 @@
+sphinx >= 1.2.3
+sphinxcontrib-napoleon >= 0.2.10
+enum34 >= 1.0.4
+stevedore >= 1.2.0
+mock

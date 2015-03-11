@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 with open('README.rst', 'r') as readme:
     README_TEXT = readme.read()
 
-VERSION = '0.0.1dev'
+VERSION = '0.1.1.dev0'
 
 
 def write_version_py(filename=None):
@@ -27,9 +27,12 @@ write_version_py()
 setup(
     name='simlammps',
     version=VERSION,
-    author='SimPhoNy FP7 European Project',
+    author='SimPhoNy, EU FP7 Project (Nr. 604005) www.simphony-project.eu',
     description='The lammps wrapper for the SimPhoNy framework',
     long_description=README_TEXT,
+    entry_points={
+        'simphony.engine': ['lammps = simlammps']},
     packages=find_packages(),
-    install_requires=["simphony"]
+    install_requires=["simphony >= 0.0.1",
+                      "pyyaml >= 3.11"]
     )

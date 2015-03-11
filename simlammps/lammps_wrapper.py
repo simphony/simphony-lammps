@@ -15,13 +15,18 @@ class LammpsWrapper(ABCModelingEngine):
 
     """
     def __init__(self):
-        self._data_filename = "data.lammps"
+        self._input_data_filename = "data_in.lammps"
+        self._output_data_filename = "data_out.lammps"
         self._data_manager = LammpsFileIoDataManager(
-            data_filename=self._data_filename)
+            input_data_filename=self._input_data_filename,
+            output_data_filename=self._output_data_filename)
 
         self.BC = DataContainer()
         self.CM = DataContainer()
         self.SP = DataContainer()
+        self.CM_extension = {}
+        self.SP_extension = {}
+        self.BC_extension = {}
 
     def add_particle_container(self, particle_container):
         """Add particle container.
@@ -114,10 +119,11 @@ class LammpsWrapper(ABCModelingEngine):
         self._data_manager.mark_as_invalid()
 
         commands = ScriptWriter.get_configuration(
-            self._data_filename,
-            self.BC,
-            self.CM,
-            self.SP)
+            input_data_file=self._input_data_filename,
+            output_data_file=self._output_data_filename,
+            BC=_combine(self.BC, self.BC_extension),
+            CM=_combine(self.CM, self.CM_extension),
+            SP=_combine(self.SP, self.SP_extension))
         lammps = LammpsProcess()
         lammps.run(commands)
 
@@ -144,3 +150,25 @@ class LammpsWrapper(ABCModelingEngine):
 
     def iter_meshes(self, names=None):
         raise NotImplementedError()
+
+
+def _combine(data_container, data_container_extension):
+    """ Combine a the approved CUBA with non-approved CUBA key-values
+
+    Parameters
+    ----------
+    data_container : DataContainer
+        data container with CUBA attributes
+    data_container_extension : dict
+        data container with non-approved CUBA attributes
+
+    Returns
+    ----------
+    dict
+        dictionary containing the approved adn non-approved
+        CUBA key-values
+
+    """
+    result = dict(data_container_extension)
+    result.update(data_container)
+    return result

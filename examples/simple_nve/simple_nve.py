@@ -17,10 +17,10 @@ from __future__ import print_function
 
 import math
 
+from simphony.engine import lammps
 from simphony.core.cuba import CUBA
-from simlammps.lammps_wrapper import LammpsWrapper
 from simphony.cuds.particles import Particle, ParticleContainer
-import numpy as np
+import numpy
 
 
 def write_file(simphony_container, file_format, file_name):
@@ -52,17 +52,18 @@ def write_file(simphony_container, file_format, file_name):
         # lattice parameter This should be an issue for the
         # conversion work.
         f.write("alat\n"+"{:+f}\n".format(1.0))
-        super_cell = simphony_container.data[CUBA.BOX_VECTORS]
+        super_cell = simphony_container.data_extension[
+            lammps.CUBAExtension.BOX_VECTORS]
         f.write("supercell\n {:+f} {:+f} {:+f}\n".format(
             super_cell[0][0],
             super_cell[0][1],
             super_cell[0][2]))
-        
+
         f.write(" {:+f} {:+f} {:+f}\n".format(
             super_cell[1][0],
             super_cell[1][1],
             super_cell[1][2]))
-            
+
         f.write(" {:+f} {:+f} {:+f}\n".format(
             super_cell[2][0],
             super_cell[2][1],
@@ -72,8 +73,6 @@ def write_file(simphony_container, file_format, file_name):
         f.close()
     else:
         raise NotImplementedError()
-    #else:
-    #raise NotImplementedError()
 
 
 # The total number of simulation cycles
@@ -102,7 +101,7 @@ basis = [
 # The number of periodic images, or duplications of the unit cell in each
 # cubic lattice direction
 N_dup = [4, 4, 4]
-# natoms is the total number of atoms after duplication
+# total number of atoms after duplication
 natoms = len(basis)*N_dup[0]*N_dup[1]*N_dup[2]
 
 # Create a non-wrapper based, i.e., standalone SimPhoNy particle
@@ -136,9 +135,9 @@ for pos in atoms1:
     # distribution, the MD algorithm will in any case result in a MB
     # one quickly.
     p.data[CUBA.VELOCITY] = [
-        np.random.uniform(-0.5, 0.5),
-        np.random.uniform(-0.5, 0.5),
-        np.random.uniform(-0.5, 0.5)
+        numpy.random.uniform(-0.5, 0.5),
+        numpy.random.uniform(-0.5, 0.5),
+        numpy.random.uniform(-0.5, 0.5)
     ]
     pc.add_particle(p)
 
@@ -168,13 +167,6 @@ for p in pc.iter_particles():
 pc.data[CUBA.MATERIAL_TYPE] = 1
 pc.data[CUBA.MASS] = 1
 
-# convert from lattice to crystal coordinate system.
-super_cell = [
-    tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
-
-# This may change later to "CUBA.SUPER_CELL_VECTORS" or
-# "CUBA.BOX_VECTORS".
-pc.data[CUBA.BOX_VECTORS] = super_cell
 # set the lattice parameter and the unit cell, as well as the lattice
 # description
 pc.data[CUBA.LATTICE_SPACING] = a_latt
@@ -182,29 +174,35 @@ pc.data[CUBA.LATTICE_SPACING] = a_latt
 # pc.data[CUBA.COORDINATE_SYSTEM] = 'cartesian'
 
 # define the wrapper to use.
-wrapper = LammpsWrapper()
+wrapper = lammps.LammpsWrapper()
 
 # define the CM component of the SimPhoNy application model:
-wrapper.CM[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
+wrapper.CM_extension[lammps.CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
 wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = Temp_rescale_period
 wrapper.CM[CUBA.TIME_STEP] = 0.0025
 # Define the BC component of the SimPhoNy application model:
-wrapper.BC[CUBA.BOX_FACES] = ["periodic", "periodic", "periodic"]
+wrapper.BC_extension[lammps.CUBAExtension.BOX_FACES] = ["periodic",
+                                                        "periodic",
+                                                        "periodic"]
+pc_w = wrapper.add_particle_container(pc)
 
-# add the particle container to the wrapper.
-wrapper.add_particle_container(pc)
+super_cell = [
+    tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
+pc_w.data_extension[lammps.CUBAExtension.BOX_VECTORS] = super_cell
+
 
 # define the SP component of the SimPhoNy application model.  The
 # following are the LJ parameters for this test. Normalized reduced
 # LJ model with eps=sigma= 1, rcut = 2.5
 # Use a direct YML description, to change.
-wrapper.SP[CUBA.PAIR_POTENTIALS] = ("lj:\n"
-                                    "  global_cutoff: 1.12246\n"
-                                    "  parameters:\n"
-                                    "  - pair: [1, 1]\n"
-                                    "    epsilon: 1.0\n"
-                                    "    sigma: 1.0\n"
-                                    "    cutoff: 2.5\n")
+wrapper.SP_extension[lammps.CUBAExtension.PAIR_POTENTIALS] = \
+    ("lj:\n"
+     "  global_cutoff: 1.12246\n"
+     "  parameters:\n"
+     "  - pair: [1, 1]\n"
+     "    epsilon: 1.0\n"
+     "    sigma: 1.0\n"
+     "    cutoff: 2.5\n")
 
 # The target temperature
 # T, kinetic_energy are the instantaneous temperature and kinetic energy
