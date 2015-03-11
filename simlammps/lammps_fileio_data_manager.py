@@ -229,6 +229,19 @@ class LammpsFileIoDataManager(object):
         self._ensure_up_to_date()
         self._pcs[uname].cache_pc.remove_particle(uid)
 
+    def has_particle(self, uid, uname):
+        """Has particle
+
+        Parameters
+        ----------
+        uid :
+            uid of particle
+        uname : string
+            name of particle container
+
+        """
+        return self._pcs[uname].cache_pc.has_particle(uid)
+
     def iter_particles(self, uname, uids=None):
         """Iterate over the particles of a certain type
 

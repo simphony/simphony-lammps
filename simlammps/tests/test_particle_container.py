@@ -57,6 +57,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
         p = Particle(coordinates=(0.0, 2.5, 0.0))
         uid = self.pc.add_particle(p)
         added_p = self.pc.get_particle(uid)
+        self.assertTrue(self.pc.has_particle(uid))
         self.assertEqual(p.coordinates, added_p.coordinates)
 
     def test_delete_particle(self):
