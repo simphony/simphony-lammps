@@ -26,9 +26,9 @@ class LammpsFileIoDataManager(object):
     Class maintains and provides LammpsParticleContainer (which implements
     the ABCParticleContainer class) so that users can update the particles
     and bonds and maintains a corresponding cache of a cache of the particle
-    information.  This information is read from file whenever its queried
-    (see _ensure_up_to_date()) and written to the file whenever the flush()
-    method is called.
+    information.  This information is read from file whenever the read()
+    method is called and written to the file whenever the flush() method
+    is called.
 
     Parameters
     ----------
@@ -57,11 +57,6 @@ class LammpsFileIoDataManager(object):
 
         # map from lammps-id to simphony-uid
         self._lammpsid_to_uid = {}
-
-        # flags to keep track of current state of this
-        # cache  (e.g. invalid is True when we no longer
-        # have up-to-date information)
-        self._invalid = False
 
     def get_name(self, uname):
         """
@@ -179,7 +174,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         return self._pcs[uname].cache_pc.get_particle(uid)
 
     def update_particle(self, particle, uname):
@@ -193,7 +187,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         return self._pcs[uname].cache_pc.update_particle(particle)
 
     def add_particle(self, particle, uname):
@@ -207,7 +200,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         if self._pcs[uname].cache_pc.has_particle(particle.uid):
             raise ValueError(
                 "particle with same uid ({}) alread exists".format(
@@ -226,7 +218,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         self._pcs[uname].cache_pc.remove_particle(uid)
 
     def has_particle(self, uid, uname):
@@ -240,7 +231,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         return self._pcs[uname].cache_pc.has_particle(uid)
 
     def iter_particles(self, uname, uids=None):
@@ -253,7 +243,6 @@ class LammpsFileIoDataManager(object):
             ids is None then all particles will be iterated over.
 
         """
-        self._ensure_up_to_date()
         return self._pcs[uname].cache_pc.iter_particles(uids)
 
     def flush(self):
@@ -266,15 +255,10 @@ class LammpsFileIoDataManager(object):
         # or when some of them do not contain any particles
         # (i.e. someone has deleted all the particles)
 
-    def mark_as_invalid(self):
-        self._invalid = True
+    def read(self):
+        self._update_from_lammps()
 
 # Private methods #######################################################
-    def _ensure_up_to_date(self):
-        if self._invalid:
-            self._update_from_lammps()
-            self._invalid = False
-
     def _update_from_lammps(self):
         """Read from file and update cache
 

@@ -113,10 +113,7 @@ class LammpsWrapper(ABCModelingEngine):
         """
 
         # before running, we flush any changes to lammps
-        # and mark our data manager (cache of particles)
-        # as being invalid
         self._data_manager.flush()
-        self._data_manager.mark_as_invalid()
 
         commands = ScriptWriter.get_configuration(
             input_data_file=self._input_data_filename,
@@ -126,6 +123,9 @@ class LammpsWrapper(ABCModelingEngine):
             SP=_combine(self.SP, self.SP_extension))
         lammps = LammpsProcess()
         lammps.run(commands)
+
+        # after running, we read any changes from lammps
+        self._data_manager.read()
 
     def add_lattice(self, lattice):
         raise NotImplementedError()
