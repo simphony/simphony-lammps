@@ -1,4 +1,6 @@
 import unittest
+import shutil
+import tempfile
 
 from simlammps.lammps_process import LammpsProcess
 
@@ -6,7 +8,11 @@ from simlammps.lammps_process import LammpsProcess
 class TestLammpsProcess(unittest.TestCase):
 
     def setUp(self):
-        self.lammps = LammpsProcess()
+        self.temp_dir = tempfile.mkdtemp()
+        self.lammps = LammpsProcess(log_directory=self.temp_dir)
+
+    def tearDown(self):
+        shutil.rmtree(self.temp_dir)
 
     def test_run_hello_world(self):
         command = "print \"hello world\""
