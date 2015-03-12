@@ -137,7 +137,7 @@ class LammpsWrapper(ABCModelingEngine):
                 BC=_combine(self.BC, self.BC_extension),
                 CM=_combine(self.CM, self.CM_extension),
                 SP=_combine(self.SP, self.SP_extension))
-            lammps = LammpsProcess()
+            lammps = LammpsProcess(log_directory=temp_dir)
             lammps.run(commands)
 
             # after running, we read any changes from lammps
