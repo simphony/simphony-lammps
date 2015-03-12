@@ -240,6 +240,7 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
+        self._ensure_up_to_date()
         return self._pcs[uname].cache_pc.has_particle(uid)
 
     def iter_particles(self, uname, uids=None):
