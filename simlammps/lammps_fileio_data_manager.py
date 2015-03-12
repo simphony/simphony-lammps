@@ -30,17 +30,9 @@ class LammpsFileIoDataManager(object):
     method is called and written to the file whenever the flush() method
     is called.
 
-    Parameters
-    ----------
-    intput_data_filename :
-        name of data-file where information is written to (i.e lammps's input).
-    output_data_filename :
-        name of data-file where information read from (i.e lammps's output).
 
     """
-    def __init__(self, input_data_filename, output_data_filename):
-        self._input_data_filename = input_data_filename
-        self._output_data_filename = output_data_filename
+    def __init__(self):
         self._number_types = 0
 
         # map from name to unique name
@@ -245,9 +237,16 @@ class LammpsFileIoDataManager(object):
         """
         return self._pcs[uname].cache_pc.iter_particles(uids)
 
-    def flush(self):
+    def flush(self, input_data_filename):
+        """flush to file
+
+        Parameters
+        ----------
+        input_data_filename :
+            name of data-file where inform is written to (i.e lammps's input).
+        """
         if self._pcs:
-            self._write_data_file(self._input_data_filename)
+            self._write_data_file(input_data_filename)
         else:
             raise RuntimeError(
                 "No particles.  Lammps cannot run without a particle")
@@ -255,19 +254,26 @@ class LammpsFileIoDataManager(object):
         # or when some of them do not contain any particles
         # (i.e. someone has deleted all the particles)
 
-    def read(self):
-        self._update_from_lammps()
+    def read(self, output_data_filename):
+        """read from file
+
+        Parameters
+        ----------
+        output_data_filename :
+            name of data-file where info read from (i.e lammps's output).
+        """
+        self._update_from_lammps(output_data_filename)
 
 # Private methods #######################################################
-    def _update_from_lammps(self):
-        """Read from file and update cache
+    def _update_from_lammps(self, output_data_filename):
+        """read from file and update cache
 
         """
-        assert os.path.isfile(self._output_data_filename)
+        assert os.path.isfile(output_data_filename)
 
         handler = LammpsSimpleDataHandler()
         parser = LammpsDataFileParser(handler)
-        parser.parse(self._output_data_filename)
+        parser.parse(output_data_filename)
 
         atoms = handler.get_atoms()
         velocities = handler.get_velocities()
