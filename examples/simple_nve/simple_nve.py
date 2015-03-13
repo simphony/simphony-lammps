@@ -174,8 +174,6 @@ pc.data[CUBA.MASS] = 1
 # set the lattice parameter and the unit cell, as well as the lattice
 # description
 pc.data[CUBA.LATTICE_SPACING] = a_latt
-# TODO:
-# pc.data[CUBA.COORDINATE_SYSTEM] = 'cartesian'
 
 # define the wrapper to use.
 wrapper = lammps.LammpsWrapper()
@@ -248,7 +246,7 @@ for run in range(0, number_NVE_cycles):
         run,
         number_NVE_cycles))
 
-    T = 2.0*kinetic_energy/(3.0)
+    T = 2.0*kinetic_energy/3.0
 
 #   Possibly add a window in which the temperature rescale kicks in if
 #   math.fabs( (T0-T)/T0) > 0.1:
