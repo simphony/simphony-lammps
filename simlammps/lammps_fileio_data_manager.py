@@ -26,21 +26,13 @@ class LammpsFileIoDataManager(object):
     Class maintains and provides LammpsParticleContainer (which implements
     the ABCParticleContainer class) so that users can update the particles
     and bonds and maintains a corresponding cache of a cache of the particle
-    information.  This information is read from file whenever its queried
-    (see _ensure_up_to_date()) and written to the file whenever the flush()
-    method is called.
+    information.  This information is read from file whenever the read()
+    method is called and written to the file whenever the flush() method
+    is called.
 
-    Parameters
-    ----------
-    intput_data_filename :
-        name of data-file where information is written to (i.e lammps's input).
-    output_data_filename :
-        name of data-file where information read from (i.e lammps's output).
 
     """
-    def __init__(self, input_data_filename, output_data_filename):
-        self._input_data_filename = input_data_filename
-        self._output_data_filename = output_data_filename
+    def __init__(self):
         self._number_types = 0
 
         # map from name to unique name
@@ -57,11 +49,6 @@ class LammpsFileIoDataManager(object):
 
         # map from lammps-id to simphony-uid
         self._lammpsid_to_uid = {}
-
-        # flags to keep track of current state of this
-        # cache  (e.g. invalid is True when we no longer
-        # have up-to-date information)
-        self._invalid = False
 
     def get_name(self, uname):
         """
@@ -179,7 +166,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         return self._pcs[uname].cache_pc.get_particle(uid)
 
     def update_particle(self, particle, uname):
@@ -193,7 +179,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         return self._pcs[uname].cache_pc.update_particle(particle)
 
     def add_particle(self, particle, uname):
@@ -207,7 +192,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         if self._pcs[uname].cache_pc.has_particle(particle.uid):
             raise ValueError(
                 "particle with same uid ({}) alread exists".format(
@@ -226,7 +210,6 @@ class LammpsFileIoDataManager(object):
             name of particle container
 
         """
-        self._ensure_up_to_date()
         self._pcs[uname].cache_pc.remove_particle(uid)
 
     def has_particle(self, uid, uname):
@@ -252,12 +235,18 @@ class LammpsFileIoDataManager(object):
             ids is None then all particles will be iterated over.
 
         """
-        self._ensure_up_to_date()
         return self._pcs[uname].cache_pc.iter_particles(uids)
 
-    def flush(self):
+    def flush(self, input_data_filename):
+        """flush to file
+
+        Parameters
+        ----------
+        input_data_filename :
+            name of data-file where inform is written to (i.e lammps's input).
+        """
         if self._pcs:
-            self._write_data_file(self._input_data_filename)
+            self._write_data_file(input_data_filename)
         else:
             raise RuntimeError(
                 "No particles.  Lammps cannot run without a particle")
@@ -265,24 +254,26 @@ class LammpsFileIoDataManager(object):
         # or when some of them do not contain any particles
         # (i.e. someone has deleted all the particles)
 
-    def mark_as_invalid(self):
-        self._invalid = True
+    def read(self, output_data_filename):
+        """read from file
+
+        Parameters
+        ----------
+        output_data_filename :
+            name of data-file where info read from (i.e lammps's output).
+        """
+        self._update_from_lammps(output_data_filename)
 
 # Private methods #######################################################
-    def _ensure_up_to_date(self):
-        if self._invalid:
-            self._update_from_lammps()
-            self._invalid = False
-
-    def _update_from_lammps(self):
-        """Read from file and update cache
+    def _update_from_lammps(self, output_data_filename):
+        """read from file and update cache
 
         """
-        assert os.path.isfile(self._output_data_filename)
+        assert os.path.isfile(output_data_filename)
 
         handler = LammpsSimpleDataHandler()
         parser = LammpsDataFileParser(handler)
-        parser.parse(self._output_data_filename)
+        parser.parse(output_data_filename)
 
         atoms = handler.get_atoms()
         velocities = handler.get_velocities()

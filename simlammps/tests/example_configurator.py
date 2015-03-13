@@ -102,7 +102,7 @@ class ExampleConfigurator:
             pc.data[CUBA.MATERIAL_TYPE] = i
 
             random.seed(42)
-            for i in range(100):
+            for _ in range(100):
                 coord = (random.uniform(0.0, 25.0),
                          random.uniform(0.0, 22.0),
                          0.0)
