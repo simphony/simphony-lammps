@@ -17,10 +17,11 @@ from __future__ import print_function
 
 import math
 
+import numpy
+
 from simphony.engine import lammps
 from simphony.core.cuba import CUBA
 from simphony.cuds.particles import Particle, ParticleContainer
-import numpy
 
 
 def write_file(simphony_container, file_format, file_name):
@@ -125,6 +126,9 @@ for i in range(0, 3):
             atoms.append(pos)
     atoms1 = atoms
     atoms = []
+
+# have seed so the validation can be reproduced
+numpy.random.seed(42)
 
 for pos in atoms1:
     pos2 = [pos[0]*a_latt, pos[1]*a_latt, pos[2]*a_latt]
