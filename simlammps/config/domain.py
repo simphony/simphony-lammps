@@ -1,7 +1,7 @@
 from simlammps.cuba_extension import CUBAExtension
 
 
-def get_box(particle_containers):
+def get_box(particles):
     """ Get simulation box commands
 
     Using CUBA.BOX_VECTORS and CUBA.BOX_ORIGIN, return the
@@ -10,12 +10,12 @@ def get_box(particle_containers):
 
     Parameters:
     -----------
-    particle_containers: list of particle containers
+    particles: list of containers of particles
     """
     origin = None
     vectors = None
 
-    for pc in particle_containers:
+    for pc in particles:
         # find box vectors (and origin) and ensure
         # that they are the same for each particle container
         if CUBAExtension.BOX_VECTORS in pc.data_extension:

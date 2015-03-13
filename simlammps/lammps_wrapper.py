@@ -41,31 +41,31 @@ class LammpsWrapper(ABCModelingEngine):
         self.SP_extension = {}
         self.BC_extension = {}
 
-    def add_particle_container(self, particle_container):
-        """Add particle container.
+    def add_particles(self, particles):
+        """Add particles.
 
         Parameters
         ----------
-        particle_container : ABCParticleContainer
-            particle container to be added.
+        particles : ABCParticles
+            particles to be added.
 
         Returns
         ----------
-        ABCParticleContainer
-            The particle container newly added to Lammps.  See
-            get_particle_container for more information.
+        ABCParticles
+            The particles newly added to Lammps.  See
+            get_particles for more information.
 
         """
-        if particle_container.name in self._data_manager:
+        if particles.name in self._data_manager:
             raise ValueError(
                 'Particle container \'{n}\` already exists'.format(
-                    n=particle_container.name))
+                    n=particles.name))
         else:
-            return self._data_manager.new_particle_container(
-                particle_container)
+            return self._data_manager.new_particles(
+                particles)
 
-    def get_particle_container(self, name):
-        """Get particle container.
+    def get_particles(self, name):
+        """Get particles
 
         The returned particle container can be used to query
         and change the related data inside LAMMPS.
@@ -81,21 +81,21 @@ class LammpsWrapper(ABCModelingEngine):
             raise KeyError(
                 'Particle container \'{}\` does not exist'.format(name))
 
-    def delete_particle_container(self, name):
-        """Delete particle container.
+    def delete_particles(self, name):
+        """Delete particles
 
         Parameters
         ----------
         name : str
-            name of particle container to delete
+            name of particles to delete
         """
         if name in self._data_manager:
             del self._data_manager[name]
         else:
             raise KeyError(
-                'Particle container \'{n}\` does not exist'.format(n=name))
+                'Particles \'{n}\` does not exist'.format(n=name))
 
-    def iter_particle_containers(self, names=None):
+    def iter_particles(self, names=None):
         """Returns an iterator over a subset or all
         of the particle containers. The iterator iterator yields
         (name, particlecontainer) tuples for each particle container.

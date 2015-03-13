@@ -5,13 +5,13 @@ from sets import Set
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from simphony.cuds.particles import ParticleContainer
+from simphony.cuds.particles import Particles
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
-from simlammps.lammps_particle_container import LammpsParticleContainer
+from simlammps.lammps_particles import LammpsParticles
 from simlammps.config.domain import get_box
 
-# tuple to hold cache of particles and corresponding LammpsParticleContainer
+# tuple to hold cache of particles and corresponding LammpsParticles
 _PC = collections.namedtuple('_PC', ["cache_pc", "lammps_pc"])
 
 
@@ -23,8 +23,8 @@ class LammpsFileIoDataManager(object):
     data existing in Lammps (via lammps data file) and allows this data to be
     queried and to be changed.
 
-    Class maintains and provides LammpsParticleContainer (which implements
-    the ABCParticleContainer class) so that users can update the particles
+    Class maintains and provides LammpsParticles (which implements
+    the ABCParticles class) so that users can update the particles
     and bonds and maintains a corresponding cache of a cache of the particle
     information.  This information is read from file whenever the read()
     method is called and written to the file whenever the flush() method
@@ -120,18 +120,18 @@ class LammpsFileIoDataManager(object):
         """
         self._pcs[uname].cache_pc.data = data
 
-    def new_particle_container(self, particle_container):
+    def new_particles(self, particles):
         """Add new particle container to this manager.
 
 
         Parameters
         ----------
-        particle_container : ABCParticleContainer
+        particles : ABCParticles
             paticle container to be added
 
         Returns
         -------
-        LammpsParticleContainer
+        LammpsParticles
 
         """
 
@@ -139,19 +139,19 @@ class LammpsFileIoDataManager(object):
         # that will not change over the lifetime of the wrapper.
         uname = uuid.uuid4()
 
-        self._unames[particle_container.name] = uname
-        self._names[uname] = particle_container.name
+        self._unames[particles.name] = uname
+        self._names[uname] = particles.name
 
         # create empty stand-alone particle container
         # to use as a cache of for input/output to LAMMPS
-        pc = ParticleContainer(name="_")
-        pc.data = DataContainer(particle_container.data)
-        for p in particle_container.iter_particles():
+        pc = Particles(name="_")
+        pc.data = DataContainer(particles.data)
+        for p in particles.iter_particles():
             pc.add_particle(p)
-        for p in particle_container.iter_bonds():
+        for p in particles.iter_bonds():
             pc.add_bond(p)
 
-        lammps_pc = LammpsParticleContainer(self, uname)
+        lammps_pc = LammpsParticles(self, uname)
         self._pcs[uname] = _PC(cache_pc=pc, lammps_pc=lammps_pc)
         return lammps_pc
 
