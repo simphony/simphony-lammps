@@ -26,7 +26,7 @@ Requirements
 
 - enum34 >= 1.0.4
 - pyyaml >= 3.11
-- `simphony-common`_ >= 0.0.1
+- `simphony-common`_ = 0.0.1
 
 Optional requirements
 ~~~~~~~~~~~~~~~~~~~~~

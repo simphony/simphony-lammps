@@ -6,4 +6,4 @@ set -e
 sudo apt-get install libhdf5-serial-dev
 
 pip install numpy numexpr cython==0.20
-pip install -e git://github.com/simphony/simphony-common.git#egg=simphony
+pip install -e git://github.com/simphony/simphony-common.git@0.0.1#egg=simphony
