@@ -1,7 +1,7 @@
-from simphony.cuds.abstractparticles import ABCParticleContainer
+from simphony.cuds.abstractparticles import ABCParticles
 
 
-class LammpsParticleContainer(ABCParticleContainer):
+class LammpsParticles(ABCParticles):
     """ Responsible class to synchronize operations on particles
 
     """

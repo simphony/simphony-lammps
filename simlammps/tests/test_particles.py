@@ -6,14 +6,14 @@ from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.tests.example_configurator import ExampleConfigurator
 
 
-def _get_particle(particle_container):
-    for p in particle_container.iter_particles():
+def _get_particle(particles):
+    for p in particles.iter_particles():
         return p
     else:
         raise RuntimeError("could not find a particle to test with")
 
 
-class TestLammpsParticleContainer(unittest.TestCase):
+class TestLammpsParticles(unittest.TestCase):
 
     def setUp(self):
 
@@ -24,9 +24,9 @@ class TestLammpsParticleContainer(unittest.TestCase):
         # CM/SP/BC and given particles
         ExampleConfigurator.configure_wrapper(self.wrapper)
 
-        # keep track of first wrapper-based particle container
+        # keep track of first wrapper-based container of particles
         # and the particle ids that it contains
-        pcs = [pc for pc in self.wrapper.iter_particle_containers()]
+        pcs = [pc for pc in self.wrapper.iter_particles()]
         self.pc = pcs[0]
         self.particle_ids_in_pc = []
         for p in pcs[0].iter_particles():
@@ -34,8 +34,8 @@ class TestLammpsParticleContainer(unittest.TestCase):
 
     def test_update_non_existing_particle(self):
         # TODO we should test that this raises
-        # ValueError but ParticleContainer (v 0.0.1)
-        # raises KeyeError
+        # ValueError but Particles raises KeyError
+        # see #104 issue in simphony-common
         with self.assertRaises(Exception):
             p = Particle(
                 uid=uuid.UUID(int=100000000), coordinates=(0.0, 0.0, 0.0))
