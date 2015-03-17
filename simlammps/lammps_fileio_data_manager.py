@@ -1,7 +1,6 @@
 import collections
 import os
 import uuid
-from sets import Set
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
@@ -328,7 +327,7 @@ class LammpsFileIoDataManager(object):
         # and collect the different material types
         # in oder to determine the number of types
         num_particles = 0
-        types = Set()
+        types = set()
         for _, pc in self._pcs.iteritems():
             types.add(pc.cache_pc.data[CUBA.MATERIAL_TYPE])
             num_particles += sum(1 for _ in pc.cache_pc.iter_particles())

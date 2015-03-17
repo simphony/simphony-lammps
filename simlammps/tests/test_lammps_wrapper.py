@@ -1,5 +1,4 @@
 import unittest
-from sets import Set
 
 from simphony.core.cuba import CUBA
 from simphony.cuds.particles import Particles, Particle
@@ -68,8 +67,7 @@ class TestLammpsParticles(unittest.TestCase):
 
         # and we should be able to use the no-longer used
         # "foo" name when adding another container of particles
-        pc = self.wrapper.add_particles(
-            Particles(name="foo"))
+        self.wrapper.add_particles(Particles(name="foo"))
 
     def test_iter_particles(self):
         self.wrapper.add_particles(_create_pc("foo"))
@@ -81,7 +79,7 @@ class TestLammpsParticles(unittest.TestCase):
 
         ordered_names = ["bar", "foo", "bar"]
 
-        self.assertEqual(Set(ordered_names), Set(pc_name_list))
+        self.assertEqual(set(ordered_names), set(pc_name_list))
 
         pc_name_list = list(
             pc.name for pc in self.wrapper.iter_particles(
