@@ -2,7 +2,7 @@ import unittest
 from sets import Set
 
 from simphony.core.cuba import CUBA
-from simphony.cuds.particles import ParticleContainer, Particle
+from simphony.cuds.particles import Particles, Particle
 from simlammps.cuba_extension import CUBAExtension
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.tests.example_configurator import ExampleConfigurator
@@ -10,7 +10,7 @@ from simlammps.tests.example_configurator import ExampleConfigurator
 
 def _create_pc(name):
     """ create particle container with a few particles """
-    pc = ParticleContainer(name)
+    pc = Particles(name)
 
     pc.add_particle(Particle(coordinates=(1.01, 1.01, 1.01)))
     pc.add_particle(Particle(coordinates=(1.02, 1.02, 1.02)))
@@ -18,65 +18,65 @@ def _create_pc(name):
     return pc
 
 
-class TestLammpsParticleContainer(unittest.TestCase):
+class TestLammpsParticles(unittest.TestCase):
 
     def setUp(self):
 
         self.wrapper = LammpsWrapper()
 
-    def test_add_particle_container(self):
-        self.wrapper.add_particle_container(_create_pc("foo"))
-        self.wrapper.get_particle_container("foo")
+    def test_add_particles(self):
+        self.wrapper.add_particles(_create_pc("foo"))
+        self.wrapper.get_particles("foo")
 
-    def test_add_same_particle_container_twice(self):
-        self.wrapper.add_particle_container(_create_pc("foo"))
+    def test_add_same_particles(self):
+        self.wrapper.add_particles(_create_pc("foo"))
         with self.assertRaises(ValueError):
-            self.wrapper.add_particle_container(_create_pc("foo"))
+            self.wrapper.add_particles(_create_pc("foo"))
 
-    def test_get_non_existing_particle_container(self):
+    def test_get_non_existing_particles(self):
         with self.assertRaises(KeyError):
-            self.wrapper.get_particle_container("foo")
+            self.wrapper.get_particles("foo")
 
-    def test_delete_particle_container(self):
-        self.wrapper.add_particle_container(_create_pc("foo"))
-        self.wrapper.get_particle_container("foo")
+    def test_delete_particles(self):
+        self.wrapper.add_particles(_create_pc("foo"))
+        self.wrapper.get_particles("foo")
 
-        self.wrapper.delete_particle_container("foo")
+        self.wrapper.delete_particles("foo")
 
         with self.assertRaises(KeyError):
-            self.wrapper.get_particle_container("foo")
+            self.wrapper.get_particles("foo")
 
-    def test_delete_non_existing_particle_container(self):
+    def test_delete_non_existing_particles(self):
         with self.assertRaises(KeyError):
-            self.wrapper.delete_particle_container("foo")
+            self.wrapper.delete_particles("foo")
 
-    def test_particle_container_rename(self):
-        pc = self.wrapper.add_particle_container(_create_pc("foo"))
+    def test_particles_rename(self):
+        pc = self.wrapper.add_particles(_create_pc("foo"))
         pc.name = "bar"
 
         # we should not be able to use the old name "foo"
         with self.assertRaises(KeyError):
-            self.wrapper.get_particle_container("foo")
+            self.wrapper.get_particles("foo")
         with self.assertRaises(KeyError):
-            self.wrapper.delete_particle_container("foo")
+            self.wrapper.delete_particles("foo")
         with self.assertRaises(KeyError):
-            [_ for _ in self.wrapper.iter_particle_containers(names=["foo"])]
+            [_ for _ in self.wrapper.iter_particles(names=["foo"])]
 
         # we should be able to access using the new "bar" name
-        pc_bar = self.wrapper.get_particle_container("bar")
+        pc_bar = self.wrapper.get_particles("bar")
         self.assertEqual("bar", pc_bar.name)
 
         # and we should be able to use the no-longer used
-        # "foo" name when adding another particle container
-        pc = self.wrapper.add_particle_container(
-            ParticleContainer(name="foo"))
+        # "foo" name when adding another container of particles
+        pc = self.wrapper.add_particles(
+            Particles(name="foo"))
 
-    def test_iter_particle_container(self):
-        self.wrapper.add_particle_container(_create_pc("foo"))
-        self.wrapper.add_particle_container(_create_pc("bar"))
+    def test_iter_particles(self):
+        self.wrapper.add_particles(_create_pc("foo"))
+        self.wrapper.add_particles(_create_pc("bar"))
 
         pc_name_list = list(
-            pc.name for pc in self.wrapper.iter_particle_containers())
+            pc.name for pc in self.wrapper.iter_particles())
         self.assertEqual(len(pc_name_list), 2)
 
         ordered_names = ["bar", "foo", "bar"]
@@ -84,7 +84,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
         self.assertEqual(Set(ordered_names), Set(pc_name_list))
 
         pc_name_list = list(
-            pc.name for pc in self.wrapper.iter_particle_containers(
+            pc.name for pc in self.wrapper.iter_particles(
                 ordered_names))
         self.assertEqual(ordered_names, pc_name_list)
 
@@ -106,9 +106,11 @@ class TestLammpsParticleContainer(unittest.TestCase):
         self.wrapper.SP_extension[CUBAExtension.PAIR_POTENTIALS] = potentials
 
         # create a pc with 10 particles
-        foo = ParticleContainer(name="foo")
-        foo.data[CUBA.MATERIAL_TYPE] = 1
-        foo.data[CUBA.MASS] = 1
+        foo = Particles(name="foo")
+        data = foo.data
+        data[CUBA.MATERIAL_TYPE] = 1
+        data[CUBA.MASS] = 1
+        foo.data = data
 
         for i in range(0, 10):
             p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 1+0.1*i))
@@ -116,7 +118,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
             foo.add_particle(p)
 
         # add to wrapper
-        foo_wrapper = self.wrapper.add_particle_container(foo)
+        foo_wrapper = self.wrapper.add_particles(foo)
 
         # add box vectors to data_extension
         box_vectors = [(2.0, 0.0, 0.0),

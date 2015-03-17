@@ -2,8 +2,8 @@ import unittest
 import uuid
 
 from simphony.cuds.particles import (
-    Particle, ParticleContainer)
-from simphony.testing.abc_check_particle_containers import (
+    Particle, Particles)
+from simphony.testing.abc_check_particles import (
     ContainerAddParticlesCheck, ContainerManipulatingParticlesCheck)
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.tests.example_configurator import ExampleConfigurator
@@ -18,7 +18,7 @@ class TestFileIoParticlesAddParticles(
     def setUp(self):
         self.wrapper = LammpsWrapper()
         ExampleConfigurator.configure_wrapper(self.wrapper)
-        pcs = [pc for pc in self.wrapper.iter_particle_containers()]
+        pcs = [pc for pc in self.wrapper.iter_particles()]
         self.pc = pcs[0]
         ContainerAddParticlesCheck.setUp(self)
 
@@ -27,22 +27,22 @@ class TestFileIoParticlesManipulatingParticles(
         ContainerManipulatingParticlesCheck, unittest.TestCase):
 
     def container_factory(self, name):
-        pc = ParticleContainer(name=name)
-        return self.wrapper.add_particle_container(pc)
+        pc = Particles(name=name)
+        return self.wrapper.add_particles(pc)
 
     def setUp(self):
         self.wrapper = LammpsWrapper()
         ContainerManipulatingParticlesCheck.setUp(self)
 
 
-def _get_particle(particle_container):
-    for p in particle_container.iter_particles():
+def _get_particle(particles):
+    for p in particles.iter_particles():
         return p
     else:
         raise RuntimeError("could not find a particle to test with")
 
 
-class TestLammpsParticleContainer(unittest.TestCase):
+class TestLammpsParticles(unittest.TestCase):
 
     def setUp(self):
 
@@ -53,9 +53,9 @@ class TestLammpsParticleContainer(unittest.TestCase):
         # CM/SP/BC and given particles
         ExampleConfigurator.configure_wrapper(self.wrapper)
 
-        # keep track of first wrapper-based particle container
+        # keep track of first wrapper-based container of particles
         # and the particle ids that it contains
-        pcs = [pc for pc in self.wrapper.iter_particle_containers()]
+        pcs = [pc for pc in self.wrapper.iter_particles()]
         self.pc = pcs[0]
         self.particle_ids_in_pc = []
         for p in pcs[0].iter_particles():
@@ -63,8 +63,8 @@ class TestLammpsParticleContainer(unittest.TestCase):
 
     def test_update_non_existing_particle(self):
         # TODO we should test that this raises
-        # ValueError but ParticleContainer (v 0.0.1)
-        # raises KeyeError
+        # ValueError but Particles raises KeyError
+        # see #104 issue in simphony-common
         with self.assertRaises(Exception):
             p = Particle(
                 uid=uuid.UUID(int=100000000), coordinates=(0.0, 0.0, 0.0))
@@ -86,6 +86,7 @@ class TestLammpsParticleContainer(unittest.TestCase):
         p = Particle(coordinates=(0.0, 2.5, 0.0))
         uid = self.pc.add_particle(p)
         added_p = self.pc.get_particle(uid)
+        self.assertTrue(self.pc.has_particle(uid))
         self.assertEqual(p.coordinates, added_p.coordinates)
 
     def test_delete_particle(self):

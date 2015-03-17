@@ -11,6 +11,11 @@ The LAMMPS engine-wrapper for the SimPhoNy framework (www.simphony-project.eu).
    :target: https://coveralls.io/r/simphony/simphony-lammps-md
       :alt: Test coverage
 
+.. image:: https://readthedocs.org/projects/simphony-lammps-md/badge/?version=master
+   :target: https://readthedocs.org/projects/simphony-lammps-md/?badge=master
+      :alt: Documentation Status
+
+
 Repository
 ----------
 
@@ -21,7 +26,14 @@ Requirements
 
 - enum34 >= 1.0.4
 - pyyaml >= 3.11
- - `simphony-common`_ >= 0.0.1
+- `simphony-common`_ = 0.1.0
+
+Optional requirements
+~~~~~~~~~~~~~~~~~~~~~
+
+To support the documentation built you need the following packages:
+
+- sphinx >= 1.2.3
 
 
 Installation
@@ -60,11 +72,29 @@ To run the full test-suite run::
 
     python -m unittest discover
 
+Documentation
+-------------
+
+To build the documentation in the doc/build directory run::
+
+    python setup.py build_sphinx
+
+.. note::
+
+    - One can use the --help option with a setup.py command
+      to see all available options.
+    - The documentation will be saved in the ``./build`` directory.
+
 
 Directory structure
 -------------------
 
 - simlammps -- hold the lammps-md wrapper implementation
 - examples -- holds different examples
+- doc -- Documentation related files
+
+  - source -- Sphinx rst source files
+  - build -- Documentation build directory, if documentation has been generated
+    using the ``make`` script in the ``doc`` directory.
 
 .. _simphony-common: https://github.com/simphony/simphony-common

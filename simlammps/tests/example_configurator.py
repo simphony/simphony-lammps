@@ -1,7 +1,8 @@
 import random
 
-from simphony.cuds.particles import Particle, ParticleContainer
+from simphony.cuds.particles import Particle, Particles
 from simphony.core.cuba import CUBA
+from simphony.core.data_container import DataContainer
 
 from simlammps.cuba_extension import CUBAExtension
 
@@ -70,7 +71,7 @@ class ExampleConfigurator:
         """ Configure example wrapper with example settings and particles
 
         The wrapper is configured with required CM, SP, BC parameters
-        and is given particles (see add_particle_containers)
+        and is given particles (see add_particles)
 
         Parameters
         ----------
@@ -81,13 +82,13 @@ class ExampleConfigurator:
         ExampleConfigurator.set_configuration(wrapper)
 
         # add particle containers
-        ExampleConfigurator.add_particle_containers(wrapper)
+        ExampleConfigurator.add_particles(wrapper)
 
     @staticmethod
-    def add_particle_containers(wrapper):
-        """ Add  particle containers to wrapper
+    def add_particles(wrapper):
+        """ Add containers of particles to wrapper
 
-        The wrapper is confugred with particle containers that contain
+        The wrapper is configured with containers of particles that contain
         mass, type/materialtype, and velocitiy.  They correspond to
         the configuration performed in configure_wrapper method
 
@@ -97,19 +98,21 @@ class ExampleConfigurator:
 
         """
         for i in range(1, 4):
-            pc = ParticleContainer(name="foo{}".format(i))
-            pc.data[CUBA.MASS] = 1
-            pc.data[CUBA.MATERIAL_TYPE] = i
+            data = DataContainer()
+            data[CUBA.MASS] = 1
+            data[CUBA.MATERIAL_TYPE] = i
+            pc = Particles(name="foo{}".format(i))
+            pc.data = data
 
             random.seed(42)
-            for i in range(100):
+            for _ in range(100):
                 coord = (random.uniform(0.0, 25.0),
                          random.uniform(0.0, 22.0),
                          0.0)
                 p = Particle(coordinates=coord)
                 p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
                 pc.add_particle(p)
-            pc_w = wrapper.add_particle_container(pc)
+            pc_w = wrapper.add_particles(pc)
 
             vectors = [(25.0, 0.0, 0.0),
                        (0.0, 22.0, 0.0),

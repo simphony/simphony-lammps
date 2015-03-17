@@ -2,6 +2,11 @@
 
 This module provides a wrapper to LAMMPS-md
 """
+import contextlib
+import os
+import tempfile
+import shutil
+
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
 
@@ -10,16 +15,24 @@ from simlammps.lammps_process import LammpsProcess
 from simlammps.config.script_writer import ScriptWriter
 
 
+@contextlib.contextmanager
+def _temp_directory():
+    """ context manager that provides temp directory
+
+    The name of the created temp directory is returned when context is entered
+    and this directory is deleted when context is exited
+    """
+    temp_dir = tempfile.mkdtemp()
+    yield temp_dir
+    shutil.rmtree(temp_dir)
+
+
 class LammpsWrapper(ABCModelingEngine):
     """ Wrapper to LAMMPS-md
 
     """
     def __init__(self):
-        self._input_data_filename = "data_in.lammps"
-        self._output_data_filename = "data_out.lammps"
-        self._data_manager = LammpsFileIoDataManager(
-            input_data_filename=self._input_data_filename,
-            output_data_filename=self._output_data_filename)
+        self._data_manager = LammpsFileIoDataManager()
 
         self.BC = DataContainer()
         self.CM = DataContainer()
@@ -28,31 +41,31 @@ class LammpsWrapper(ABCModelingEngine):
         self.SP_extension = {}
         self.BC_extension = {}
 
-    def add_particle_container(self, particle_container):
-        """Add particle container.
+    def add_particles(self, particles):
+        """Add particles.
 
         Parameters
         ----------
-        particle_container : ABCParticleContainer
-            particle container to be added.
+        particles : ABCParticles
+            particles to be added.
 
         Returns
         ----------
-        ABCParticleContainer
-            The particle container newly added to Lammps.  See
-            get_particle_container for more information.
+        ABCParticles
+            The particles newly added to Lammps.  See
+            get_particles for more information.
 
         """
-        if particle_container.name in self._data_manager:
+        if particles.name in self._data_manager:
             raise ValueError(
                 'Particle container \'{n}\` already exists'.format(
-                    n=particle_container.name))
+                    n=particles.name))
         else:
-            return self._data_manager.new_particle_container(
-                particle_container)
+            return self._data_manager.new_particles(
+                particles)
 
-    def get_particle_container(self, name):
-        """Get particle container.
+    def get_particles(self, name):
+        """Get particles
 
         The returned particle container can be used to query
         and change the related data inside LAMMPS.
@@ -68,21 +81,21 @@ class LammpsWrapper(ABCModelingEngine):
             raise KeyError(
                 'Particle container \'{}\` does not exist'.format(name))
 
-    def delete_particle_container(self, name):
-        """Delete particle container.
+    def delete_particles(self, name):
+        """Delete particles
 
         Parameters
         ----------
         name : str
-            name of particle container to delete
+            name of particles to delete
         """
         if name in self._data_manager:
             del self._data_manager[name]
         else:
             raise KeyError(
-                'Particle container \'{n}\` does not exist'.format(n=name))
+                'Particles \'{n}\` does not exist'.format(n=name))
 
-    def iter_particle_containers(self, names=None):
+    def iter_particles(self, names=None):
         """Returns an iterator over a subset or all
         of the particle containers. The iterator iterator yields
         (name, particlecontainer) tuples for each particle container.
@@ -108,24 +121,27 @@ class LammpsWrapper(ABCModelingEngine):
                             n=name))
 
     def run(self):
-        """ Run for based on configuration
+        """ Run lammps-engine based on configuration and data
 
         """
+        with _temp_directory() as temp_dir:
+            input_data_filename = os.path.join(temp_dir, "data_in.lammps")
+            output_data_filename = os.path.join(temp_dir, "data_out.lammps")
 
-        # before running, we flush any changes to lammps
-        # and mark our data manager (cache of particles)
-        # as being invalid
-        self._data_manager.flush()
-        self._data_manager.mark_as_invalid()
+            # before running, we flush any changes to lammps
+            self._data_manager.flush(input_data_filename)
 
-        commands = ScriptWriter.get_configuration(
-            input_data_file=self._input_data_filename,
-            output_data_file=self._output_data_filename,
-            BC=_combine(self.BC, self.BC_extension),
-            CM=_combine(self.CM, self.CM_extension),
-            SP=_combine(self.SP, self.SP_extension))
-        lammps = LammpsProcess()
-        lammps.run(commands)
+            commands = ScriptWriter.get_configuration(
+                input_data_file=input_data_filename,
+                output_data_file=output_data_filename,
+                BC=_combine(self.BC, self.BC_extension),
+                CM=_combine(self.CM, self.CM_extension),
+                SP=_combine(self.SP, self.SP_extension))
+            lammps = LammpsProcess(log_directory=temp_dir)
+            lammps.run(commands)
+
+            # after running, we read any changes from lammps
+            self._data_manager.read(output_data_filename)
 
     def add_lattice(self, lattice):
         raise NotImplementedError()
