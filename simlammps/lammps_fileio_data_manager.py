@@ -231,7 +231,7 @@ class LammpsFileIoDataManager(object):
         ----------
         uids : list of particle uids
             sequence of uids of particles that should be iterated over. If
-            ids is None then all particles will be iterated over.
+            uids is None then all particles will be iterated over.
 
         """
         return self._pcs[uname].cache_pc.iter_particles(uids)
