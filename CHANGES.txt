@@ -1,5 +1,9 @@
 Simphony-Lammps
 ======================
+Release 0.1.2
+* uuid is being used instead of uid (#48)
+* use simphony-common version 0.1.1 (#50, #46)
+-------------
 Release 0.1.1
 -------------
 * Using coveralls for test coverage reporting (#11)
