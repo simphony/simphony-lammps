@@ -35,19 +35,19 @@ class LammpsParticles(ABCParticles):
     def add_particle(self, particle):
         """Add particle
 
-        If particle has an id then this is used.  If the
-        particle's id is None then a id is generated for the
+        If particle has an uid then this is used.  If the
+        particle's uid is None then a uid is generated for the
         particle.
 
         Returns
         -------
         int
-            id of particle
+            uid of particle
 
         Raises
         -------
         ValueError
-           if an id is given which already exists.
+           if an uid is given which already exists.
 
         """
         return self._manager.add_particle(particle, self._uname)
@@ -58,29 +58,29 @@ class LammpsParticles(ABCParticles):
         """
         return self._manager.update_particle(particle, self._uname)
 
-    def get_particle(self, id):
+    def get_particle(self, uid):
         """Get particle
 
         """
-        return self._manager.get_particle(id, self._uname)
+        return self._manager.get_particle(uid, self._uname)
 
-    def remove_particle(self, id):
+    def remove_particle(self, uid):
         """Remove particle
 
         """
-        return self._manager.remove_particle(id, self._uname)
+        return self._manager.remove_particle(uid, self._uname)
 
-    def has_particle(self, id):
+    def has_particle(self, uid):
         """Has particle
 
         """
-        return self._manager.has_particle(id, self._uname)
+        return self._manager.has_particle(uid, self._uname)
 
-    def iter_particles(self, ids=None):
+    def iter_particles(self, uids=None):
         """Get iterator over particles
 
         """
-        for p in self._manager.iter_particles(self._uname, ids):
+        for p in self._manager.iter_particles(self._uname, uids):
             yield p
 
     # Bond methods #######################################################
@@ -97,24 +97,24 @@ class LammpsParticles(ABCParticles):
         """
         pass
 
-    def get_bond(self, id):
+    def get_bond(self, uid):
         """Get bond
 
         """
         pass
 
-    def remove_bond(self, id):
+    def remove_bond(self, uid):
         """Remove bond
 
         """
         pass
 
-    def has_bond(self, id):
+    def has_bond(self, uid):
         """Has bond
 
         """
 
-    def iter_bonds(self, ids=None):
+    def iter_bonds(self, uids=None):
         """Get iterator over bonds
 
         """
