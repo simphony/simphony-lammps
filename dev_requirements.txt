@@ -2,3 +2,4 @@ enum34 >= 1.0.4
 pyyaml >= 3.11
 coverage
 flake8
+-e git+https://github.com/simphony/simphony-common.git#egg=simphony
