@@ -10,9 +10,6 @@ install:
   - ./install_external.sh
   - export PATH=$PATH:$PWD/mylammps/src/
 
-  # install simphony-common
-  - chmod +x install_simphony_common.sh  && ./install_simphony_common.sh
-
   - pip install -r dev_requirements.txt
   - pip install -r doc_requirements.txt
   - pip install coveralls
