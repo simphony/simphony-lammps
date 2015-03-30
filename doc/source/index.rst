@@ -12,10 +12,11 @@ Welcome to Simphony-Lammps's documentation!
 User Manual
 ===========
 
-INTERNAL and FILE-IO Interfaces <interface>
-
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+
+   INTERNAL and FILE-IO interface to LAMMPS <interface>
+
 
 Indices and tables
 ==================
