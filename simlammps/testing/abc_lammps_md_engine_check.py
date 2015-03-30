@@ -21,6 +21,14 @@ def _create_pc(name):
     return pc
 
 
+def _get_particle(wrapper):
+    for particles in wrapper.iter_particles():
+        for p in particles.iter_particles():
+            return p
+    else:
+        raise RuntimeError("could not find a particle to test with")
+
+
 class ABCLammpsMDEngineCheck(object):
 
     __metaclass__ = abc.ABCMeta
@@ -103,6 +111,22 @@ class ABCLammpsMDEngineCheck(object):
     def test_run(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)
         self.wrapper.run()
+
+    def test_run_delete_particle(self):
+        MDExampleConfigurator.configure_wrapper(self.wrapper)
+
+        removed_particle = _get_particle(self.pc)
+        self.pc.remove_particle(removed_particle.uid)
+
+        # check that it was removed
+        with self.assertRaises(KeyError):
+            self.pc.get_particle(removed_particle.uid)
+
+        self.wrapper.run()
+
+        # check that it stayed removed
+        with self.assertRaises(KeyError):
+            self.pc.get_particle(removed_particle.uid)
 
     def test_0_step_run(self):
         MDExampleConfigurator.set_configuration(self.wrapper)
