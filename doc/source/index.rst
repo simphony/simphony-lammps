@@ -8,10 +8,14 @@ Welcome to Simphony-Lammps's documentation!
 
 .. include:: ../../README.rst
 
+
+User Manual
+===========
+
+INTERNAL and FILE-IO Interfaces <interface>
+
 .. toctree::
    :maxdepth: 2
-
-
 
 Indices and tables
 ==================
