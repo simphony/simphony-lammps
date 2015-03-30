@@ -4,7 +4,7 @@ from simphony.cuds.particles import Particles
 from simphony.testing.abc_check_particles import (
     ContainerAddParticlesCheck, ContainerManipulatingParticlesCheck)
 from simlammps.lammps_wrapper import LammpsWrapper
-from simlammps.tests.example_configurator import ExampleConfigurator
+from simlammps.testing.md_example_configurator import MDExampleConfigurator
 
 
 class TestFileIoParticlesAddParticles(
@@ -15,7 +15,7 @@ class TestFileIoParticlesAddParticles(
 
     def setUp(self):
         self.wrapper = LammpsWrapper()
-        ExampleConfigurator.configure_wrapper(self.wrapper)
+        MDExampleConfigurator.configure_wrapper(self.wrapper)
         pcs = [pc for pc in self.wrapper.iter_particles()]
         self.pc = pcs[0]
         ContainerAddParticlesCheck.setUp(self)
@@ -48,7 +48,7 @@ class TestLammpsParticles(unittest.TestCase):
         # configuration is being done by dummy class
         # the wrapper is properly configured with
         # CM/SP/BC and given particles
-        ExampleConfigurator.configure_wrapper(self.wrapper)
+        MDExampleConfigurator.configure_wrapper(self.wrapper)
 
         # keep track of first wrapper-based container of particles
         # and the particle ids that it contains
