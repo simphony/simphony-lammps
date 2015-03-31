@@ -6,6 +6,7 @@ import contextlib
 import os
 import tempfile
 import shutil
+from enum import IntEnum, unique
 
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
@@ -27,11 +28,28 @@ def _temp_directory():
     shutil.rmtree(temp_dir)
 
 
+@unique
+class InterfaceType(IntEnum):
+
+    INTERNAL = 0
+    FILEIO = 1
+
+
 class LammpsWrapper(ABCModelingEngine):
     """ Wrapper to LAMMPS-md
 
+
     """
-    def __init__(self):
+    def __init__(self, interface=InterfaceType.FILEIO):
+        """ Constructor.
+
+        Parameters
+        ----------
+        interface : InterfaceType
+            The type of interface should be used in interfacing with LAMMPS
+
+        """
+
         self._data_manager = LammpsFileIoDataManager()
 
         self.BC = DataContainer()

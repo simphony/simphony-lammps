@@ -7,17 +7,17 @@ from simphony.core.data_container import DataContainer
 from simlammps.cuba_extension import CUBAExtension
 
 
-class ExampleConfigurator:
-    """  Example configuration
+class MDExampleConfigurator:
+    """  MD Example configuration
 
     Class provides an example configuration for a
-    lammps wrapper
+    lammps molecular dynamic engine
 
     """
 
     @staticmethod
     def set_configuration(wrapper):
-        """ Configure example wrapper with example settings
+        """ Configure example engine with example settings
 
         The wrapper is configured with required CM, SP, BC parameters
 
@@ -79,10 +79,10 @@ class ExampleConfigurator:
 
         """
         # configure
-        ExampleConfigurator.set_configuration(wrapper)
+        MDExampleConfigurator.set_configuration(wrapper)
 
         # add particle containers
-        ExampleConfigurator.add_particles(wrapper)
+        MDExampleConfigurator.add_particles(wrapper)
 
     @staticmethod
     def add_particles(wrapper):
