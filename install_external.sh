@@ -6,14 +6,14 @@ pushd mylammps && git checkout r12824 && popd
 
 # build lammps executable 
 pushd mylammps/src 
-make -j ubuntu_simple
+make -j 2 ubuntu_simple
 ln -s lmp_ubuntu_simple lammps
 popd
 
 
 pushd mylammps/src
 # make shared library for python
-make -j makeshlib && make -j -f Makefile.shlib ubuntu_simple
+make -j 2 makeshlib && make -j 2 -f Makefile.shlib ubuntu_simple
 popd
 # install LAMMPS python wrapper
 pushd mylammps/python 
