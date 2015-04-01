@@ -112,7 +112,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        return self._pc_cache[uname].update_particle(particle)
+        self._pc_cache[uname].update_particle(particle)
 
     def add_particle(self, particle, uname):
         """Add particle
@@ -261,7 +261,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             types.add(pc.data[CUBA.MATERIAL_TYPE])
             num_particles += sum(1 for _ in pc.iter_particles())
 
-        box = get_box([pc for _, pc in self._pcs.iteritems()])
+        box = get_box([pc for _, pc in self._pc_cache.iteritems()])
 
         lines.append('{} atoms\n'.format(num_particles))
         lines.append('{} atom types\n\n'.format(len(types)))
