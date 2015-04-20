@@ -53,7 +53,7 @@ class TestPairStyle(unittest.TestCase):
 
     def test_lj_cut_error(self):
         SP = {}
-        SP[CUBAExtension.PAIR_POTENTIALS] = ("lj:\n")
+        SP[CUBAExtension.PAIR_POTENTIALS] = "lj:\n"
         with self.assertRaises(RuntimeError):
             PairStyle(SP)
 

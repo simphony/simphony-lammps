@@ -29,8 +29,11 @@ class LammpsFileIoDataManager(ABCDataManager):
         # map from lammps-id to simphony-uid
         self._lammpsid_to_uid = {}
 
-        # cache of particle containeres
+        # cache of particle containers
         self._pc_cache = {}
+
+        # cache of data container extensions
+        self._dc_extension_cache = {}
 
     def get_data(self, uname):
         """Returns data container associated with particle container
@@ -54,6 +57,28 @@ class LammpsFileIoDataManager(ABCDataManager):
         """
         self._pc_cache[uname].data = data
 
+    def get_data_extension(self, uname):
+        """Returns data container extension associated with particle container
+
+        Parameters
+        ----------
+        uname : string
+            non-changing unique name of particles
+
+        """
+        return self._dc_extension_cache[uname]
+
+    def set_data_extension(self, data, uname):
+        """Sets data container extension associated with particle container
+
+        Parameters
+        ----------
+        uname : string
+            non-changing unique name of particles
+
+        """
+        self._dc_extension_cache[uname] = data
+
     def _handle_delete_particles(self, uname):
         """Handle when a Particles is deleted
 
@@ -64,6 +89,7 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         """
         del self._pc_cache[uname]
+        del self._dc_extension_cache[uname]
 
     def _handle_new_particles(self, uname, particles):
         """Add new particle container to this manager.
@@ -87,6 +113,9 @@ class LammpsFileIoDataManager(ABCDataManager):
             pc.add_bond(p)
 
         self._pc_cache[uname] = pc
+
+        # create empty dc extension
+        self._dc_extension_cache[uname] = {}
 
     def get_particle(self, uid, uname):
         """Get particle
@@ -261,7 +290,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             types.add(pc.data[CUBA.MATERIAL_TYPE])
             num_particles += sum(1 for _ in pc.iter_particles())
 
-        box = get_box([pc for _, pc in self._pc_cache.iteritems()])
+        box = get_box([de for _, de in self._dc_extension_cache.iteritems()])
 
         lines.append('{} atoms\n'.format(num_particles))
         lines.append('{} atom types\n\n'.format(len(types)))
@@ -356,7 +385,7 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         """
         mass = {}
-        for uname, pc in self.iteritems():
+        for uname, pc in self._pc_cache.iteritems():
             data = pc.data
             material_type = data[CUBA.MATERIAL_TYPE]
             if material_type in mass:

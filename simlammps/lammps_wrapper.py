@@ -12,6 +12,7 @@ from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
 
 from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
+from simlammps.lammps_internal_data_manager import LammpsInternalDataManager
 from simlammps.lammps_process import LammpsProcess
 from simlammps.config.script_writer import ScriptWriter
 
@@ -50,7 +51,15 @@ class LammpsWrapper(ABCModelingEngine):
 
         """
 
-        self._data_manager = LammpsFileIoDataManager()
+        self._interface = interface
+
+        if interface == InterfaceType.FILEIO:
+            self._data_manager = LammpsFileIoDataManager()
+        else:
+            # TODO
+            import lammps
+            self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
+            self._data_manager = LammpsInternalDataManager(self._lammps)
 
         self.BC = DataContainer()
         self.CM = DataContainer()
@@ -142,24 +151,42 @@ class LammpsWrapper(ABCModelingEngine):
         """ Run lammps-engine based on configuration and data
 
         """
-        with _temp_directory() as temp_dir:
-            input_data_filename = os.path.join(temp_dir, "data_in.lammps")
-            output_data_filename = os.path.join(temp_dir, "data_out.lammps")
 
+        if self._interface == InterfaceType.FILEIO:
+            with _temp_directory() as temp_dir:
+                input_data_filename = os.path.join(
+                    temp_dir, "data_in.lammps")
+                output_data_filename = os.path.join(
+                    temp_dir, "data_out.lammps")
+
+                # before running, we flush any changes to lammps
+                self._data_manager.flush(input_data_filename)
+
+                commands = ScriptWriter.get_configuration(
+                    input_data_file=input_data_filename,
+                    output_data_file=output_data_filename,
+                    BC=_combine(self.BC, self.BC_extension),
+                    CM=_combine(self.CM, self.CM_extension),
+                    SP=_combine(self.SP, self.SP_extension))
+                lammps_process = LammpsProcess(log_directory=temp_dir)
+                lammps_process.run(commands)
+
+                # after running, we read any changes from lammps
+                self._data_manager.read(output_data_filename)
+        else:
             # before running, we flush any changes to lammps
-            self._data_manager.flush(input_data_filename)
+            self._data_manager.flush()
 
             commands = ScriptWriter.get_configuration(
-                input_data_file=input_data_filename,
-                output_data_file=output_data_filename,
                 BC=_combine(self.BC, self.BC_extension),
                 CM=_combine(self.CM, self.CM_extension),
                 SP=_combine(self.SP, self.SP_extension))
-            lammps = LammpsProcess(log_directory=temp_dir)
-            lammps.run(commands)
+
+            self._lammps.command(commands)
 
             # after running, we read any changes from lammps
-            self._data_manager.read(output_data_filename)
+            # TODO rework
+            self._data_manager.read("dummy")
 
     def add_lattice(self, lattice):
         raise NotImplementedError()

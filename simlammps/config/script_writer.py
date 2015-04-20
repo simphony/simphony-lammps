@@ -165,23 +165,23 @@ def _get_boundary(BC):
 
     """
 
-    errorMessage = ""
-    boundaryCommand = "boundary"
+    error_message = ""
+    boundary_command = "boundary"
 
     # mapping of cuds-value to lammps string
     mappings = {'periodic': 'p', 'fixed': 'f'}
 
     if len(BC[CUBAExtension.BOX_FACES]) != 3:
-        errorMessage += "3 dimensions need to be given.\n"
+        error_message += "3 dimensions need to be given.\n"
     for b in BC[CUBAExtension.BOX_FACES]:
         if b in mappings:
-            boundaryCommand += " {}".format(mappings[b])
+            boundary_command += " {}".format(mappings[b])
         else:
-            errorMessage += "'{}' is not supported\n"
-    if errorMessage:
+            error_message += "'{}' is not supported\n"
+    if error_message:
         message = ("Unsupported boundary was provided "
                    "BC[CUBAExtension.BOX_FACES] = {}\n"
                    "{}")
         ConfigurationError(message.format(
-            BC[CUBAExtension.BOX_FACES], errorMessage))
-    return boundaryCommand
+            BC[CUBAExtension.BOX_FACES], error_message))
+    return boundary_command

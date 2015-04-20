@@ -4,15 +4,20 @@ from simphony.cuds.abstractparticles import ABCParticles
 class LammpsParticles(ABCParticles):
     """ Responsible class to synchronize operations on particles
 
+    Attributes
+    ----------
+    name : string
+        name of particles
+    data : DataContainer
+        holds data
+    data_extension : dict
+        holds non-approved CUBA keywords
+
     """
     def __init__(self, manager, uname):
         # most of the work is delegated here to this manger
         self._manager = manager
-
         self._uname = uname
-
-        # holds non-approved CUBA keywords
-        self.data_extension = {}
 
     @property
     def name(self):
@@ -29,6 +34,14 @@ class LammpsParticles(ABCParticles):
     @data.setter
     def data(self, value):
         self._manager.set_data(value, self._uname)
+
+    @property
+    def data_extension(self):
+        return self._manager.get_data_extension(self._uname)
+
+    @data_extension.setter
+    def data_extension(self, value):
+        self._manager.set_data_extension(value, self._uname)
 
     # Particle methods ######################################################
 

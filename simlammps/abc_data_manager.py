@@ -86,7 +86,7 @@ class ABCDataManager(object):
         """Deletes lammps particle container and associated cache
 
         """
-        self._handle_delete_pc(self._unames[name])
+        self._handle_delete_particles(self._unames[name])
         del self._lpcs[self._unames[name]]
         del self._unames[name]
 
@@ -163,6 +163,27 @@ class ABCDataManager(object):
             non-changing unique name of particles
 
         """
+    @abc.abstractmethod
+    def get_data_extension(self, uname):
+        """Returns extension data container associated with particle container
+
+        Parameters
+        ----------
+        uname : string
+            non-changing unique name of particles
+
+        """
+
+    @abc.abstractmethod
+    def set_data_extension(self, data, uname):
+        """Sets textension data container associated with particle container
+
+        Parameters
+        ----------
+        uname : string
+            non-changing unique name of particles
+
+        """
 
     @abc.abstractmethod
     def get_particle(self, uid, uname):
@@ -173,7 +194,7 @@ class ABCDataManager(object):
         uid :
             uid of particle
         uname : string
-            name of particle container
+            non-changing unique name of particles
 
         """
 
@@ -186,7 +207,7 @@ class ABCDataManager(object):
         uid :
             uid of particle
         uname : string
-            name of particle container
+            non-changing unique name of particles
 
         """
 
@@ -199,7 +220,7 @@ class ABCDataManager(object):
         uid :
             uid of particle
         uname : string
-            name of particle container
+            non-changing unique name of particles
 
         """
 
@@ -212,7 +233,7 @@ class ABCDataManager(object):
         uid :
             uid of particle
         uname : string
-            name of particle container
+            non-changing unique name of particles
 
         """
 
@@ -238,6 +259,8 @@ class ABCDataManager(object):
         uids : list of particle uids
             sequence of uids of particles that should be iterated over. If
             uids is None then all particles will be iterated over.
+        uname : string
+            non-changing unique name of particles
 
         """
 

@@ -1,34 +1,42 @@
 from simlammps.cuba_extension import CUBAExtension
 
 
-def get_box(particles):
+def get_box(particle_data_containers, command_format=False):
     """ Get simulation box commands
 
     Using CUBA.BOX_VECTORS and CUBA.BOX_ORIGIN, return the
     string used by LAMMPS to define the simulation box in
-    the LAMMPS data file
+    the LAMMPS data file or as a command.
+
+    Currently the box vectors (and origin) have to be
+    the same for each particle container.
 
     Parameters:
     -----------
-    particles: list of containers of particles
+    particle_data_containers: collection of DataContainer
+        list of containers of data containers from particles
+    command_format: boolean
+        if command format is true, then box command suitable
+        for lammps-command is returned.  Otherwise, the
+        string retured is suitable for LAMMPS data file.
     """
     origin = None
     vectors = None
 
-    for pc in particles:
+    for dc in particle_data_containers:
         # find box vectors (and origin) and ensure
         # that they are the same for each particle container
-        if CUBAExtension.BOX_VECTORS in pc.data_extension:
+        if CUBAExtension.BOX_VECTORS in dc:
             if (vectors and
-                    vectors != pc.data_extension[CUBAExtension.BOX_VECTORS]):
+                    vectors != dc[CUBAExtension.BOX_VECTORS]):
                 # TODO provide more info in exception message
                 raise RuntimeError("Box vectors need to match")
-            vectors = pc.data_extension[CUBAExtension.BOX_VECTORS]
-        if CUBAExtension.BOX_ORIGIN in pc.data:
-            if origin and origin != pc.data[CUBAExtension.BOX_ORIGIN]:
+            vectors = dc[CUBAExtension.BOX_VECTORS]
+        if CUBAExtension.BOX_ORIGIN in dc:
+            if origin and origin != dc[CUBAExtension.BOX_ORIGIN]:
                 # TODO provide more info in exception message
                 raise RuntimeError("Box origin need to match")
-            origin = pc.data_extension[CUBAExtension.BOX_ORIGIN]
+            origin = dc[CUBAExtension.BOX_ORIGIN]
 
     # origin is optional
     if not origin:
@@ -49,7 +57,15 @@ def get_box(particles):
     else:
         _check_vectors(vectors)
 
-    return _get_box_string(vectors, origin)
+    box_string = ""
+    if command_format:
+        box_string = _get_command_region_box_string(vectors, origin)
+    else:
+        box_string = _get_data_file_box_string(vectors, origin)
+
+    return box_string.format(origin[0], vectors[0][0]-origin[0],
+                             origin[1], vectors[1][1]-origin[1],
+                             origin[2], vectors[2][2]-origin[2])
 
 
 def _check_vectors(vectors):
@@ -65,15 +81,15 @@ def _check_vectors(vectors):
                 raise RuntimeError(msg)
 
 
-def _get_box_string(vectors, origin):
-    # TODO: see previous TODO
-    x = vectors[0][0]
-    y = vectors[1][1]
-    z = vectors[2][2]
-    box = "{:.16e} {:.16e} xlo xhi\n".format(
-        origin[0], x-origin[0])
-    box += "{0:.16e} {1:.16e} ylo yhi\n".format(
-        origin[1], y-origin[1])
-    box += "{0:.16e} {1:.16e} zlo zhi\n".format(
-        origin[2], z-origin[2])
+def _get_data_file_box_string(vectors, origin):
+    box = "{:.16e} {:.16e} xlo xhi\n"
+    box += "{:.16e} {:.16e} ylo yhi\n"
+    box += "{:.16e} {:.16e} zlo zhi\n"
+    return box
+
+
+def _get_command_region_box_string(vectors, origin):
+    box = "region box block {:.16e} {:.16e} "
+    box += "{:.16e} {:.16e} "
+    box += "{:.16e} {:.16e}\n"
     return box
