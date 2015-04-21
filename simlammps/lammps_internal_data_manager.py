@@ -28,11 +28,11 @@ class _IDGenerator(object):
 
 
 class LammpsInternalDataManager(ABCDataManager):
-    """  Class managing Lammps data information using file-io
+    """  Class managing LAMMPS data information using file-io
 
-    The class performs communicating the data to and from lammps using FILE-IO
+    The class performs communicating the data to and from LAMMPS using FILE-IO
     communications (i.e. through input and output files). The class manages
-    data existing in Lammps (via lammps data file) and allows this data to be
+    data existing in LAMMPS (via LAMMPS data file) and allows this data to be
     queried and to be changed.
 
     Class maintains a cache of the particle information.  This information
@@ -411,9 +411,10 @@ class LammpsInternalDataManager(ABCDataManager):
         self._lammpsid_to_uid[lammps_id] = particle.uid
         self._uid_to_lammpsid[uname][particle.uid] = lammps_id
         self._lammpsid_to_index[lammps_id] = len(self._lammpsid_to_uid) - 1
-        # TODO probably do not need both lammpsid and index as in the INTERNAL
-        # case the values are ordered by lammps-ids (1..N) so what there
-        # index is clear.
+        # TODO we probably do not need both lammpsid and index as in the
+        # case of the INTERNAL wrapper, the values are ordered by
+        # lammps-ids (1..N) so what the index is clear when one has
+        # the lammps id
 
         # TODO check if this is right..i assume we should cache added atoms
         # and then add there values to our caches
