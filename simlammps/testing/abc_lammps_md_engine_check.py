@@ -1,6 +1,8 @@
 import abc
 from functools import partial
 
+from numpy.testing import assert_almost_equal
+
 from simphony.testing.utils import (
     compare_data_containers, compare_particles)
 from simphony.core.data_container import DataContainer
@@ -139,13 +141,12 @@ class ABCLammpsMDEngineCheck(object):
         with self.assertRaises(KeyError):
             particles.get_particle(removed_particle.uid)
 
-    # TODO
-    def TODO_test_0_step_run(self):
+    def test_0_step_run(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)
 
         foo = Particles(name="foo")
         for i in range(0, 10):
-            p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 1+0.1*i))
+            p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 0+0.1*i))
             p.data[CUBA.VELOCITY] = (1+0.1*i, 1+0.1*i, 1+0.1*i)
             foo.add_particle(p)
 
@@ -156,7 +157,7 @@ class ABCLammpsMDEngineCheck(object):
         # check if information matches up
         for p in foo.iter_particles():
             p_w = foo_w.get_particle(p.uid)
-            self.assertEqual(p_w.coordinates, p.coordinates)
+            assert_almost_equal(p_w.coordinates, p.coordinates)
             # TODO test velocity
             # self.assertEqual(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
 
@@ -168,7 +169,7 @@ class ABCLammpsMDEngineCheck(object):
         for p in foo.iter_particles():
             p_w = foo_w.get_particle(p.uid)
 
-            self.assertEqual(p_w.coordinates, p.coordinates)
+            assert_almost_equal(p_w.coordinates, p.coordinates)
             # TODO test velocity
             # self.assertEqual(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
 
