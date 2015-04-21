@@ -1,4 +1,5 @@
 import uuid
+import ctypes
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
@@ -345,11 +346,8 @@ class LammpsInternalDataManager(ABCDataManager):
         self._invalid = False
 
     def _send_to_lammps(self):
-        # TODO remove hack.  Need to figu
-        coordinates = self._lammps.gather_atoms("x", 1, 3)
-        for i, c in enumerate(self._coordinates):
-            coordinates[i] = self._coordinates[i]
-        self._lammps.scatter_atoms("x", 1, 3, coordinates)
+        coords = (ctypes.c_float * len(self._coordinates))(*self._coordinates)
+        self._lammps.scatter_atoms("x", 1, 3, coords)
 
     def _get_coordinates(self, index):
         """ Get coordinates for a particle
@@ -367,9 +365,11 @@ class LammpsInternalDataManager(ABCDataManager):
         """ Set coordinates for a particle
 
         """
+
         # TODO have arguments as particle and index
         lammpsid = self._uid_to_lammpsid[uname][particle.uid]
         i = self._lammpsid_to_index[lammpsid] * 3
+
         self._coordinates[i:i+3] = particle.coordinates[0:3]
 
     def _add_atom(self, particle, uname):
