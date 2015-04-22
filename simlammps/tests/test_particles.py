@@ -1,6 +1,8 @@
 import unittest
 
 from simphony.cuds.particles import Particles
+from simphony.core.cuba import CUBA
+
 from simlammps.lammps_wrapper import LammpsWrapper, InterfaceType
 from simlammps.testing.md_example_configurator import MDExampleConfigurator
 
@@ -10,9 +12,8 @@ from simlammps.testing.md_example_configurator import MDExampleConfigurator
 from simlammps.testing.abc_check_particles import (
     ContainerAddParticlesCheck, ContainerManipulatingParticlesCheck)
 
-# list of CUBA that is supported by particles in LAMMPS-MD
-# TODO add CUBA.VELOCITY
-_supported_cuba = []
+# list of CUBA that is supported/needed by particles in LAMMPS-MD
+_supported_cuba = [CUBA.VELOCITY]
 
 
 class TestFileIoParticlesAddParticles(

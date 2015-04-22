@@ -23,8 +23,11 @@ def _create_pc(name):
     data[CUBA.MATERIAL_TYPE] = 1
     pc.data = data
 
-    pc.add_particle(Particle(coordinates=(1.01, 1.01, 1.01)))
-    pc.add_particle(Particle(coordinates=(1.02, 1.02, 1.02)))
+    data = DataContainer()
+    data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
+
+    pc.add_particle(Particle(coordinates=(1.01, 1.01, 1.01), data=data))
+    pc.add_particle(Particle(coordinates=(1.02, 1.02, 1.02), data=data))
 
     return pc
 

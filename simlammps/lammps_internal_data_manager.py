@@ -80,6 +80,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         # cache of point data
         self._coordinates = []
+        self._velocity = []
         self._types = []
 
         # cache of particle containers's data
@@ -225,8 +226,8 @@ class LammpsInternalDataManager(ABCDataManager):
         if uid in self._uid_to_lammpsid[uname]:
             index = self._lammpsid_to_index[self._uid_to_lammpsid[uname][uid]]
             coordinates = self._get_coordinates(index)
-            # TODO get data
-            p = Particle(uid=uid, coordinates=coordinates)
+            data = self._get_particle_data(index)
+            p = Particle(uid=uid, coordinates=coordinates, data=data)
             return p
         else:
             raise KeyError("uid ({}) was not found".format(uid))
@@ -341,13 +342,18 @@ class LammpsInternalDataManager(ABCDataManager):
         for index, id_value in enumerate(ids):
             self._lammpsid_to_index[id_value] = index
         self._coordinates = self._lammps.gather_atoms("x", 1, 3)
+        self._velocity = self._lammps.gather_atoms("v", 1, 3)
         self._types = self._lammps.gather_atoms("type", 0, 1)
         assert(len(self._types) == len(self._lammpsid_to_uid))
+
         self._invalid = False
 
     def _send_to_lammps(self):
         coords = (ctypes.c_float * len(self._coordinates))(*self._coordinates)
         self._lammps.scatter_atoms("x", 1, 3, coords)
+
+        vel = (ctypes.c_float * len(self._velocity))(*self._velocity)
+        self._lammps.scatter_atoms("v", 1, 3, vel)
 
         # todo send types
         # todo send mass (for each type)
@@ -365,6 +371,25 @@ class LammpsInternalDataManager(ABCDataManager):
         coords = self._coordinates[i:i+3]
         return tuple(coords)
 
+    def _get_particle_data(self, index):
+        """ get particle data
+
+        Parameters
+        ----------
+        index : int
+            index location of particle in array
+
+        Returns
+        -------
+        data : DataContainer
+            data of the particle
+        """
+        data = DataContainer()
+        i = index * 3
+        vel = self._velocity[i:i+3]
+        data[CUBA.VELOCITY] = tuple(vel)
+        return data
+
     def _set_coordinates(self, particle, uname):
         """ Set coordinates for a particle
 
@@ -375,6 +400,19 @@ class LammpsInternalDataManager(ABCDataManager):
         i = self._lammpsid_to_index[lammpsid] * 3
 
         self._coordinates[i:i+3] = particle.coordinates[0:3]
+
+    def _set_data(self, particle, uname):
+        """ Set data for a particle
+
+        """
+
+        # TODO have arguments as particle and index
+        lammpsid = self._uid_to_lammpsid[uname][particle.uid]
+        i = self._lammpsid_to_index[lammpsid] * 3
+
+        data = particle.data
+
+        self._velocity[i:i+3] = data[CUBA.VELOCITY][0:3]
 
     def _add_atom(self, particle, uname):
         """ Add a atom at point's position to lammps
@@ -423,5 +461,6 @@ class LammpsInternalDataManager(ABCDataManager):
         # TODO check if this is right..i assume we should cache added atoms
         # and then add there values to our caches
         self._set_coordinates(particle, uname)
+        self._set_data(particle, uname)
 
         return particle.uid
