@@ -54,7 +54,7 @@ class LammpsInternalDataManager(ABCDataManager):
         self._lammps.command("boundary p s p")
         self._lammps.command("atom_style atomic")
 
-        # This is a hack as due to pc.data_extension
+        # TODO This is a hack as due to pc.data_extension
         # being empty at this point
         vectors = [(25.0, 0.0, 0.0),
                    (0.0, 22.0, 0.0),
@@ -348,6 +348,10 @@ class LammpsInternalDataManager(ABCDataManager):
     def _send_to_lammps(self):
         coords = (ctypes.c_float * len(self._coordinates))(*self._coordinates)
         self._lammps.scatter_atoms("x", 1, 3, coords)
+
+        # todo send types
+        # todo send mass (for each type)
+        # TODO send velocity
 
     def _get_coordinates(self, index):
         """ Get coordinates for a particle
