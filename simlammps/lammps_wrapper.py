@@ -11,9 +11,10 @@ from enum import IntEnum, unique
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
 
-from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
-from simlammps.lammps_internal_data_manager import LammpsInternalDataManager
-from simlammps.lammps_process import LammpsProcess
+from simlammps.io.lammps_fileio_data_manager import LammpsFileIoDataManager
+from simlammps.io.lammps_process import LammpsProcess
+from simlammps.internal.lammps_internal_data_manager import (
+    LammpsInternalDataManager)
 from simlammps.config.script_writer import ScriptWriter
 
 
