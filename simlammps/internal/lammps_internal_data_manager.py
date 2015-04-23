@@ -339,10 +339,6 @@ class LammpsInternalDataManager(ABCDataManager):
         # (i.e. someone has deleted all the particles)
 
     def _update_from_lammps(self):
-        self._lammpsid_to_index = {}
-        ids = self._lammps.gather_atoms("id", 0, 1)
-        for index, id_value in enumerate(ids):
-            self._lammpsid_to_index[id_value] = index
         self._coordinates = self._lammps.gather_atoms("x", 1, 3)
 
         self._particle_data_cache.retrieve()
