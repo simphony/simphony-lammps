@@ -34,23 +34,27 @@ class ParticleDataCache(object):
         self._data_entries = [_LammpsData(CUBA=CUBA.VELOCITY,
                                           lammps_name="v",
                                           type=1,  # double
-                                          count=3)]
+                                          count=3),
+                              _LammpsData(CUBA=CUBA.MATERIAL_TYPE,
+                                          lammps_name="type",
+                                          type=0,  # int
+                                          count=1)]
 
-        self.cache = {}
+        self._cache = {}
 
         for entry in self._data_entries:
-            self.cache[entry.CUBA] = []
+            self._cache[entry.CUBA] = []
 
     def retrieve(self):
         for entry in self._data_entries:
-            self.cache[entry.CUBA] = self._lammps.gather_atoms(
+            self._cache[entry.CUBA] = self._lammps.gather_atoms(
                 entry.lammps_name,
                 entry.type,
                 entry.count)
 
     def send(self):
         for entry in self._data_entries:
-            values = self.cache[entry.CUBA]
+            values = self._cache[entry.CUBA]
 
             if entry.type is 1:
                 values = (ctypes.c_float * len(values))(*values)
@@ -77,11 +81,13 @@ class ParticleDataCache(object):
         data = DataContainer()
         for entry in self._data_entries:
             i = index * entry.count
-            value = self.cache[entry.CUBA][i:i+entry.count]
             if entry.count > 1:
-                # TODO assuming that its a tuple
-                value = tuple(value)
-            data[entry.CUBA] = value
+                # always assuming that its a tuple
+                # ( see https://github.com/simphony/simphony-common/issues/18 )
+                data[entry.CUBA] = tuple(
+                    self._cache[entry.CUBA][i:i+entry.count])
+            else:
+                data[entry.CUBA] = self._cache[entry.CUBA][i]
         return data
 
     def set_particle_data(self, data, index):
@@ -98,5 +104,16 @@ class ParticleDataCache(object):
         """
         for entry in self._data_entries:
             i = index * entry.count
-            self.cache[entry.CUBA][i:i+entry.count] = \
-                data[entry.CUBA][0:entry.count]
+            if entry.count > 1:
+                self._cache[entry.CUBA][i:i+entry.count] = \
+                    data[entry.CUBA][0:entry.count]
+            else:
+                if i < len(self._cache[entry.CUBA]):
+                    self._cache[entry.CUBA][i] = data[entry.CUBA]
+                elif i == len(self._cache[entry.CUBA]):
+                    self._cache[entry.CUBA].append(data[entry.CUBA])
+                else:
+                    msg = "Problem with index {}".format(index)
+                    msg += "When particle data is first set it," \
+                           " it must be set in order (from 0 to N"
+                    raise IndexError(msg)

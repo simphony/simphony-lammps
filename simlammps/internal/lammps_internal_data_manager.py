@@ -180,6 +180,11 @@ class LammpsInternalDataManager(ABCDataManager):
 
         # self._update_simulation_box()
 
+        # TODO have uniform way to check what is needed
+        # and perform a check at a different spot.
+        if CUBA.MATERIAL_TYPE not in self._pc_data[uname]:
+            raise ValueError("Missing the required CUBA.MATERIAL_TYPE")
+
         # add each item
         for p in particles.iter_particles():
             self._add_atom(p, uname)
@@ -227,6 +232,13 @@ class LammpsInternalDataManager(ABCDataManager):
             index = self._lammpsid_to_index[self._uid_to_lammpsid[uname][uid]]
             coordinates = self._get_coordinates(index)
             data = self._particle_data_cache.get_particle_data(index)
+
+            # TODO removing type from data as it not kept as a per-particle
+            # data but currently it is on the container.
+            # In lammps it is only stored as a per-atom based attribute.
+            # This should be changed once #9 issue is addressed
+            del data[CUBA.MATERIAL_TYPE]
+
             p = Particle(uid=uid,
                          coordinates=coordinates,
                          data=data)
@@ -246,7 +258,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         """
         if particle.uid in self._uid_to_lammpsid[uname]:
-            self._set_coordinates(particle, uname)
+            self._set_particle(particle, uname)
         else:
             raise ValueError(
                 "particle id ({}) was not found".format(particle.uid))
@@ -366,16 +378,33 @@ class LammpsInternalDataManager(ABCDataManager):
         coords = self._coordinates[i:i+3]
         return tuple(coords)
 
-    def _set_coordinates(self, particle, uname):
-        """ Set coordinates for a particle
+    def _set_particle(self, particle, uname):
+        """ Set coordinates and data for a particle
+
+        Parameters
+        ----------
+        particle : Particle
+            particle to be set
+        uname : string
+            non-changing unique name of particle container
 
         """
 
         # TODO have arguments as particle and index
         lammpsid = self._uid_to_lammpsid[uname][particle.uid]
-        i = self._lammpsid_to_index[lammpsid] * 3
-
+        index = self._lammpsid_to_index[lammpsid]
+        i = index * 3
         self._coordinates[i:i+3] = particle.coordinates[0:3]
+
+        # TODO using type from container.  in lammps it is only
+        # stored as a per-atom based attribute.
+        # this should be changed once #9 issue is addressed
+        p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
+        data = DataContainer(particle.data)
+        data[CUBA.MATERIAL_TYPE] = p_type
+
+        self._particle_data_cache.set_particle_data(data,
+                                                    index)
 
     def _add_atom(self, particle, uname):
         """ Add a atom at point's position to lammps
@@ -399,10 +428,6 @@ class LammpsInternalDataManager(ABCDataManager):
                 "{} coordinates are incorrect".format(particle.coordinates))
         coordinates = ' '.join(map(str, particle.coordinates))
 
-        # TODO have uniform way to check what is needed
-        # and perform a check at a different spot.
-        if CUBA.MATERIAL_TYPE not in self._pc_data[uname]:
-            raise ValueError("Missing the required CUBA.MATERIAL_TYPE")
         p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
 
         self._lammps.command(
@@ -421,12 +446,6 @@ class LammpsInternalDataManager(ABCDataManager):
         # lammps-ids (1..N) so what the index is clear when one has
         # the lammps id
 
-        # TODO check if this is right..i assume we should cache added atoms
-        # and then add there values to our caches
-        self._set_coordinates(particle, uname)
-
-        index = self._lammpsid_to_index[lammps_id]
-        self._particle_data_cache.set_particle_data(particle.data,
-                                                    index)
+        self._set_particle(particle, uname)
 
         return particle.uid
