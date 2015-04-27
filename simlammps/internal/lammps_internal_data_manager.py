@@ -12,10 +12,10 @@ from simlammps.cuba_extension import CUBAExtension
 
 
 class _IDGenerator(object):
-    """Class keeps track of what is next lammps id
+    """Class keeps track of what is next LAMMPS id
 
     TODO provide ids that can be reused (i.e. become available
-     after deletions)
+     after deletions) or complains when we have used too many..
 
     """
     def __init__(self):
@@ -444,7 +444,8 @@ class LammpsInternalDataManager(ABCDataManager):
         # TODO we probably do not need both lammpsid and index as in the
         # case of the INTERNAL wrapper, the values are ordered by
         # lammps-ids (1..N) so what the index is clear when one has
-        # the lammps id
+        # the lammps id.  Need to evaluate this once we support
+        # the deletion of particles
 
         self._set_particle(particle, uname)
 
