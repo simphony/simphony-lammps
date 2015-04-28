@@ -41,11 +41,16 @@ class ParticleDataCache(object):
                                           count=1)]
 
         self._cache = {}
+        self._coordinates = []
+        self._id_cache = None
 
         for entry in self._data_entries:
             self._cache[entry.CUBA] = []
 
     def retrieve(self):
+        self._id_cache = self._lammps.gather_atoms("id", 0, 1)
+        self._coordinates = self._lammps.gather_atoms("x", 1, 3)
+
         for entry in self._data_entries:
             self._cache[entry.CUBA] = self._lammps.gather_atoms(
                 entry.lammps_name,
@@ -53,17 +58,26 @@ class ParticleDataCache(object):
                 entry.count)
 
     def send(self):
+        coords = (ctypes.c_float * len(self._coordinates))(*self._coordinates)
+        self._lammps.scatter_atoms("x", 1, 3, coords)
+
         for entry in self._data_entries:
             values = self._cache[entry.CUBA]
 
-            if entry.type is 1:
-                values = (ctypes.c_float * len(values))(*values)
+            extract = self._lammps.extract_atom(entry.lammps_name,
+                                                _get_extract_type(entry))
+
+            if entry.count == 1:
+                for i in range(len(values)):
+                    extract[i] = values[i]
+            elif entry.count == 3:
+                for i in range(len(values)/3):
+                    for j in range(entry.count):
+                        extract[i][j] = values[i*3+j]
             else:
-                values = (ctypes.c_int * len(values))(*values)
-            self._lammps.scatter_atoms(entry.lammps_name,
-                                       entry.type,
-                                       entry.count,
-                                       values)
+                raise RuntimeError("Unsupported count {}".format(
+                    entry.count))
+            return
 
     def get_particle_data(self, index):
         """ get particle data
@@ -90,18 +104,22 @@ class ParticleDataCache(object):
                 data[entry.CUBA] = self._cache[entry.CUBA][i]
         return data
 
-    def set_particle_data(self, data, index):
-        """ set particle data
+    def set_particle(self, coordinates, data, index):
+        """ set particle coordinates and data
 
         Parameters
         ----------
+        coordinates : tuple of floats
+            particle coordinates
         data : DataContainer
             data of the particle
-
         index : int
             index location of particle in cache to be updated
 
         """
+        i = index * 3
+        self._coordinates[i:i+3] = coordinates[0:3]
+
         for entry in self._data_entries:
             i = index * entry.count
             if entry.count > 1:
@@ -117,3 +135,44 @@ class ParticleDataCache(object):
                     msg += "When particle data is first set it," \
                            " it must be set in order (from 0 to N"
                     raise IndexError(msg)
+
+    def get_coordinates(self, index):
+        """ Get coordinates for a particle
+
+        Parameters
+        ----------
+        index : int
+            index location of particle in array
+        """
+        i = index * 3
+        coords = self._coordinates[i:i+3]
+        return tuple(coords)
+
+
+def _get_extract_type(entry):
+    """ get LAMMPS "extract" type for extract_atoms method
+
+    Parameters
+    ----------
+    entry : LammpsData
+        info about the atom parameter
+
+    for the method extract_atoms, the parameter 'type' can be:
+       0 = vector of ints
+       1 = array of ints
+       2 = vector of doubles
+       3 = array of doubles
+
+    """
+    if entry.count == 1 and entry.type == 0:
+        return 0
+    elif entry.count == 3 and entry.type == 0:
+        return 1
+    elif entry.count == 1 and entry.type == 1:
+        return 2
+    elif entry.count == 3 and entry.type == 1:
+        return 3
+    else:
+        raise RuntimeError(
+            "Unsupported type {} and count {}".format(entry.type,
+                                                      entry.count))

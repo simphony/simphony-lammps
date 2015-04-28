@@ -173,8 +173,7 @@ class ABCLammpsMDEngineCheck(object):
             p_w = foo_w.get_particle(p.uid)
 
             assert_almost_equal(p_w.coordinates, p.coordinates)
-            # TODO test velocity
-            # self.assertEqual(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
+            assert_almost_equal(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
 
     def test_run_incomplete_cm(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)

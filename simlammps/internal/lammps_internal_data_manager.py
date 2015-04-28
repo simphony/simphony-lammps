@@ -1,5 +1,4 @@
 import uuid
-import ctypes
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
@@ -86,8 +85,7 @@ class LammpsInternalDataManager(ABCDataManager):
         # map from lammpsid to index location of data
         self._lammpsid_to_index = {}
 
-        # cache of point data
-        self._coordinates = []
+        # cache of coordinates and point data
         self._particle_data_cache = ParticleDataCache(lammps=self._lammps)
 
         # cache of particle containers's data
@@ -237,7 +235,7 @@ class LammpsInternalDataManager(ABCDataManager):
         """
         if uid in self._uid_to_lammpsid[uname]:
             index = self._lammpsid_to_index[self._uid_to_lammpsid[uname][uid]]
-            coordinates = self._get_coordinates(index)
+            coordinates = self._particle_data_cache.get_coordinates(index)
             data = self._particle_data_cache.get_particle_data(index)
 
             # TODO removing type from data as it not kept as a per-particle
@@ -349,7 +347,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         """
         if self._pc_data:
-            self._send_to_lammps()
+            self._particle_data_cache.send()
         else:
             raise RuntimeError(
                 "No particles.  Lammps cannot run without a particle")
@@ -358,32 +356,8 @@ class LammpsInternalDataManager(ABCDataManager):
         # (i.e. someone has deleted all the particles)
 
     def _update_from_lammps(self):
-        self._coordinates = self._lammps.gather_atoms("x", 1, 3)
-
         self._particle_data_cache.retrieve()
-
         self._invalid = False
-
-    def _send_to_lammps(self):
-        coords = (ctypes.c_float * len(self._coordinates))(*self._coordinates)
-        self._lammps.scatter_atoms("x", 1, 3, coords)
-
-        # send particle data (i.e. type, velocity)
-        self._particle_data_cache.send()
-
-        # todo send mass (for each type)
-
-    def _get_coordinates(self, index):
-        """ Get coordinates for a particle
-
-        Parameters
-        ----------
-        index : int
-            index location of particle in array
-        """
-        i = index * 3
-        coords = self._coordinates[i:i+3]
-        return tuple(coords)
 
     def _set_particle(self, particle, uname):
         """ Set coordinates and data for a particle
@@ -400,8 +374,6 @@ class LammpsInternalDataManager(ABCDataManager):
         # TODO have arguments as particle and index
         lammpsid = self._uid_to_lammpsid[uname][particle.uid]
         index = self._lammpsid_to_index[lammpsid]
-        i = index * 3
-        self._coordinates[i:i+3] = particle.coordinates[0:3]
 
         # TODO using type from container.  in lammps it is only
         # stored as a per-atom based attribute.
@@ -410,8 +382,9 @@ class LammpsInternalDataManager(ABCDataManager):
         data = DataContainer(particle.data)
         data[CUBA.MATERIAL_TYPE] = p_type
 
-        self._particle_data_cache.set_particle_data(data,
-                                                    index)
+        self._particle_data_cache.set_particle(particle.coordinates,
+                                               data,
+                                               index)
 
     def _add_atom(self, particle, uname):
         """ Add a atom at point's position to lammps
