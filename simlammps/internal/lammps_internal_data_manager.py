@@ -9,6 +9,7 @@ from simlammps.config.domain import get_box
 from simlammps.internal.particle_data_cache import ParticleDataCache
 from simlammps.abc_data_manager import ABCDataManager
 from simlammps.cuba_extension import CUBAExtension
+from simlammps.config.script_writer import ScriptWriter
 
 
 class _IDGenerator(object):
@@ -50,10 +51,16 @@ class LammpsInternalDataManager(ABCDataManager):
 
         self._lammps = lammps
 
-        # TODO remove
-        self._lammps.command("dimension 3")
-        self._lammps.command("boundary p s p")
-        self._lammps.command("atom_style atomic")
+        dummy_bc = {}
+        dummy_bc[CUBAExtension.BOX_FACES] = (
+            "periodic", "periodic", "periodic")
+        commands = "dimension 3\n"
+        commands = "units lj\n"
+        commands = ScriptWriter.get_initial_setup()
+
+        commands += ScriptWriter.get_boundary(dummy_bc)
+        for command in commands.splitlines():
+            self._lammps.command(command)
 
         # TODO This is a hack as due to pc.data_extension
         # being empty at this point

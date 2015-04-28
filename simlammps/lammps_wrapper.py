@@ -178,10 +178,15 @@ class LammpsWrapper(ABCModelingEngine):
             # before running, we flush any changes to lammps
             self._data_manager.flush()
 
-            commands = ScriptWriter.get_configuration(
-                BC=_combine(self.BC, self.BC_extension),
-                CM=_combine(self.CM, self.CM_extension),
-                SP=_combine(self.SP, self.SP_extension))
+            commands = ""
+
+            commands += ScriptWriter.get_pair_style(self.SP)
+            commands += ScriptWriter.get_fix(CM=_combine(self.CM,
+                                                         self.CM_extension))
+            commands += ScriptWriter.get_pair_coeff(
+                _combine(self.SP, self.SP_extension))
+            commands += ScriptWriter.get_run(CM=_combine(self.CM,
+                                                         self.CM_extension))
 
             self._lammps.command(commands)
 
