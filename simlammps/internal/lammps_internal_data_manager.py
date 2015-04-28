@@ -62,10 +62,12 @@ class LammpsInternalDataManager(ABCDataManager):
             self._lammps.command(command)
 
         # TODO This is a hack as due to pc.data_extension
-        # being empty at this point
+        # being empty at this point (we choose a vectors
+        # that corresponds with the dimensions used in our
+        # unit testing and in simple_nve.py
         vectors = [(25.0, 0.0, 0.0),
                    (0.0, 22.0, 0.0),
-                   (0.0, 0.0, 1.0)]
+                   (0.0, 0.0, 6.196)]
         dummy_data = {}
         dummy_data[CUBAExtension.BOX_VECTORS] = vectors
         dummy_data[CUBAExtension.BOX_ORIGIN] = (0.0, 0.0, 0.0)
@@ -173,11 +175,13 @@ class LammpsInternalDataManager(ABCDataManager):
         self._pc_data[uname] = DataContainer(particles.data)
         self._pc_data_extension[uname] = {}
 
-        # This is a hack as due to pc.data_extension
-        # being empty at this point
+        # TODO This is a hack as due to pc.data_extension
+        # being empty at this point (we choose a vectors
+        # that corresponds with the dimensions used in our
+        # unit testing and in simple_nve.py
         vectors = [(25.0, 0.0, 0.0),
                    (0.0, 22.0, 0.0),
-                   (0.0, 0.0, 1.0)]
+                   (0.0, 0.0, 6.196)]
         self._pc_data_extension[uname][CUBAExtension.BOX_VECTORS] = vectors
         self._pc_data_extension[uname][CUBAExtension.BOX_ORIGIN] = (0.0,
                                                                     0.0,
