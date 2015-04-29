@@ -41,7 +41,7 @@ class TestPairStyle(unittest.TestCase):
 
         pair_style = PairStyle(SP)
         self.assertEqual(
-            pair_style.get_global_config(), "pair_style lj/cut 1.12246")
+            pair_style.get_global_config(), "pair_style lj/cut 1.12246\n")
 
         lines = pair_style.get_pair_coeffs().split("\n")
         self.assertTrue("pair_coeff 1 1 1.0 1.0 1.2246" in lines)
@@ -76,7 +76,7 @@ class TestPairStyle(unittest.TestCase):
         pair_style = PairStyle(SP)
         self.assertEqual(
             pair_style.get_global_config(),
-            "pair_style hybrid/overlay lj/cut 1.13 coul/cut 1.12")
+            "pair_style hybrid/overlay lj/cut 1.13 coul/cut 1.12\n")
 
         lines = pair_style.get_pair_coeffs().split("\n")
         self.assertTrue("pair_coeff 1 1 lj/cut 1.0 1.0 1.2246" in lines)

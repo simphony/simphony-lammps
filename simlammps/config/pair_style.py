@@ -49,7 +49,7 @@ class PairStyle(object):
         if self._pair_infos:
             if len(self._pair_infos) == 1:
                 pair_info = self._pair_infos[0]
-                return "pair_style {} {}".format(
+                return "pair_style {} {}\n".format(
                     pair_info.pair_style,
                     " ".join(map(str, pair_info.global_params)))
             else:
@@ -59,6 +59,7 @@ class PairStyle(object):
                     result += " {} {}".format(
                         pair_info.pair_style,
                         " ".join(map(str, pair_info.global_params)))
+                result += "\n"
                 return result
         else:
             return ""
