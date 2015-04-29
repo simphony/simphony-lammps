@@ -49,7 +49,7 @@ class PairStyle(object):
         if self._pair_infos:
             if len(self._pair_infos) == 1:
                 pair_info = self._pair_infos[0]
-                return "pair_style {} {}".format(
+                return "pair_style {} {}\n".format(
                     pair_info.pair_style,
                     " ".join(map(str, pair_info.global_params)))
             else:
@@ -59,6 +59,7 @@ class PairStyle(object):
                     result += " {} {}".format(
                         pair_info.pair_style,
                         " ".join(map(str, pair_info.global_params)))
+                result += "\n"
                 return result
         else:
             return ""
@@ -78,17 +79,51 @@ class PairStyle(object):
                     coeffs += " ".join(map(str, pair)) + " "
 
                     if isOverlay:
-                        # add addtional info for ovelay
+                        # add additional info for overlay
                         coeffs += pair_info.pair_style + " "
 
                     # then add all params
                     coeffs += " ".join(map(str, params)) + "\n"
             coeffs += "\n"
+
+            # work-around for not being able to change the number of types
+            # (see issue #66), we set up a general wildcard pair coeffiencents
+            # so that every type is covered (i.e. pair_coeff * * XXX XXX XXX)
+            # and then what the user specifically sets overrides it for the
+            # actual types that are in use.
+            coeffs = self._extract_wildcard_coeffs() + coeffs
             return coeffs
         else:
             return ""
 
     # Private methods #######################################################
+
+    def _extract_wildcard_coeffs(self):
+        """ Get wildcard coefficients
+
+            Get wildcard pair coefficients.  This is used due to issue #66.
+            See comment in get_pair_coeffs method.
+        """
+        coeffs = ""
+        isOverlay = len(self._pair_infos) > 1
+        for pair_info in self._pair_infos:
+            for pair, params in pair_info.pair_params.iteritems():
+                # first add list pair info
+                # pair_coeff * * x.xx x.xx x.xx
+                coeffs += "pair_coeff * * "
+
+                if isOverlay:
+                    # add additional info for overlay
+                    coeffs += pair_info.pair_style + " "
+
+                # then add params all params
+                coeffs += " ".join(map(str, params)) + "\n"
+
+                # now we stop as we need only one wild card for each type
+                break
+        coeffs += "\n"
+
+        return coeffs
 
     def _create_pair_infos(self, SP):
         """ Creates appropriate pair info handler(s) from information
@@ -108,9 +143,10 @@ class PairStyle(object):
                     handler_info = _supported_pair_styles[my_pair_style]
                     req_global = handler_info["required_global_params"]
                     req_params = handler_info["required_pair_params"]
-                    global_params = self._get_global_params(
+                    global_params = PairStyle._get_global_params(
                         parameters, req_global)
-                    pair_params = self._get_pair_params(parameters, req_params)
+                    pair_params = PairStyle._get_pair_params(parameters,
+                                                             req_params)
                     styles.append(
                         PairStyleInfo(pair_style=handler_info["pair_style"],
                                       global_params=global_params,
@@ -120,7 +156,8 @@ class PairStyle(object):
                         "Unsupported pair style: {}".format(my_pair_style))
         return styles
 
-    def _get_global_params(self, keywords, required_global_params):
+    @staticmethod
+    def _get_global_params(keywords, required_global_params):
         global_params = []
         missing_params = []
         for req in required_global_params:
@@ -136,7 +173,8 @@ class PairStyle(object):
 
         return global_params
 
-    def _get_pair_params(self, keywords, required_pair_params):
+    @staticmethod
+    def _get_pair_params(keywords, required_pair_params):
         pair_params = {}
 
         parameter_keywords = keywords["parameters"]

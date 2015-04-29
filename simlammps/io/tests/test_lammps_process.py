@@ -2,7 +2,7 @@ import unittest
 import shutil
 import tempfile
 
-from simlammps.lammps_process import LammpsProcess
+from simlammps.io.lammps_process import LammpsProcess
 
 
 class TestLammpsProcess(unittest.TestCase):
