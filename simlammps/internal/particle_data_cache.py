@@ -59,7 +59,10 @@ class ParticleDataCache(object):
 
     def send(self):
         coords = (ctypes.c_float * len(self._coordinates))(*self._coordinates)
-        self._lammps.scatter_atoms("x", 1, 3, coords)
+        x = self._lammps.extract_atom("x", 3)
+        for i in range(len(coords)/3):
+            for j in range(3):
+                x[i][j] = coords[i*3+j]
 
         for entry in self._data_entries:
             values = self._cache[entry.CUBA]

@@ -44,7 +44,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        return self._pc_cache[uname].data
+        return DataContainer(self._pc_cache[uname].data)
 
     def set_data(self, data, uname):
         """Sets data container associated with particle container
@@ -55,7 +55,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        self._pc_cache[uname].data = data
+        self._pc_cache[uname].data = DataContainer(data)
 
     def get_data_extension(self, uname):
         """Returns data container extension associated with particle container
@@ -66,7 +66,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        return self._dc_extension_cache[uname]
+        return dict(self._dc_extension_cache[uname])
 
     def set_data_extension(self, data, uname):
         """Sets data container extension associated with particle container
@@ -77,7 +77,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        self._dc_extension_cache[uname] = data
+        self._dc_extension_cache[uname] = dict(data)
 
     def _handle_delete_particles(self, uname):
         """Handle when a Particles is deleted

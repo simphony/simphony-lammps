@@ -191,8 +191,7 @@ pc_w = wrapper.add_particles(pc)
 
 super_cell = [
     tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
-pc_w.data_extension[lammps.CUBAExtension.BOX_VECTORS] = super_cell
-
+pc_w.data_extension = {lammps.CUBAExtension.BOX_VECTORS: super_cell}
 
 # define the SP component of the SimPhoNy application model.  The
 # following are the LJ parameters for this test. Normalized reduced

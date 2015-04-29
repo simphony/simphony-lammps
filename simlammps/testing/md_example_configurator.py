@@ -145,6 +145,7 @@ class MDExampleConfigurator:
         vectors = [(25.0, 0.0, 0.0),
                    (0.0, 22.0, 0.0),
                    (0.0, 0.0, 1.0)]
-        pc_w.data_extension[CUBAExtension.BOX_VECTORS] = vectors
-        pc_w.data_extension[CUBAExtension.BOX_ORIGIN] = (0.0, 0.0, 0.0)
+
+        pc_w.data_extension = {CUBAExtension.BOX_VECTORS: vectors,
+                               CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
         return pc_w
