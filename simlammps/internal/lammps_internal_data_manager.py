@@ -4,6 +4,7 @@ from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
 
+import simlammps.common.globals as globals
 from simlammps.config.domain import get_box
 from simlammps.internal.particle_data_cache import ParticleDataCache
 from simlammps.abc_data_manager import ABCDataManager
@@ -72,8 +73,11 @@ class LammpsInternalDataManager(ABCDataManager):
         dummy_data[CUBAExtension.BOX_VECTORS] = vectors
         dummy_data[CUBAExtension.BOX_ORIGIN] = (0.0, 0.0, 0.0)
         self._lammps.command(get_box([dummy_data], command_format=True))
-        types = 3
-        self._lammps.command("create_box {} box".format(types))
+        # due to not being able to alter the number of types (issue #66),
+        # we set the number of supported types to a high number and then
+        # give dummy values for the unused types
+        self._lammps.command(
+            "create_box {} box".format(globals.MAX_NUMBER_TYPES))
 
         self._id_generator = _IDGenerator()
 
@@ -377,6 +381,11 @@ class LammpsInternalDataManager(ABCDataManager):
             types_mass[data[CUBA.MATERIAL_TYPE]] = data[CUBA.MASS]
         for material_type, mass in types_mass.iteritems():
             self._lammps.command("mass {} {}".format(material_type, mass))
+
+        # set the mass of all unused types (see issue #66)
+        for material_type in range(1, globals.MAX_NUMBER_TYPES+1):
+            if material_type not in types_mass:
+                self._lammps.command("mass {} {}".format(material_type, 1.0))
 
     def _update_from_lammps(self):
         self._particle_data_cache.retrieve()

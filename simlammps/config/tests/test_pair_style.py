@@ -51,6 +51,9 @@ class TestPairStyle(unittest.TestCase):
         self.assertTrue("pair_coeff 2 3 1.0 1.0 1.2246" in lines)
         self.assertTrue("pair_coeff 3 3 1.0 1.0 1.0001" in lines)
 
+        # additional tests for having wildcards due to #66
+        self.assertTrue("pair_coeff * * 1.0 1.0 1.2246" in lines)
+
     def test_lj_cut_error(self):
         SP = {}
         SP[CUBAExtension.PAIR_POTENTIALS] = "lj:\n"
@@ -81,6 +84,11 @@ class TestPairStyle(unittest.TestCase):
         lines = pair_style.get_pair_coeffs().split("\n")
         self.assertTrue("pair_coeff 1 1 lj/cut 1.0 1.0 1.2246" in lines)
         self.assertTrue("pair_coeff 1 1 coul/cut 1.2246" in lines)
+
+        # additional tests for having wildcards due to #66
+        self.assertTrue("pair_coeff * * lj/cut 1.0 1.0 1.2246" in lines)
+        self.assertTrue("pair_coeff * * coul/cut 1.2246" in lines)
+
 
 if __name__ == '__main__':
     unittest.main()
