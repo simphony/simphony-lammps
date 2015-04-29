@@ -161,8 +161,7 @@ class ABCLammpsMDEngineCheck(object):
         for p in foo.iter_particles():
             p_w = foo_w.get_particle(p.uid)
             assert_almost_equal(p_w.coordinates, p.coordinates)
-            # TODO test velocity
-            # self.assertEqual(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
+            assert_almost_equal(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
 
         # run lammps-engine for 0 steps
         self.wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 0
