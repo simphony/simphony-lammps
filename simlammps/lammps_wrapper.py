@@ -178,9 +178,14 @@ class LammpsWrapper(ABCModelingEngine):
             # before running, we flush any changes to lammps
             self._data_manager.flush()
 
+            # TODO this has to be rewritten as
+            # we only want to send configuration commands
+            # once (or after they change) but the 'run'
+            # command each time
             commands = ""
 
-            commands += ScriptWriter.get_pair_style(self.SP)
+            commands += ScriptWriter.get_pair_style(
+                _combine(self.SP, self.SP_extension))
             commands += ScriptWriter.get_fix(CM=_combine(self.CM,
                                                          self.CM_extension))
             commands += ScriptWriter.get_pair_coeff(
@@ -188,7 +193,8 @@ class LammpsWrapper(ABCModelingEngine):
             commands += ScriptWriter.get_run(CM=_combine(self.CM,
                                                          self.CM_extension))
 
-            self._lammps.command(commands)
+            for command in commands.splitlines():
+                self._lammps.command(command)
 
             # after running, we read any changes from lammps
             # TODO rework
