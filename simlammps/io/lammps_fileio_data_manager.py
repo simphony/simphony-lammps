@@ -246,6 +246,8 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         # update each particle container with these
         # material-specific attributes
+        # TODO updating the material_type from lammps should possibly be
+        # removed as lammps is not going to change it
         for _, pc in self._pc_cache.iteritems():
             data = type_data[pc.data[CUBA.MATERIAL_TYPE]]
             for key, value in data.iteritems():
