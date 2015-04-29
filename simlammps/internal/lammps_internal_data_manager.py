@@ -351,6 +351,13 @@ class LammpsInternalDataManager(ABCDataManager):
 
         """
         if self._pc_data:
+            # update particles (container)'s data n
+            # updating only MASS at the moment as MATERIAL_TYPE is sent as a
+            # particle-based attribute to LAMMPS even though in SimPhoNy its
+            # a container-based attribute
+            self._update_mass()
+
+            # update the particle-data
             self._particle_data_cache.send()
         else:
             raise RuntimeError(
@@ -358,6 +365,18 @@ class LammpsInternalDataManager(ABCDataManager):
         # TODO handle properly when there are no particle containers
         # or when some of them do not contain any particles
         # (i.e. someone has deleted all the particles)
+
+    def _update_mass(self):
+        # TODO that mass and type are always consistent
+        types_mass = {}
+        for _, data in self._pc_data.iteritems():
+            if (CUBA.MATERIAL_TYPE in types_mass and
+                    types_mass[data[CUBA.MATERIAL_TYPE]] != data[CUBA.MASS]):
+                msg = "Inconsistent CUBA:MATERIAL_TYPE and CUBA.MASS"
+                raise RuntimeError(msg)
+            types_mass[data[CUBA.MATERIAL_TYPE]] = data[CUBA.MASS]
+        for material_type, mass in types_mass.iteritems():
+            self._lammps.command("mass {} {}".format(material_type, mass))
 
     def _update_from_lammps(self):
         self._particle_data_cache.retrieve()
