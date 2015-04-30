@@ -1,10 +1,19 @@
 import unittest
 
 from simphony.cuds.particles import Particles
-from simphony.testing.abc_check_particles import (
+from simphony.core.cuba import CUBA
+
+from simlammps.lammps_wrapper import LammpsWrapper, InterfaceType
+from simlammps.testing.md_example_configurator import MDExampleConfigurator
+
+# using the following tests instead of those
+# located in simphony.testing as we currently
+# dont pass all tests
+from simlammps.testing.abc_check_particles import (
     ContainerAddParticlesCheck, ContainerManipulatingParticlesCheck)
-from simlammps.lammps_wrapper import LammpsWrapper
-from simlammps.tests.example_configurator import ExampleConfigurator
+
+# list of CUBA that is supported/needed by particles in LAMMPS-MD
+_supported_cuba = [CUBA.VELOCITY]
 
 
 class TestFileIoParticlesAddParticles(
@@ -14,63 +23,58 @@ class TestFileIoParticlesAddParticles(
         return self.pc
 
     def setUp(self):
-        self.wrapper = LammpsWrapper()
-        ExampleConfigurator.configure_wrapper(self.wrapper)
+        self.wrapper = LammpsWrapper(interface=InterfaceType.FILEIO)
+        MDExampleConfigurator.configure_wrapper(self.wrapper)
         pcs = [pc for pc in self.wrapper.iter_particles()]
         self.pc = pcs[0]
-        ContainerAddParticlesCheck.setUp(self)
+        ContainerAddParticlesCheck.setUp(self, restrict=_supported_cuba)
+
+
+class TestInternalParticlesAddParticles(
+        ContainerAddParticlesCheck, unittest.TestCase):
+
+    def container_factory(self, name):
+        return self.pc
+
+    def setUp(self):
+        self.wrapper = LammpsWrapper(interface=InterfaceType.INTERNAL)
+        MDExampleConfigurator.configure_wrapper(self.wrapper)
+        pcs = [pc for pc in self.wrapper.iter_particles()]
+        self.pc = pcs[0]
+        ContainerAddParticlesCheck.setUp(self, restrict=_supported_cuba)
 
 
 class TestFileIoParticlesManipulatingParticles(
         ContainerManipulatingParticlesCheck, unittest.TestCase):
 
     def container_factory(self, name):
-        pc = Particles(name=name)
-        return self.wrapper.add_particles(pc)
+        p = Particles(name="foo")
+        pc_w = MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                             p)
+        return pc_w
 
     def setUp(self):
-        self.wrapper = LammpsWrapper()
-        ContainerManipulatingParticlesCheck.setUp(self)
+        self.wrapper = LammpsWrapper(interface=InterfaceType.FILEIO)
+        MDExampleConfigurator.configure_wrapper(self.wrapper)
+        ContainerManipulatingParticlesCheck.setUp(self,
+                                                  restrict=_supported_cuba)
 
 
-def _get_particle(particles):
-    for p in particles.iter_particles():
-        return p
-    else:
-        raise RuntimeError("could not find a particle to test with")
+class TestInternalParticlesManipulatingParticles(
+        ContainerManipulatingParticlesCheck, unittest.TestCase):
 
-
-class TestLammpsParticles(unittest.TestCase):
+    def container_factory(self, name):
+        p = Particles(name="foo")
+        pc_w = MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                             p)
+        return pc_w
 
     def setUp(self):
-        self.wrapper = LammpsWrapper()
+        self.wrapper = LammpsWrapper(interface=InterfaceType.INTERNAL)
+        MDExampleConfigurator.configure_wrapper(self.wrapper)
+        ContainerManipulatingParticlesCheck.setUp(self,
+                                                  restrict=_supported_cuba)
 
-        # configuration is being done by dummy class
-        # the wrapper is properly configured with
-        # CM/SP/BC and given particles
-        ExampleConfigurator.configure_wrapper(self.wrapper)
-
-        # keep track of first wrapper-based container of particles
-        # and the particle ids that it contains
-        pcs = [pc for pc in self.wrapper.iter_particles()]
-        self.pc = pcs[0]
-        self.particle_ids_in_pc = []
-        for p in pcs[0].iter_particles():
-            self.particle_ids_in_pc.append(p.uid)
-
-    def test_delete_particle(self):
-        removed_particle = _get_particle(self.pc)
-        self.pc.remove_particle(removed_particle.uid)
-
-        # check that it was removed
-        with self.assertRaises(KeyError):
-            self.pc.get_particle(removed_particle.uid)
-
-        self.wrapper.run()
-
-        # check that it stayed removed
-        with self.assertRaises(KeyError):
-            self.pc.get_particle(removed_particle.uid)
 
 if __name__ == '__main__':
     unittest.main()

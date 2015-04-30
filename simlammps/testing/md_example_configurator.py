@@ -7,17 +7,17 @@ from simphony.core.data_container import DataContainer
 from simlammps.cuba_extension import CUBAExtension
 
 
-class ExampleConfigurator:
-    """  Example configuration
+class MDExampleConfigurator:
+    """  MD Example configuration
 
     Class provides an example configuration for a
-    lammps wrapper
+    lammps molecular dynamic engine
 
     """
 
     @staticmethod
     def set_configuration(wrapper):
-        """ Configure example wrapper with example settings
+        """ Configure example engine with example settings
 
         The wrapper is configured with required CM, SP, BC parameters
 
@@ -79,10 +79,10 @@ class ExampleConfigurator:
 
         """
         # configure
-        ExampleConfigurator.set_configuration(wrapper)
+        MDExampleConfigurator.set_configuration(wrapper)
 
         # add particle containers
-        ExampleConfigurator.add_particles(wrapper)
+        MDExampleConfigurator.add_particles(wrapper)
 
     @staticmethod
     def add_particles(wrapper):
@@ -98,25 +98,54 @@ class ExampleConfigurator:
 
         """
         for i in range(1, 4):
-            data = DataContainer()
-            data[CUBA.MASS] = 1
-            data[CUBA.MATERIAL_TYPE] = i
             pc = Particles(name="foo{}".format(i))
-            pc.data = data
 
             random.seed(42)
-            for _ in range(100):
+            for _ in range(10):
                 coord = (random.uniform(0.0, 25.0),
                          random.uniform(0.0, 22.0),
                          0.0)
                 p = Particle(coordinates=coord)
                 p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
                 pc.add_particle(p)
-            pc_w = wrapper.add_particles(pc)
 
-            vectors = [(25.0, 0.0, 0.0),
-                       (0.0, 22.0, 0.0),
-                       (0.0, 0.0, 1.0)]
-            pc_w.data_extension[CUBAExtension.BOX_VECTORS] = vectors
+            MDExampleConfigurator.add_configure_particles(wrapper,
+                                                          pc,
+                                                          mass=i,
+                                                          material_type=i)
 
-            pc_w.data_extension[CUBAExtension.BOX_ORIGIN] = (0.0, 0.0, 0.0)
+    @staticmethod
+    def add_configure_particles(wrapper, pc, mass=1, material_type=1):
+        """ Add containers of particles to wrapper and  configure it properly.
+
+        The wrapper is configured with containers of particles that contain
+        mass, type/materialtype, and velocity.  They correspond to
+        the configuration performed in configure_wrapper method
+
+        Parameters
+        ----------
+        wrapper : ABCModelingEngine
+            wrapper
+        pc : Particles
+            particle container to be added and configured
+        mass : int
+            mass of particles
+        material : int, optional
+            material type of particles
+        """
+        data = DataContainer()
+        data[CUBA.MASS] = mass
+        data[CUBA.MATERIAL_TYPE] = material_type
+
+        pc.data = data
+
+        pc_w = wrapper.add_particles(pc)
+
+        # TODO this should be a class variable
+        vectors = [(25.0, 0.0, 0.0),
+                   (0.0, 22.0, 0.0),
+                   (0.0, 0.0, 1.0)]
+
+        pc_w.data_extension = {CUBAExtension.BOX_VECTORS: vectors,
+                               CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
+        return pc_w

@@ -6,12 +6,15 @@ import contextlib
 import os
 import tempfile
 import shutil
+from enum import IntEnum, unique
 
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
 
-from simlammps.lammps_fileio_data_manager import LammpsFileIoDataManager
-from simlammps.lammps_process import LammpsProcess
+from simlammps.io.lammps_fileio_data_manager import LammpsFileIoDataManager
+from simlammps.io.lammps_process import LammpsProcess
+from simlammps.internal.lammps_internal_data_manager import (
+    LammpsInternalDataManager)
 from simlammps.config.script_writer import ScriptWriter
 
 
@@ -27,12 +30,37 @@ def _temp_directory():
     shutil.rmtree(temp_dir)
 
 
+@unique
+class InterfaceType(IntEnum):
+
+    INTERNAL = 0
+    FILEIO = 1
+
+
 class LammpsWrapper(ABCModelingEngine):
     """ Wrapper to LAMMPS-md
 
+
     """
-    def __init__(self):
-        self._data_manager = LammpsFileIoDataManager()
+    def __init__(self, interface=InterfaceType.FILEIO):
+        """ Constructor.
+
+        Parameters
+        ----------
+        interface : InterfaceType
+            The type of interface should be used in interfacing with LAMMPS
+
+        """
+
+        self._interface = interface
+
+        if interface == InterfaceType.FILEIO:
+            self._data_manager = LammpsFileIoDataManager()
+        else:
+            # TODO
+            import lammps
+            self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
+            self._data_manager = LammpsInternalDataManager(self._lammps)
 
         self.BC = DataContainer()
         self.CM = DataContainer()
@@ -124,24 +152,53 @@ class LammpsWrapper(ABCModelingEngine):
         """ Run lammps-engine based on configuration and data
 
         """
-        with _temp_directory() as temp_dir:
-            input_data_filename = os.path.join(temp_dir, "data_in.lammps")
-            output_data_filename = os.path.join(temp_dir, "data_out.lammps")
 
+        if self._interface == InterfaceType.FILEIO:
+            with _temp_directory() as temp_dir:
+                input_data_filename = os.path.join(
+                    temp_dir, "data_in.lammps")
+                output_data_filename = os.path.join(
+                    temp_dir, "data_out.lammps")
+
+                # before running, we flush any changes to lammps
+                self._data_manager.flush(input_data_filename)
+
+                commands = ScriptWriter.get_configuration(
+                    input_data_file=input_data_filename,
+                    output_data_file=output_data_filename,
+                    BC=_combine(self.BC, self.BC_extension),
+                    CM=_combine(self.CM, self.CM_extension),
+                    SP=_combine(self.SP, self.SP_extension))
+                lammps_process = LammpsProcess(log_directory=temp_dir)
+                lammps_process.run(commands)
+
+                # after running, we read any changes from lammps
+                self._data_manager.read(output_data_filename)
+        else:
             # before running, we flush any changes to lammps
-            self._data_manager.flush(input_data_filename)
+            self._data_manager.flush()
 
-            commands = ScriptWriter.get_configuration(
-                input_data_file=input_data_filename,
-                output_data_file=output_data_filename,
-                BC=_combine(self.BC, self.BC_extension),
-                CM=_combine(self.CM, self.CM_extension),
-                SP=_combine(self.SP, self.SP_extension))
-            lammps = LammpsProcess(log_directory=temp_dir)
-            lammps.run(commands)
+            # TODO this has to be rewritten as
+            # we only want to send configuration commands
+            # once (or after they change) but the 'run'
+            # command each time
+            commands = ""
+
+            commands += ScriptWriter.get_pair_style(
+                _combine(self.SP, self.SP_extension))
+            commands += ScriptWriter.get_fix(CM=_combine(self.CM,
+                                                         self.CM_extension))
+            commands += ScriptWriter.get_pair_coeff(
+                _combine(self.SP, self.SP_extension))
+            commands += ScriptWriter.get_run(CM=_combine(self.CM,
+                                                         self.CM_extension))
+
+            for command in commands.splitlines():
+                self._lammps.command(command)
 
             # after running, we read any changes from lammps
-            self._data_manager.read(output_data_filename)
+            # TODO rework
+            self._data_manager.read("dummy")
 
     def add_lattice(self, lattice):
         raise NotImplementedError()

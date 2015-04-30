@@ -28,7 +28,7 @@ from simphony.cuds.particles import Particle, Particles
 def write_file(particles, file_format, file_name):
     if file_format == "EXYZ":
         f = open(file_name+".exyz", "w")
-        # until we have number_of_partucles method or similar...
+        # until we have number_of_particles method or similar...
         particles_size = 0
         for p in particles.iter_particles():
             particles_size += 1
@@ -191,8 +191,7 @@ pc_w = wrapper.add_particles(pc)
 
 super_cell = [
     tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
-pc_w.data_extension[lammps.CUBAExtension.BOX_VECTORS] = super_cell
-
+pc_w.data_extension = {lammps.CUBAExtension.BOX_VECTORS: super_cell}
 
 # define the SP component of the SimPhoNy application model.  The
 # following are the LJ parameters for this test. Normalized reduced

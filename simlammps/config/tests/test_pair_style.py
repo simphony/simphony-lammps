@@ -41,7 +41,7 @@ class TestPairStyle(unittest.TestCase):
 
         pair_style = PairStyle(SP)
         self.assertEqual(
-            pair_style.get_global_config(), "pair_style lj/cut 1.12246")
+            pair_style.get_global_config(), "pair_style lj/cut 1.12246\n")
 
         lines = pair_style.get_pair_coeffs().split("\n")
         self.assertTrue("pair_coeff 1 1 1.0 1.0 1.2246" in lines)
@@ -51,9 +51,12 @@ class TestPairStyle(unittest.TestCase):
         self.assertTrue("pair_coeff 2 3 1.0 1.0 1.2246" in lines)
         self.assertTrue("pair_coeff 3 3 1.0 1.0 1.0001" in lines)
 
+        # additional tests for having wildcards due to #66
+        self.assertTrue("pair_coeff * * 1.0 1.0 1.2246" in lines)
+
     def test_lj_cut_error(self):
         SP = {}
-        SP[CUBAExtension.PAIR_POTENTIALS] = ("lj:\n")
+        SP[CUBAExtension.PAIR_POTENTIALS] = "lj:\n"
         with self.assertRaises(RuntimeError):
             PairStyle(SP)
 
@@ -76,11 +79,16 @@ class TestPairStyle(unittest.TestCase):
         pair_style = PairStyle(SP)
         self.assertEqual(
             pair_style.get_global_config(),
-            "pair_style hybrid/overlay lj/cut 1.13 coul/cut 1.12")
+            "pair_style hybrid/overlay lj/cut 1.13 coul/cut 1.12\n")
 
         lines = pair_style.get_pair_coeffs().split("\n")
         self.assertTrue("pair_coeff 1 1 lj/cut 1.0 1.0 1.2246" in lines)
         self.assertTrue("pair_coeff 1 1 coul/cut 1.2246" in lines)
+
+        # additional tests for having wildcards due to #66
+        self.assertTrue("pair_coeff * * lj/cut 1.0 1.0 1.2246" in lines)
+        self.assertTrue("pair_coeff * * coul/cut 1.2246" in lines)
+
 
 if __name__ == '__main__':
     unittest.main()
