@@ -35,7 +35,7 @@ To support the documentation built you need the following packages:
 
 - sphinx >= 1.2.3
 
-To run the unit tests you additionaly need the following packages:
+To run the unit tests you additionally need the following packages:
 
 - numpy >= 1.4.1
 
