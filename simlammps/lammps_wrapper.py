@@ -6,7 +6,6 @@ import contextlib
 import os
 import tempfile
 import shutil
-from enum import IntEnum, unique
 
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.core.data_container import DataContainer
@@ -30,37 +29,32 @@ def _temp_directory():
     shutil.rmtree(temp_dir)
 
 
-@unique
-class InterfaceType(IntEnum):
-
-    INTERNAL = 0
-    FILEIO = 1
-
-
 class LammpsWrapper(ABCModelingEngine):
     """ Wrapper to LAMMPS-md
 
 
     """
-    def __init__(self, interface=InterfaceType.FILEIO):
+    def __init__(self, use_internal_interface=False):
         """ Constructor.
 
         Parameters
         ----------
-        interface : InterfaceType
-            The type of interface should be used in interfacing with LAMMPS
+        use_internal_interface : bool, optional
+            If true, then the internal interface (library) is used when
+            communicating with LAMMPS, if false, then file-io interface is
+            used where input/output files are used to communicate with LAMMPS
 
         """
 
-        self._interface = interface
+        self._use_internal_interface = use_internal_interface
 
-        if interface == InterfaceType.FILEIO:
-            self._data_manager = LammpsFileIoDataManager()
-        else:
+        if self._use_internal_interface:
             # TODO
             import lammps
             self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
             self._data_manager = LammpsInternalDataManager(self._lammps)
+        else:
+            self._data_manager = LammpsFileIoDataManager()
 
         self.BC = DataContainer()
         self.CM = DataContainer()
@@ -153,28 +147,7 @@ class LammpsWrapper(ABCModelingEngine):
 
         """
 
-        if self._interface == InterfaceType.FILEIO:
-            with _temp_directory() as temp_dir:
-                input_data_filename = os.path.join(
-                    temp_dir, "data_in.lammps")
-                output_data_filename = os.path.join(
-                    temp_dir, "data_out.lammps")
-
-                # before running, we flush any changes to lammps
-                self._data_manager.flush(input_data_filename)
-
-                commands = ScriptWriter.get_configuration(
-                    input_data_file=input_data_filename,
-                    output_data_file=output_data_filename,
-                    BC=_combine(self.BC, self.BC_extension),
-                    CM=_combine(self.CM, self.CM_extension),
-                    SP=_combine(self.SP, self.SP_extension))
-                lammps_process = LammpsProcess(log_directory=temp_dir)
-                lammps_process.run(commands)
-
-                # after running, we read any changes from lammps
-                self._data_manager.read(output_data_filename)
-        else:
+        if self._use_internal_interface:
             # before running, we flush any changes to lammps
             self._data_manager.flush()
 
@@ -199,6 +172,27 @@ class LammpsWrapper(ABCModelingEngine):
             # after running, we read any changes from lammps
             # TODO rework
             self._data_manager.read("dummy")
+        else:
+            with _temp_directory() as temp_dir:
+                input_data_filename = os.path.join(
+                    temp_dir, "data_in.lammps")
+                output_data_filename = os.path.join(
+                    temp_dir, "data_out.lammps")
+
+                # before running, we flush any changes to lammps
+                self._data_manager.flush(input_data_filename)
+
+                commands = ScriptWriter.get_configuration(
+                    input_data_file=input_data_filename,
+                    output_data_file=output_data_filename,
+                    BC=_combine(self.BC, self.BC_extension),
+                    CM=_combine(self.CM, self.CM_extension),
+                    SP=_combine(self.SP, self.SP_extension))
+                lammps_process = LammpsProcess(log_directory=temp_dir)
+                lammps_process.run(commands)
+
+                # after running, we read any changes from lammps
+                self._data_manager.read(output_data_filename)
 
     def add_lattice(self, lattice):
         raise NotImplementedError()

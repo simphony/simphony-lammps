@@ -3,7 +3,7 @@ import unittest
 from simphony.cuds.particles import Particles
 from simphony.core.cuba import CUBA
 
-from simlammps.lammps_wrapper import LammpsWrapper, InterfaceType
+from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.testing.md_example_configurator import MDExampleConfigurator
 
 # using the following tests instead of those
@@ -23,7 +23,7 @@ class TestFileIoParticlesAddParticles(
         return self.pc
 
     def setUp(self):
-        self.wrapper = LammpsWrapper(interface=InterfaceType.FILEIO)
+        self.wrapper = LammpsWrapper(use_internal_interface=False)
         MDExampleConfigurator.configure_wrapper(self.wrapper)
         pcs = [pc for pc in self.wrapper.iter_particles()]
         self.pc = pcs[0]
@@ -37,7 +37,7 @@ class TestInternalParticlesAddParticles(
         return self.pc
 
     def setUp(self):
-        self.wrapper = LammpsWrapper(interface=InterfaceType.INTERNAL)
+        self.wrapper = LammpsWrapper(use_internal_interface=True)
         MDExampleConfigurator.configure_wrapper(self.wrapper)
         pcs = [pc for pc in self.wrapper.iter_particles()]
         self.pc = pcs[0]
@@ -54,7 +54,7 @@ class TestFileIoParticlesManipulatingParticles(
         return pc_w
 
     def setUp(self):
-        self.wrapper = LammpsWrapper(interface=InterfaceType.FILEIO)
+        self.wrapper = LammpsWrapper(use_internal_interface=False)
         MDExampleConfigurator.configure_wrapper(self.wrapper)
         ContainerManipulatingParticlesCheck.setUp(self,
                                                   restrict=_supported_cuba)
@@ -70,7 +70,7 @@ class TestInternalParticlesManipulatingParticles(
         return pc_w
 
     def setUp(self):
-        self.wrapper = LammpsWrapper(interface=InterfaceType.INTERNAL)
+        self.wrapper = LammpsWrapper(use_internal_interface=True)
         MDExampleConfigurator.configure_wrapper(self.wrapper)
         ContainerManipulatingParticlesCheck.setUp(self,
                                                   restrict=_supported_cuba)

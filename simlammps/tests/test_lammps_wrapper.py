@@ -1,6 +1,6 @@
 import unittest
 
-from simlammps.lammps_wrapper import LammpsWrapper, InterfaceType
+from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.testing.abc_lammps_md_engine_check import ABCLammpsMDEngineCheck
 
 
@@ -10,7 +10,7 @@ class TestLammpsMDEngineINTERNAL(ABCLammpsMDEngineCheck, unittest.TestCase):
         ABCLammpsMDEngineCheck.setUp(self)
 
     def engine_factory(self):
-        return LammpsWrapper(interface=InterfaceType.INTERNAL)
+        return LammpsWrapper(use_internal_interface=True)
 
 
 class TestLammpsMDEngineFileIO(ABCLammpsMDEngineCheck, unittest.TestCase):
@@ -19,7 +19,7 @@ class TestLammpsMDEngineFileIO(ABCLammpsMDEngineCheck, unittest.TestCase):
         ABCLammpsMDEngineCheck.setUp(self)
 
     def engine_factory(self):
-        return LammpsWrapper(interface=InterfaceType.FILEIO)
+        return LammpsWrapper(use_internal_interface=False)
 
 
 if __name__ == '__main__':
