@@ -16,6 +16,7 @@ User Manual
    :maxdepth: 1
 
    INTERNAL and FILE-IO interface to LAMMPS <interface>
+   Molecular Dynamics Engine <md>
 
 
 Indices and tables
