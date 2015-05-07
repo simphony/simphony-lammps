@@ -1,6 +1,6 @@
 """ LAMMPS SimPhoNy Wrapper
 
-This module provides a wrapper to LAMMPS-md
+This module provides a wrapper for  LAMMPS-md
 """
 import contextlib
 import os
