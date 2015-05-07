@@ -1,12 +1,15 @@
 Interface to LAMMPS
 ===================
 
-The SimPhoNy LAMMPS engine (see :class:`LammpsWrapper`) can be configured to interface with LAMMPS in two separate ways:
+The SimPhoNy LAMMPS engine (see :class:`LammpsWrapper`) can be configured to
+interface with LAMMPS in two separate ways:
 
 * FILE-IO - use file and file output operations to run LAMMPS engine
-* INTERNAL - uses a LAMMPS library interface to run LAMMPS and access the internal state.
+* INTERNAL - uses a LAMMPS library interface to run LAMMPS and access the
+  internal state.
 
-Despite performance differences, it should not matter whether the user is using the File-IO or the INTERNAL interface as the API is the same.
+Despite performance differences, it should not matter whether the user is
+using the File-IO or the INTERNAL interface as the API is the same.
 
 ::
 
@@ -28,6 +31,24 @@ Installation of LAMMPS
 
 The installation of LAMMPS differs depending on what interface is used:
 
-- FILE-IO: There needs to be an executable called "lammps" that can be found in the PATH.
-- INTERNAL:  The LAMMPS-provided Python wrapper to LAMMPS needs to be installed.  Instructions on building LAMMPS as a shared library and installing the Python wrapper can be found on LAMMPS website (http://lammps.sandia.gov/doc/Section_python.html#py_3)
+- FILE-IO: There needs to be an executable called "lammps" that can be found in
+  the PATH.
+- INTERNAL:  The LAMMPS-provided Python wrapper to LAMMPS needs to be
+  installed.Instructions on building LAMMPS as a shared library and installing
+  the Python wrapper can be found on LAMMPS website
+  (http://lammps.sandia.gov/doc/Section_python.html#py_3)
 
+
+Limitations of the INTERNAL interface
+-------------------------------------
+The following are known limitations when using the INTERNAL interface to LAMMPS:
+ - Deletion of particles (i.e. ``delete_particle``) is not yet supported
+ - Adding particles to the LAMMPSParticleContainer can fail when coordinates of
+   the added particles is outside of the simulation box configured by the user.
+ - Currently an upper limit of particle types (CUBA.MATERIAL_TYPE) is set due to
+   the fact that LAMMPS only allows the number of types be configured at start
+   (and not changed later)
+ - No notification is provided to the user when an internal error occurs in the
+   LAMMPS shared library as the library calls `exit(1)` and the process
+   immediately exists (without an exception or writing to standard
+   output/error).
