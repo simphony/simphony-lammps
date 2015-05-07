@@ -13,7 +13,7 @@ User Manual
 ===========
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
 
    INTERNAL and FILE-IO interface to LAMMPS <interface>
    Molecular Dynamics Engine <md>

@@ -1,11 +1,23 @@
+LAMMPS engine for SimPhoNy
+==========================
+
+The SimPhoNy engine for LAMMPS is available in the SimPhoNy through the engine plugin named ``lammps``
+
+After installation, the user should be able to import the ``lammps`` engine plugin module::
+
+  from simphony.engine import lammps
+    engine = lammps.LammpsWrapper()
+
+
+
 Interface to LAMMPS
-===================
+--------------------
 
 The SimPhoNy LAMMPS engine (see :class:`LammpsWrapper`) can be configured to
 interface with LAMMPS in two separate ways:
 
-* FILE-IO - use file and file output operations to run LAMMPS engine
-* INTERNAL - uses a LAMMPS library interface to run LAMMPS and access the
+* FILE-IO - input and output files are used to configure and run LAMMPS engine
+* INTERNAL - the LAMMPS library interface is used to run LAMMPS and access the
   internal state.
 
 Despite performance differences, it should not matter whether the user is
