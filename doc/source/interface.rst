@@ -53,7 +53,6 @@ The installation of LAMMPS differs depending on what interface is used:
   the Python wrapper can be found on LAMMPS website
   (http://lammps.sandia.gov/doc/Section_python.html#py_3)
 
-
 Limitations of the INTERNAL interface
 -------------------------------------
 The following are known limitations when using the INTERNAL interface to LAMMPS:
