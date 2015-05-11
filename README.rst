@@ -35,7 +35,7 @@ To support the documentation built you need the following packages:
 
 - sphinx >= 1.2.3
 
-To run the unit tests you additionaly need the following packages:
+To run the unit tests you additionally need the following packages:
 
 - numpy >= 1.4.1
 
@@ -56,9 +56,14 @@ or::
 LAMMPS installation
 ~~~~~~~~~~~~~~~~~~~
 
-This engine-wrapper uses LAMMPS Molecular Dynamics Simulator. The engine wrapper assumes that there is an executable called "lammps" that can be found in the PATH and an exception is thrown if this is not the case.
+This engine-wrapper uses LAMMPS Molecular Dynamics Simulator. A recent stable
+version (9 Dec 2014, tagged r12824) of LAMMPS is supported and has been
+tested. See ``install_lammps.sh`` for an example installation instructions.
+For general LAMMPS install information, see http://lammps.sandia.gov/index.html
 
-A recent stable version (9 Dec 2014, tagged r12824) of LAMMPS is supported and has been tested. See ``install_lammps.sh`` for an example installation instructions. For further information, see http://lammps.sandia.gov/index.html
+LAMMPS installation varies depending on which interface is being used.  See the
+manual for more details.
+
 
 Usage
 -----
@@ -66,7 +71,7 @@ Usage
 After installation, the user should be able to import the ``lammps`` engine plugin module by::
 
   from simphony.engine import lammps
-    wrapper = lammps.LammpsWrapper()
+    engine = lammps.LammpsWrapper()
 
 
 Testing
