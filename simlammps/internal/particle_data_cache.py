@@ -1,5 +1,3 @@
-import ctypes
-
 from collections import namedtuple
 
 from simphony.core.cuba import CUBA
@@ -48,6 +46,17 @@ class ParticleDataCache(object):
             self._cache[entry.CUBA] = []
 
     def retrieve(self):
+        """ Retrieve
+
+        Parameters
+        ----------
+        particle : Particle
+            particle to be set
+        uname : string
+            non-changing unique name of particle container
+
+        """
+
         self._id_cache = self._lammps.gather_atoms("id", 0, 1)
         self._coordinates = self._lammps.gather_atoms("x", 1, 3)
 
@@ -58,12 +67,6 @@ class ParticleDataCache(object):
                 entry.count)
 
     def send(self):
-        coords = (ctypes.c_float * len(self._coordinates))(*self._coordinates)
-        x = self._lammps.extract_atom("x", 3)
-        for i in range(len(coords)/3):
-            for j in range(3):
-                x[i][j] = coords[i*3+j]
-
         for entry in self._data_entries:
             values = self._cache[entry.CUBA]
 

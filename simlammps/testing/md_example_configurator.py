@@ -89,7 +89,7 @@ class MDExampleConfigurator:
         """ Add containers of particles to wrapper
 
         The wrapper is configured with containers of particles that contain
-        mass, type/materialtype, and velocitiy.  They correspond to
+        mass, type/materialtype, and velocity.  They correspond to
         the configuration performed in configure_wrapper method
 
         Parameters
