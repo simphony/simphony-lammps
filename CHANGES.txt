@@ -1,16 +1,25 @@
-Simphony-Lammps
+Simphony-Lammps CHANGELOG
 ======================
+
+Release 0.1.3
+* support using the internal interface of LAMMPS (INTERNAL) (#67, #58, #57, #55, #54)
+* use simphony-common version 0.1.3
+
+-------------
+
 Release 0.1.2
 * uuid is being used instead of uid (#48)
 * use simphony-common version 0.1.1 (#50, #46)
 -------------
+
 Release 0.1.1
 -------------
 * Using coveralls for test coverage reporting (#11)
 * Use Sphinx-based documenation and setup/configure use of ReadTheDocs (#12, #32).
 * Update readme with SimPhoNy website (#22)
 * Update use of provisional CUBA keywords (#18)
-* Test do noot create files in the local directory (#34)
+* Test do not create files in the local directory (#34)
+
 Release 0.1.0
 -------------
 * Initial release: basic running of LAMMPS-MD
