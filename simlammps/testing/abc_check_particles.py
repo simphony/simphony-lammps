@@ -74,7 +74,6 @@ class ContainerManipulatingParticlesCheck(object):
     def setUp(self, restrict=None):
         self.addTypeEqualityFunc(
             Particle, partial(compare_particles, testcase=self))
-        self.maxDiff = None
         self.particle_list = create_particles(restrict=restrict)
         self.particle_list[0].uid = uuid.uuid4()
         self.container = self.container_factory('foo')

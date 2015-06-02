@@ -176,7 +176,7 @@ class ABCDataManager(object):
 
     @abc.abstractmethod
     def set_data_extension(self, data, uname):
-        """Sets textension data container associated with particle container
+        """Sets extension data container associated with particle container
 
         Parameters
         ----------

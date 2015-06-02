@@ -125,7 +125,8 @@ class PairStyle(object):
 
         return coeffs
 
-    def _create_pair_infos(self, SP):
+    @staticmethod
+    def _create_pair_infos(SP):
         """ Creates appropriate pair info handler(s) from information
             stored in the SP.
 
@@ -192,12 +193,10 @@ class PairStyle(object):
                     pair_dict.append(params[req])
                 else:
                     missing_params.append(req)
-                    msg = "The pair ({}) is missing {}".format(pair, req)
-                    raise RuntimeError(msg)
 
             if missing_params:
-                msg = "The pair ({}) is missing the following {}".format(
-                    pair, req)
+                msg = "The pair ({}) is missing the " \
+                      + " following parameters: ".format(pair)
                 msg += ', '.join(missing_params)
                 raise RuntimeError(msg)
 

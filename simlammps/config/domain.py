@@ -59,9 +59,9 @@ def get_box(particle_data_containers, command_format=False):
 
     box_string = ""
     if command_format:
-        box_string = _get_command_region_box_string(vectors, origin)
+        box_string = _get_command_region_box_string()
     else:
-        box_string = _get_data_file_box_string(vectors, origin)
+        box_string = _get_data_file_box_string()
 
     return box_string.format(origin[0], vectors[0][0]-origin[0],
                              origin[1], vectors[1][1]-origin[1],
@@ -81,14 +81,14 @@ def _check_vectors(vectors):
                 raise RuntimeError(msg)
 
 
-def _get_data_file_box_string(vectors, origin):
+def _get_data_file_box_string():
     box = "{:.16e} {:.16e} xlo xhi\n"
     box += "{:.16e} {:.16e} ylo yhi\n"
     box += "{:.16e} {:.16e} zlo zhi\n"
     return box
 
 
-def _get_command_region_box_string(vectors, origin):
+def _get_command_region_box_string():
     box = "region box block {:.16e} {:.16e} "
     box += "{:.16e} {:.16e} "
     box += "{:.16e} {:.16e}\n"

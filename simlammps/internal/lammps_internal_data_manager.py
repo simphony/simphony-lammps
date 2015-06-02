@@ -51,11 +51,10 @@ class LammpsInternalDataManager(ABCDataManager):
 
         self._lammps = lammps
 
-        dummy_bc = {}
-        dummy_bc[CUBAExtension.BOX_FACES] = (
-            "periodic", "periodic", "periodic")
+        dummy_bc = {CUBAExtension.BOX_FACES: ("periodic",
+                                              "periodic",
+                                              "periodic")}
         commands = "dimension 3\n"
-        commands = "units lj\n"
         commands = ScriptWriter.get_initial_setup()
 
         commands += ScriptWriter.get_boundary(dummy_bc)
@@ -69,9 +68,8 @@ class LammpsInternalDataManager(ABCDataManager):
         vectors = [(25.0, 0.0, 0.0),
                    (0.0, 22.0, 0.0),
                    (0.0, 0.0, 6.196)]
-        dummy_data = {}
-        dummy_data[CUBAExtension.BOX_VECTORS] = vectors
-        dummy_data[CUBAExtension.BOX_ORIGIN] = (0.0, 0.0, 0.0)
+        dummy_data = {CUBAExtension.BOX_VECTORS: vectors,
+                      CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
         self._lammps.command(get_box([dummy_data], command_format=True))
         # due to not being able to alter the number of types (issue #66),
         # we set the number of supported types to a high number and then
@@ -355,10 +353,10 @@ class LammpsInternalDataManager(ABCDataManager):
 
         """
         if self._pc_data:
-            # update particles (container)'s data n
-            # updating only MASS at the moment as MATERIAL_TYPE is sent as a
+            # update particles (container)'s data
+            # (updating only MASS at the moment as MATERIAL_TYPE is sent as a
             # particle-based attribute to LAMMPS even though in SimPhoNy its
-            # a container-based attribute
+            # a container-based attribute)
             self._update_mass()
 
             # update the particle-data
