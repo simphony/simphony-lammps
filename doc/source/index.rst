@@ -17,6 +17,7 @@ User Manual
 
    INTERNAL and FILE-IO interface to LAMMPS <interface>
    Molecular Dynamics Engine <md>
+   Converting from existing LAMMPS input files <file_conversion>
 
 API Reference
 =============
@@ -25,6 +26,8 @@ API Reference
    :maxdepth: 2
 
    api/engine
+
+
 
 Indices and tables
 ==================

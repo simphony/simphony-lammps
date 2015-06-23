@@ -1,0 +1,56 @@
+from simphony.cuds.particles import Particle, Particles
+from simphony.core.data_container import DataContainer
+from simphony.core.cuba import CUBA
+
+from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
+from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
+
+
+def read_data_file(filename):
+    """ Reads LAMMPS data file and create CUDS objects
+
+    Reads LAMMPS data file and create list of Particles. The returned list
+    of Particles will contain a Particles for each atom type (i.e.
+    CUBA.MATERIAL_TYPE).
+
+    Parameters
+    ----------
+    filename : str
+        filename of lammps data file
+
+    Returns
+    -------
+    particles_list : list of Particles
+
+    """
+    handler = LammpsSimpleDataHandler()
+    parser = LammpsDataFileParser(handler=handler)
+    parser.parse(filename)
+
+    atoms = handler.get_atoms()
+    velocities = handler.get_velocities()
+    masses = handler.get_masses()
+
+    type_to_particles_map = {}
+
+    # set up a Particles for each different type
+    for atom_type, mass in masses.iteritems():
+        data = DataContainer()
+        data[CUBA.MASS] = mass
+
+        particles = Particles(name="".format(atom_type))
+        particles.data = data
+
+        type_to_particles_map[atom_type] = particles
+
+    # add each particle to each Particles
+    for lammps_id, atom in atoms.iteritems():
+        p = Particle()
+        p.coordinates = tuple(atom[1:4])
+
+        p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id])
+
+        atom_type = atom[0]
+        type_to_particles_map[atom_type].add_particle(p)
+
+    return type_to_particles_map.values()
