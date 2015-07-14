@@ -11,7 +11,8 @@ def read_data_file(filename):
 
     Reads LAMMPS data file and create list of Particles. The returned list
     of Particles will contain a Particles for each atom type (i.e.
-    CUBA.MATERIAL_TYPE).
+    CUBA.MATERIAL_TYPE). The name of the Particles will be the atom type (e.g.
+    a Particles with atom_type/CUBA.MATERIAL_TYPE of 1 will have the name "1")
 
     Parameters
     ----------
@@ -38,7 +39,7 @@ def read_data_file(filename):
         data = DataContainer()
         data[CUBA.MASS] = mass
 
-        particles = Particles(name="".format(atom_type))
+        particles = Particles(name="{}".format(atom_type))
         particles.data = data
 
         type_to_particles_map[atom_type] = particles

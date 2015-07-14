@@ -48,7 +48,8 @@ subprocess.check_call("lammps < lammps_example_script", shell=True)
 
 particles_list = read_data_file("example.data")
 
-print("{} DataContainers read from file file:".format(len(particles_list)))
+print("{} DataContainers read from file:".format(len(particles_list)))
 for particles in particles_list:
     number_particles = sum(1 for _ in particles.iter_particles())
-    print("{} has {} particles".format(particles.name, number_particles))
+    print("    '{}' Particles has {} particles".format(particles.name,
+                                                       number_particles))
