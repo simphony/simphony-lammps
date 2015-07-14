@@ -19,6 +19,7 @@ install:
   - export PATH=$PATH:$PWD/mylammps/src/
 
   - pip install -r dev_requirements.txt
+  - pip install git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
   - pip install -r doc_requirements.txt
   - pip install coveralls
   - python setup.py develop
