@@ -1,0 +1,1 @@
+-e git+https://github.com/simphony/simphony-common.git@master#egg=simphony
