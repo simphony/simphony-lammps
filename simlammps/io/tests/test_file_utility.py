@@ -29,6 +29,7 @@ class TestFileUtility(unittest.TestCase):
         number_particles = 0
         for particles in particles_list:
             number_particles += sum(1 for _ in particles.iter_particles())
+            self.assertEqual(4, number_particles)
 
             for p in particles.iter_particles():
                 assert_almost_equal(p.data[CUBA.VELOCITY], [1.0, 1.0, 1.0])
@@ -41,7 +42,7 @@ def _write_example_file(filename, contents):
 _data_file_contents = """LAMMPS data file via write_data, version 28 Jun 2014, timestep = 0
 
 4 atoms
-2 atom types
+3 atom types
 
 0.0000000000000000e+00 2.5687134504920127e+01 xlo xhi
 -2.2245711031688635e-03 2.2247935602791809e+01 ylo yhi
