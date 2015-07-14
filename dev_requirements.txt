@@ -3,5 +3,4 @@ pyyaml >= 3.11
 coverage
 flake8
 numpy >= 1.4.1
--e git+https://github.com/simphony/simphony-common.git#egg=simphony
 sphinxcontrib-napoleon >= 0.2.10
