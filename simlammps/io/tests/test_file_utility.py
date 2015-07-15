@@ -29,10 +29,11 @@ class TestFileUtility(unittest.TestCase):
         number_particles = 0
         for particles in particles_list:
             number_particles += sum(1 for _ in particles.iter_particles())
-            self.assertEqual(4, number_particles)
 
             for p in particles.iter_particles():
                 assert_almost_equal(p.data[CUBA.VELOCITY], [1.0, 1.0, 1.0])
+
+        self.assertEqual(4, number_particles)
 
 
 def _write_example_file(filename, contents):
