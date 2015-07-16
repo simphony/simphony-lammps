@@ -4,6 +4,7 @@ from simphony.core.cuba import CUBA
 
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
+from simlammps.cuba_extension import CUBAExtension
 
 
 def read_data_file(filename):
@@ -32,6 +33,9 @@ def read_data_file(filename):
     velocities = handler.get_velocities()
     masses = handler.get_masses()
 
+    box_origin = handler.get_box_origin()
+    box_vectors = handler.get_box_vectors()
+
     type_to_particles_map = {}
 
     # set up a Particles for each different type
@@ -39,8 +43,13 @@ def read_data_file(filename):
         data = DataContainer()
         data[CUBA.MASS] = mass
 
+        data_extension = {}
+        data_extension[CUBAExtension.BOX_ORIGIN] = box_origin
+        data_extension[CUBAExtension.BOX_VECTORS] = box_vectors
+
         particles = Particles(name="{}".format(atom_type))
         particles.data = data
+        particles.data_extension = data_extension
 
         type_to_particles_map[atom_type] = particles
 

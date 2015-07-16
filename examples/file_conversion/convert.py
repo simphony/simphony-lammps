@@ -3,6 +3,7 @@ from __future__ import print_function
 import subprocess
 
 from simlammps import read_data_file
+from simlammps.cuba_extension import CUBAExtension
 
 lammps_script = """# example of creating lammps data file (to be then used by SimPhoNy"
 dimension	2
@@ -47,9 +48,21 @@ with open("lammps_example_script", "w") as script_file:
 subprocess.check_call("lammps < lammps_example_script", shell=True)
 
 particles_list = read_data_file("example.data")
+print("\n\nFinished converting files")
+print("\n{} Particles data-sets were read from the file:".format(
+    len(particles_list)))
 
-print("{} DataContainers read from file:".format(len(particles_list)))
 for particles in particles_list:
     number_particles = sum(1 for _ in particles.iter_particles())
-    print("    '{}' Particles has {} particles".format(particles.name,
-                                                       number_particles))
+
+    print("    '{}' has {} particles".format(particles.name,
+                                             number_particles))
+
+box_description = ""\
+                  "Each has the following simulation box description:\n"\
+                  "CUBAExtension.BOX_ORIGIN: {}\n" \
+                  "CUBAExtension.BOX_VECTORS: {}"
+
+print(box_description.format(
+    particles_list[0].data_extension[CUBAExtension.BOX_ORIGIN],
+    particles_list[0].data_extension[CUBAExtension.BOX_VECTORS]))

@@ -16,6 +16,8 @@ class LammpsSimpleDataHandler(object):
         self._atoms = {}
         self._masses = {}
         self._velocities = {}
+        self._box_origin = None
+        self._box_vectors = None
 
     def end(self):
         """ Handle end of file parsing
@@ -46,3 +48,15 @@ class LammpsSimpleDataHandler(object):
 
     def get_velocities(self):
         return self._velocities
+
+    def process_box_origin(self, values):
+        self._box_origin = values
+
+    def get_box_origin(self):
+        return self._box_origin
+
+    def process_box_vectors(self, values):
+        self._box_vectors = values
+
+    def get_box_vectors(self):
+        return self._box_vectors
