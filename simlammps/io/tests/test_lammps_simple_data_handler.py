@@ -43,7 +43,7 @@ class TestLammpsSimpleDataHandler(unittest.TestCase):
             self.assertTrue(i in atoms)
             self.assertEqual(atoms[i][1:4], [i * 1.0, i * 1.0, i * 1.0])
 
-    def test_velocties(self):
+    def test_velocities(self):
         self.parser.parse(self.filename)
         velocities = self.handler.get_velocities()
 

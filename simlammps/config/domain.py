@@ -18,7 +18,7 @@ def get_box(particle_data_containers, command_format=False):
     command_format: boolean
         if command format is true, then box command suitable
         for lammps-command is returned.  Otherwise, the
-        string retured is suitable for LAMMPS data file.
+        string returned is suitable for LAMMPS data file.
     """
     origin = None
     vectors = None
