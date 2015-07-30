@@ -114,8 +114,11 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         self._pc_cache[uname] = pc
 
-        # create empty dc extension
-        self._dc_extension_cache[uname] = {}
+        if hasattr(particles, 'data_extension'):
+            self._dc_extension_cache[uname] = dict(particles.data_extension)
+        else:
+            # create empty dc extension
+            self._dc_extension_cache[uname] = {}
 
     def get_particle(self, uid, uname):
         """Get particle
