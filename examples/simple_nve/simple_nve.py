@@ -21,7 +21,6 @@ import numpy
 
 from simphony.engine import lammps
 from simphony.core.cuba import CUBA
-from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle, Particles
 
 
@@ -79,14 +78,13 @@ number_NVE_cycles = 1000
 
 # The number of MD steps in each cycle, this is the number of
 # steps that are run at each call of wrapper.run().
-Temp_rescale_period = 200
+temp_rescale_period = 200
 
 # Create the input data in Python: This is a simple mono atomic system
 # with one atomic type.
 
 # The lattice parameter (in a cubic setup)
 a_latt = 1.549
-
 
 # Use a SC unit cell with basis for the FCC system
 unit_cell = [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
@@ -164,34 +162,27 @@ for p in pc.iter_particles():
     p.data[CUBA.VELOCITY][2] -= v_cm[2]
 
 
-# Define the material type, may use CUBA.MATERIAL_TYPE or CUBA.ATOM_TYPE
-# Several types will be added later using shared data.
-pc_data = DataContainer()
-pc_data[CUBA.MATERIAL_TYPE] = 1
-pc_data[CUBA.MASS] = 1
+# Define the mass and material type
+pc.data = {CUBA.MATERIAL_TYPE: 1,
+           CUBA.MASS: 1}
 
-# set the lattice parameter and the unit cell, as well as the lattice
-# description
-pc_data[CUBA.LATTICE_SPACING] = a_latt
-
-pc.data = pc_data
+super_cell = [
+    tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
+pc.data_extension = {lammps.CUBAExtension.BOX_VECTORS: super_cell}
 
 # define the wrapper to use.
 wrapper = lammps.LammpsWrapper()
 
 # define the CM component of the SimPhoNy application model:
 wrapper.CM_extension[lammps.CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
-wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = Temp_rescale_period
+wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = temp_rescale_period
 wrapper.CM[CUBA.TIME_STEP] = 0.0025
+
 # Define the BC component of the SimPhoNy application model:
 wrapper.BC_extension[lammps.CUBAExtension.BOX_FACES] = ["periodic",
                                                         "periodic",
                                                         "periodic"]
 pc_w = wrapper.add_particles(pc)
-
-super_cell = [
-    tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
-pc_w.data_extension = {lammps.CUBAExtension.BOX_VECTORS: super_cell}
 
 # define the SP component of the SimPhoNy application model.  The
 # following are the LJ parameters for this test. Normalized reduced
@@ -240,23 +231,19 @@ for run in range(0, number_NVE_cycles):
     kinetic_energy *= 0.5
     kinetic_energy /= number_of_points
 
-    print ("kinetic_energy:{} number_of_points:{} (running {} of {})".format(
-        kinetic_energy,
-        number_of_points,
-        run,
-        number_NVE_cycles))
-
     T = 2.0*kinetic_energy/3.0
 
 #   Possibly add a window in which the temperature rescale kicks in if
 #   math.fabs( (T0-T)/T0) > 0.1:
     fac = math.sqrt(T0/T)
     ft.write('{:d} {:f} {:f} {:<2f}\n'.format(run, T, kinetic_energy, fac))
-    print ("kinetic_energy:{} number_of_points:{}, fac:{} T0:{}".format(
-        kinetic_energy,
-        number_of_points,
-        fac,
-        T0))
+    print (("kinetic_energy:{} number_of_points:{} "
+           "fac:{} T0:{} (running {} of {})").format(kinetic_energy,
+                                                     number_of_points,
+                                                     fac,
+                                                     T0,
+                                                     run,
+                                                     number_NVE_cycles))
 
     for par in pc_MD.iter_particles():
         par.data[CUBA.VELOCITY] = tuple(v*fac for v in par.data[CUBA.VELOCITY])
