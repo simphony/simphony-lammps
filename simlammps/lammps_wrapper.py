@@ -171,7 +171,7 @@ class LammpsWrapper(ABCModelingEngine):
 
             # after running, we read any changes from lammps
             # TODO rework
-            self._data_manager.read("dummy")
+            self._data_manager.read()
         else:
             with _temp_directory() as temp_dir:
                 input_data_filename = os.path.join(

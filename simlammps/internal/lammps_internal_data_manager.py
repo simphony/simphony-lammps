@@ -32,14 +32,8 @@ class _IDGenerator(object):
 class LammpsInternalDataManager(ABCDataManager):
     """  Class managing LAMMPS data information using file-io
 
-    The class performs communicating the data to and from LAMMPS using FILE-IO
-    communications (i.e. through input and output files). The class manages
-    data existing in LAMMPS (via LAMMPS data file) and allows this data to be
-    queried and to be changed.
-
-    Class maintains a cache of the particle information.  This information
-    is read from file whenever the read() method is called and written to
-    the file whenever the flush() method is called.
+    The class performs communicating the data to and from LAMMPS using the
+    internal interface (i.e. LAMMPS shared library).
 
     Parameters
     ----------
@@ -308,18 +302,14 @@ class LammpsInternalDataManager(ABCDataManager):
             for uid in self._uid_to_lammpsid[uname].iterkeys():
                 yield self.get_particle(uid, uname)
 
-    def read(self, output_data_filename):
-        """read from file
+    def read(self):
+        """read latest state
 
-        Parameters
-        ----------
-        output_data_filename :
-            name of data-file where info read from (i.e lammps's output).
         """
         self._update_from_lammps()
 
     def flush(self):
-        """flush to file
+        """flush state
 
         """
         if self._pc_data:
@@ -357,7 +347,6 @@ class LammpsInternalDataManager(ABCDataManager):
 
     def _update_from_lammps(self):
         self._particle_data_cache.retrieve()
-        self._invalid = False
 
     def _set_particle(self, particle, uname):
         """ Set coordinates and data for a particle
@@ -403,9 +392,6 @@ class LammpsInternalDataManager(ABCDataManager):
             lammps-id of added atom
 
         """
-        if particle.coordinates[2] > 100:
-            raise RuntimeError(
-                "{} coordinates are incorrect".format(particle.coordinates))
         coordinates = ' '.join(map(str, particle.coordinates))
 
         p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
