@@ -61,11 +61,13 @@ class ABCLammpsMDEngineCheck(object):
         """
 
     def test_add_particles(self):
-        self.wrapper.add_particles(_create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
         self.wrapper.get_particles("foo")
 
     def test_add_same_particles(self):
-        self.wrapper.add_particles(_create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
         with self.assertRaises(ValueError):
             self.wrapper.add_particles(_create_pc("foo"))
 
@@ -74,7 +76,8 @@ class ABCLammpsMDEngineCheck(object):
             self.wrapper.get_particles("foo")
 
     def test_delete_particles(self):
-        self.wrapper.add_particles(_create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
         self.wrapper.get_particles("foo")
 
         self.wrapper.delete_particles("foo")
@@ -87,7 +90,8 @@ class ABCLammpsMDEngineCheck(object):
             self.wrapper.delete_particles("foo")
 
     def test_particles_rename(self):
-        pc = self.wrapper.add_particles(_create_pc("foo"))
+        pc = MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                           _create_pc("foo"))
         pc.name = "bar"
 
         # we should not be able to use the old name "foo"
@@ -107,8 +111,10 @@ class ABCLammpsMDEngineCheck(object):
         self.wrapper.add_particles(_create_pc("foo"))
 
     def test_iter_particles(self):
-        self.wrapper.add_particles(_create_pc("foo"))
-        self.wrapper.add_particles(_create_pc("bar"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("bar"))
 
         pc_name_list = list(
             pc.name for pc in self.wrapper.iter_particles())

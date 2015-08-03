@@ -61,16 +61,14 @@ class LammpsInternalDataManager(ABCDataManager):
         for command in commands.splitlines():
             self._lammps.command(command)
 
-        # TODO This is a hack as due to pc.data_extension
-        # being empty at this point (we choose a vectors
-        # that corresponds with the dimensions used in our
-        # unit testing and in simple_nve.py
+        # create initial box with dummy values
         vectors = [(25.0, 0.0, 0.0),
                    (0.0, 22.0, 0.0),
                    (0.0, 0.0, 6.196)]
-        dummy_data = {CUBAExtension.BOX_VECTORS: vectors,
-                      CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
-        self._lammps.command(get_box([dummy_data], command_format=True))
+        dummy_box_data = {CUBAExtension.BOX_VECTORS: vectors,
+                          CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
+        self._lammps.command(get_box([dummy_box_data], command_format=True))
+
         # due to not being able to alter the number of types (issue #66),
         # we set the number of supported types to a high number and then
         # give dummy values for the unused types
@@ -95,8 +93,6 @@ class LammpsInternalDataManager(ABCDataManager):
         # cache of particle containers's data
         self._pc_data = {}
         self._pc_data_extension = {}
-
-        self._dummy_box = None
 
     def get_data(self, uname):
         """Returns data container associated with particle container
@@ -169,27 +165,18 @@ class LammpsInternalDataManager(ABCDataManager):
             particle container to be added
 
         """
-        # create empty stand-alone particle container
-        # to use as a cache of for input/output to LAMMPS
 
         self._uid_to_lammpsid[uname] = {}
 
         self._pc_data[uname] = DataContainer(particles.data)
-        self._pc_data_extension[uname] = {}
 
-        # TODO This is a hack as due to pc.data_extension
-        # being empty at this point (we choose a vectors
-        # that corresponds with the dimensions used in our
-        # unit testing and in simple_nve.py
-        vectors = [(25.0, 0.0, 0.0),
-                   (0.0, 22.0, 0.0),
-                   (0.0, 0.0, 6.196)]
-        self._pc_data_extension[uname][CUBAExtension.BOX_VECTORS] = vectors
-        self._pc_data_extension[uname][CUBAExtension.BOX_ORIGIN] = (0.0,
-                                                                    0.0,
-                                                                    0.0)
+        if hasattr(particles, 'data_extension'):
+            self._pc_data_extension[uname] = dict(particles.data_extension)
+        else:
+            # create empty dc extension
+            self._pc_data_extension[uname] = {}
 
-        # self._update_simulation_box()
+        self._update_simulation_box()
 
         # TODO have uniform way to check what is needed
         # and perform a check at a different spot.
@@ -205,28 +192,11 @@ class LammpsInternalDataManager(ABCDataManager):
     def _update_simulation_box(self):
         """Update simulation box
 
-
         """
-        # TODO remove this hack. here we only set the simulation box
-        # once as we don't support it being changed.
-        if self._dummy_box:
-            # delete old box
-            self._lammps.command("region delete box")
-        box = get_box([de for _, de in self._pc_data_extension.iteritems()],
-                      command_format=True)
-
-        if box != self._dummy_box:
-            # we update our region and then
-            # update the simulation box if
-            # the dimensions have changed
-            self._lammps.command(box)
-
-            # TODO
-            types = set()
-            for _, data in self._pc_data.iteritems():
-                types.add(data[CUBA.MATERIAL_TYPE])
-            self._lammps.command("create_box {} box".format(len(types)))
-            self.dummy_box = box
+        cmd = get_box([de for _, de in self._pc_data_extension.iteritems()],
+                      command_format=True,
+                      change_existing=True)
+        self._lammps.command(cmd)
 
     def get_particle(self, uid, uname):
         """Get particle
