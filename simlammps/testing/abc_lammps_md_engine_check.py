@@ -133,8 +133,7 @@ class ABCLammpsMDEngineCheck(object):
         MDExampleConfigurator.configure_wrapper(self.wrapper)
         self.wrapper.run()
 
-    # TODO not yet supported
-    def DUMMY_test_run_delete_particle(self):
+    def test_run_remove_particle(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)
 
         removed_particle, particles = _get_particle(self.wrapper)

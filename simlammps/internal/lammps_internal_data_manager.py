@@ -141,10 +141,13 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
+        uids_to_be_deleted = self._uid_to_lammpsid[uname].keys()
+
+        for uid in uids_to_be_deleted:
+            self.remove_particle(uid, uname)
+
         del self._pc_data[uname]
         del self._pc_data_extension[uname]
-
-        # TODO delete id->uid info
         del self._uid_to_lammpsid[uname]
 
     def _handle_new_particles(self, uname, particles):
@@ -268,7 +271,17 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        raise NotImplementedError()
+
+        self._lammps.command(
+            "group to_be_removed id {}".format(
+                self._uid_to_lammpsid[uname][uid]))
+
+        self._lammps.command("delete_atoms group to_be_removed ")
+
+        del self._lammpsid_to_index[self._uid_to_lammpsid[uname][uid]]
+        del self._uid_to_lammpsid[uname][uid]
+
+        self._lammps.command("group to_be_removed delete")
 
     def has_particle(self, uid, uname):
         """Has particle
