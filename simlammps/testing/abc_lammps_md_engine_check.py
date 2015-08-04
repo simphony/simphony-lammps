@@ -17,13 +17,6 @@ def _create_pc(name):
     pc = Particles(name)
 
     data = DataContainer()
-
-    # TODO these values should be gotten from MDExampleConfigurator
-    data[CUBA.MASS] = 1
-    data[CUBA.MATERIAL_TYPE] = 1
-    pc.data = data
-
-    data = DataContainer()
     data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
 
     pc.add_particle(Particle(coordinates=(1.01, 1.01, 1.01), data=data))
@@ -108,7 +101,8 @@ class ABCLammpsMDEngineCheck(object):
 
         # and we should be able to use the no-longer used
         # "foo" name when adding another container of particles
-        self.wrapper.add_particles(_create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
 
     def test_iter_particles(self):
         MDExampleConfigurator.add_configure_particles(self.wrapper,
