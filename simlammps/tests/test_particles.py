@@ -29,11 +29,6 @@ class TestFileIoParticlesAddParticles(
         self.pc = pcs[0]
         ContainerAddParticlesCheck.setUp(self)
 
-    # see issue #13
-    @unittest.skip("Not supporting test_add_particle_with_unsupported_cuba.")
-    def test_add_particle_with_unsupported_cuba(self):
-        pass
-
 
 class TestInternalParticlesAddParticles(
         ContainerAddParticlesCheck, unittest.TestCase):
@@ -50,11 +45,6 @@ class TestInternalParticlesAddParticles(
         pcs = [pc for pc in self.wrapper.iter_particles()]
         self.pc = pcs[0]
         ContainerAddParticlesCheck.setUp(self)
-
-    # see issue #13
-    @unittest.skip("Not supporting test_add_particle_with_unsupported_cuba.")
-    def test_add_particle_with_unsupported_cuba(self):
-        pass
 
 
 class TestFileIoParticlesManipulatingParticles(
