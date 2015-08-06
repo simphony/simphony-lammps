@@ -16,7 +16,6 @@ class ParticleDataCache(object):
     in order to retrieve this data from LAMMPS and send this
     data to LAMMPS.
 
-
     Parameters
     ----------
     lammps :
@@ -37,27 +36,19 @@ class ParticleDataCache(object):
                                           lammps_name="type",
                                           type=0,  # int
                                           count=1)]
+        # map from uid to index in lammps arrays
+        self._index_of_uid = {}
 
         self._cache = {}
         self._coordinates = []
-        self._id_cache = None
 
         for entry in self._data_entries:
             self._cache[entry.CUBA] = []
 
     def retrieve(self):
-        """ Retrieve
-
-        Parameters
-        ----------
-        particle : Particle
-            particle to be set
-        uname : string
-            non-changing unique name of particle container
+        """ Retrieve all data from lammps
 
         """
-
-        self._id_cache = self._lammps.gather_atoms("id", 0, 1)
         self._coordinates = self._lammps.gather_atoms("x", 1, 3)
 
         for entry in self._data_entries:
@@ -67,6 +58,9 @@ class ParticleDataCache(object):
                 entry.count)
 
     def send(self):
+        """ Send data to lammps
+
+        """
         for entry in self._data_entries:
             values = self._cache[entry.CUBA]
 
@@ -85,13 +79,13 @@ class ParticleDataCache(object):
                     entry.count))
             return
 
-    def get_particle_data(self, index):
+    def get_particle_data(self, uid):
         """ get particle data
 
         Parameters
         ----------
-        index : int
-            index location of particle in cache
+        uid : UUID
+            uid for particle
 
         Returns
         -------
@@ -100,7 +94,7 @@ class ParticleDataCache(object):
         """
         data = DataContainer()
         for entry in self._data_entries:
-            i = index * entry.count
+            i = self._index_of_uid[uid] * entry.count
             if entry.count > 1:
                 # always assuming that its a tuple
                 # ( see https://github.com/simphony/simphony-common/issues/18 )
@@ -110,7 +104,7 @@ class ParticleDataCache(object):
                 data[entry.CUBA] = self._cache[entry.CUBA][i]
         return data
 
-    def set_particle(self, coordinates, data, index):
+    def set_particle(self, coordinates, data, uid):
         """ set particle coordinates and data
 
         Parameters
@@ -119,13 +113,17 @@ class ParticleDataCache(object):
             particle coordinates
         data : DataContainer
             data of the particle
-        index : int
-            index location of particle in cache to be updated
+        uid : uuid
+            uuid of the particle
 
         """
-        i = index * 3
+        if uid not in self._index_of_uid:
+            self._index_of_uid[uid] = len(self._index_of_uid)
+
+        i = self._index_of_uid[uid] * 3
         self._coordinates[i:i+3] = coordinates[0:3]
 
+        index = self._index_of_uid[uid]
         for entry in self._data_entries:
             i = index * entry.count
             if entry.count > 1:
@@ -137,20 +135,18 @@ class ParticleDataCache(object):
                 elif i == len(self._cache[entry.CUBA]):
                     self._cache[entry.CUBA].append(data[entry.CUBA])
                 else:
-                    msg = "Problem with index {}".format(index)
-                    msg += "When particle data is first set it," \
-                           " it must be set in order (from 0 to N"
+                    msg = "Problem with index {}".format(uid)
                     raise IndexError(msg)
 
-    def get_coordinates(self, index):
+    def get_coordinates(self, uid):
         """ Get coordinates for a particle
 
         Parameters
         ----------
-        index : int
-            index location of particle in array
+        uid : uid
+            uid of particle
         """
-        i = index * 3
+        i = self._index_of_uid[uid] * 3
         coords = self._coordinates[i:i+3]
         return tuple(coords)
 

@@ -145,16 +145,22 @@ class ABCLammpsMDEngineCheck(object):
 
     def test_0_step_run(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)
-
         foo = Particles(name="foo")
-        for i in range(0, 10):
+        particles_uids = []
+        for i in range(0, 5):
             p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 0+0.1*i))
             p.data[CUBA.VELOCITY] = (1+0.1*i, 1+0.1*i, 1+0.1*i)
-            foo.add_particle(p)
+            uid = foo.add_particle(p)
+            particles_uids.append(uid)
 
         # add to wrapper
         foo_w = MDExampleConfigurator.add_configure_particles(self.wrapper,
                                                               foo)
+
+        # remove one particle
+        uid_to_remove = particles_uids[len(particles_uids)/2]
+        foo_w.remove_particle(uid_to_remove)
+        foo.remove_particle(uid_to_remove)
 
         # check if information matches up
         for p in foo.iter_particles():
