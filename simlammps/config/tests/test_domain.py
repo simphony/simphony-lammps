@@ -3,7 +3,7 @@ import unittest
 from simlammps.config.domain import get_box
 
 
-class TestPairStyle(unittest.TestCase):
+class TestDomain(unittest.TestCase):
     """ Tests the domain config class
 
     """
