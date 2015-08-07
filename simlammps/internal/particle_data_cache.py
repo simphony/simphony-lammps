@@ -1,5 +1,7 @@
 from collections import namedtuple
 
+import ctypes
+
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 
@@ -61,6 +63,10 @@ class ParticleDataCache(object):
         """ Send data to lammps
 
         """
+        self._lammps.scatter_atoms(
+            "x", 1, 3,
+            (ctypes.c_double * len(self._coordinates))(*self._coordinates))
+
         for entry in self._data_entries:
             values = self._cache[entry.CUBA]
 
@@ -77,7 +83,6 @@ class ParticleDataCache(object):
             else:
                 raise RuntimeError("Unsupported count {}".format(
                     entry.count))
-            return
 
     def get_particle_data(self, uid):
         """ get particle data

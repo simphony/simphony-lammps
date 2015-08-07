@@ -149,7 +149,7 @@ class ABCLammpsMDEngineCheck(object):
         particles_uids = []
         for i in range(0, 5):
             p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 0+0.1*i))
-            p.data[CUBA.VELOCITY] = (1+0.1*i, 1+0.1*i, 1+0.1*i)
+            p.data[CUBA.VELOCITY] = (0+0.001*i, 0+0.0001*i, 0+0.0001*i)
             uid = foo.add_particle(p)
             particles_uids.append(uid)
 
@@ -161,6 +161,14 @@ class ABCLammpsMDEngineCheck(object):
         uid_to_remove = particles_uids[len(particles_uids)/2]
         foo_w.remove_particle(uid_to_remove)
         foo.remove_particle(uid_to_remove)
+
+        # update another point
+        uid_to_remove = particles_uids[len(particles_uids)/2-1]
+        p = foo.get_particle(uid_to_remove)
+        p.coordinates = (1.42, 1.42, 1.42)
+        p.data[CUBA.VELOCITY] = (0.0042, 0.0042, 0.0042)
+        foo.update_particle(p)
+        foo_w.update_particle(p)
 
         # check if information matches up
         for p in foo.iter_particles():
@@ -178,6 +186,18 @@ class ABCLammpsMDEngineCheck(object):
 
             assert_almost_equal(p_w.coordinates, p.coordinates)
             assert_almost_equal(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
+
+        # update again
+        p = foo.get_particle(uid_to_remove)
+        p.coordinates = (1.24, 1.24, 1.24)
+        foo.update_particle(p)
+        foo_w.update_particle(p)
+
+        self.wrapper.run()
+        # check if information matches up
+        for p in foo.iter_particles():
+            p_w = foo_w.get_particle(p.uid)
+            assert_almost_equal(p_w.coordinates, p.coordinates)
 
     def test_run_incomplete_cm(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)

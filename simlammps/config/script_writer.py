@@ -116,6 +116,7 @@ class ScriptWriter(object):
 
 
 INITIAL = """atom_style  atomic
+atom_modify     map array
 neighbor    0.3 bin
 neigh_modify    delay 5
 """
