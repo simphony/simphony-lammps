@@ -34,13 +34,15 @@ def get_box(particle_data_containers,
         if CUBAExtension.BOX_VECTORS in dc:
             if (vectors and
                     vectors != dc[CUBAExtension.BOX_VECTORS]):
-                # TODO provide more info in exception message
-                raise RuntimeError("Box vectors need to match")
+                raise RuntimeError(
+                    "Box vectors of each Particles need to match")
             vectors = dc[CUBAExtension.BOX_VECTORS]
+        else:
+            raise RuntimeError("CUBAExtension.BOX_VECTORS  was not set")
         if CUBAExtension.BOX_ORIGIN in dc:
             if origin and origin != dc[CUBAExtension.BOX_ORIGIN]:
-                # TODO provide more info in exception message
-                raise RuntimeError("Box origin need to match")
+                raise RuntimeError(
+                    "Box origin of each Particles need to match")
             origin = dc[CUBAExtension.BOX_ORIGIN]
 
     # origin is optional
@@ -73,9 +75,9 @@ def get_box(particle_data_containers,
             RuntimeError("change existing is not supported for data file")
         box_string = _get_data_file_box_string()
 
-    return box_string.format(origin[0], vectors[0][0]-origin[0],
-                             origin[1], vectors[1][1]-origin[1],
-                             origin[2], vectors[2][2]-origin[2])
+    return box_string.format(origin[0], vectors[0][0]+origin[0],
+                             origin[1], vectors[1][1]+origin[1],
+                             origin[2], vectors[2][2]+origin[2])
 
 
 def _check_vectors(vectors):

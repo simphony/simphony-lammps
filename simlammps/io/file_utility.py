@@ -49,7 +49,7 @@ def read_data_file(filename):
 
         particles = Particles(name="{}".format(atom_type))
         particles.data = data
-        particles.data_extension = data_extension
+        particles.data_extension = dict(data_extension)
 
         type_to_particles_map[atom_type] = particles
 
