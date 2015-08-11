@@ -107,8 +107,19 @@ class ScriptWriter(object):
         return _get_thermodynamic_ensemble(CM)
 
     @staticmethod
-    def get_boundary(BC):
-        return _get_boundary(BC)
+    def get_boundary(BC, change_existing_boundary=False):
+        """ get lammps commands related to boundary conditions (BC)
+
+        Parameters:
+        ----------
+        BC : DataContainer
+            container of attributes related to the boundary conditions
+        change_existing_boundary : boolean
+            if true then return lammps commands that change existing boundary
+            conditions. if false, then return lammps commands that set the
+            boundary conditions
+        """
+        return _get_boundary(BC, change_existing_boundary)
 
     @staticmethod
     def get_initial_setup():
@@ -161,7 +172,7 @@ def _get_thermodynamic_ensemble(CM):
         ConfigurationError(message.format(esemble))
 
 
-def _get_boundary(BC):
+def _get_boundary(BC, change_existing_boundary):
     """ get lammps boundary command from BC
 
     The boundary command can be either fixed or periodic.
@@ -171,7 +182,11 @@ def _get_boundary(BC):
     """
 
     error_message = ""
-    boundary_command = "boundary"
+    boundary_command = ""
+    if change_existing_boundary:
+        boundary_command = "change_box all boundary"
+    else:
+        boundary_command = "boundary"
 
     # mapping of cuds-value to lammps string
     mappings = {'periodic': 'p', 'fixed': 'f'}
