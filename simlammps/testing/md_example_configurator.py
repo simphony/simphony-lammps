@@ -121,7 +121,7 @@ class MDExampleConfigurator:
                          random.uniform(zrange[0], zrange[1]))
                 p = Particle(coordinates=coord)
                 p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
-                pc.add_particle(p)
+                pc.add_particles([p])
 
             MDExampleConfigurator.add_configure_particles(wrapper,
                                                           pc,
@@ -158,6 +158,6 @@ class MDExampleConfigurator:
                              CUBAExtension.BOX_ORIGIN:
                              MDExampleConfigurator.box_origin}
 
-        pc_w = wrapper.add_particles(pc)
+        pc_w = wrapper.add_dataset(pc)
 
         return pc_w

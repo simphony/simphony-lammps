@@ -1,4 +1,5 @@
-from simphony.cuds.abstractparticles import ABCParticles
+from simphony.cuds.abc_particles import ABCParticles
+from simphony.core.cuds_item import CUDSItem
 
 
 class LammpsParticles(ABCParticles):
@@ -45,31 +46,44 @@ class LammpsParticles(ABCParticles):
 
     # Particle methods ######################################################
 
-    def add_particle(self, particle):
-        """Add particle
+    def add_particles(self, particles):
+        """Adds a set of particles from the provided iterable
+        to the container.
 
-        If particle has an uid then this is used.  If the
-        particle's uid is None then a uid is generated for the
-        particle.
+        If any particle have no uids, the container
+        will generate a new uids for it. If the particle has
+        already an uids, it won't add the particle if a particle
+        with the same uid already exists. If the user wants to replace
+        an existing particle in the container there is an 'update_particles'
+        method for that purpose.
+
+        Parameters
+        ----------
+        iterable : iterable of Particle objects
+            the new set of particles that will be included in the container.
 
         Returns
         -------
-        int
-            uid of particle
+        uids : list of uuid.UUID
+            The uids of the added particles.
 
         Raises
-        -------
-        ValueError
-           if an uid is given which already exists.
-
+        ------
+        ValueError :
+            when there is a particle with an uids that already exists
+            in the container.
         """
-        return self._manager.add_particle(particle, self._uname)
+        uids = []
+        for particle in particles:
+            uids.append(self._manager.add_particle(particle, self._uname))
+        return uids
 
-    def update_particle(self, particle):
+    def update_particles(self, particles):
         """Update particle
 
         """
-        return self._manager.update_particle(particle, self._uname)
+        for particle in particles:
+            self._manager.update_particle(particle, self._uname)
 
     def get_particle(self, uid):
         """Get particle
@@ -77,11 +91,12 @@ class LammpsParticles(ABCParticles):
         """
         return self._manager.get_particle(uid, self._uname)
 
-    def remove_particle(self, uid):
-        """Remove particle
+    def remove_particles(self, uids):
+        """Remove particles
 
         """
-        return self._manager.remove_particle(uid, self._uname)
+        for uid in uids:
+            self._manager.remove_particle(uid, self._uname)
 
     def has_particle(self, uid):
         """Has particle
@@ -98,13 +113,13 @@ class LammpsParticles(ABCParticles):
 
     # Bond methods #######################################################
 
-    def add_bond(self, bond):
-        """Add bond
+    def add_bonds(self, bonds):
+        """Add bonds
 
         """
         pass
 
-    def update_bond(self, bond):
+    def update_bonds(self, bonds):
         """Update particle
 
         """
@@ -116,7 +131,7 @@ class LammpsParticles(ABCParticles):
         """
         pass
 
-    def remove_bond(self, uid):
+    def remove_bonds(self, uid):
         """Remove bond
 
         """
@@ -132,3 +147,32 @@ class LammpsParticles(ABCParticles):
 
         """
         pass
+
+    # count methods #######################################################
+    def count_of(self, item_type):
+        """ Return the count of item_type in the container.
+
+        Parameters
+        ----------
+        item_type : CUDSItem
+            The CUDSItem enum of the type of the items to return the count of.
+
+        Returns
+        -------
+        count : int
+            The number of items of item_type in the container.
+
+        Raises
+        ------
+        ValueError :
+            If the type of the item is not supported in the current
+            container.
+
+        """
+        if item_type == CUDSItem.PARTICLE:
+            return self._manager.number_of_particles(self._uname)
+        elif item_type == CUDSItem.BOND:
+            return 0
+        else:
+            error_str = "Trying to obtain count a of non-supported item: {}"
+            raise ValueError(error_str.format(item_type))

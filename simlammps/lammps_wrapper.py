@@ -8,6 +8,7 @@ import tempfile
 import shutil
 
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
+from simphony.cuds.abc_particles import ABCParticles
 from simphony.core.data_container import DataContainer
 
 from simlammps.io.lammps_fileio_data_manager import LammpsFileIoDataManager
@@ -63,39 +64,56 @@ class LammpsWrapper(ABCModelingEngine):
         self.SP_extension = {}
         self.BC_extension = {}
 
-    def add_particles(self, particles):
-        """Add particles.
+    def add_dataset(self, container):
+        """Add a CUDS container
 
         Parameters
         ----------
-        particles : ABCParticles
-            particles to be added.
+        container : {ABCParticles}
+            The CUDS container to add to the engine.
 
-        Returns
-        ----------
-        ABCParticles
-            The particles newly added to Lammps.  See
-            get_particles for more information.
+        Raises
+        ------
+        TypeError:
+            If the container type is not supported (i.e. ABCLattice, ABCMesh).
+        ValueError:
+            If there is already a dataset with the given name.
 
         """
-        if particles.name in self._data_manager:
+        if not isinstance(container, ABCParticles):
+            raise TypeError(
+                "The type of the dataset container is not supported")
+
+        if container.name in self._data_manager:
             raise ValueError(
                 'Particle container \'{n}\` already exists'.format(
-                    n=particles.name))
+                    n=container.name))
         else:
             return self._data_manager.new_particles(
-                particles)
+                container)
 
-    def get_particles(self, name):
-        """Get particles
+    def get_dataset(self, name):
+        """ Get the dataset
 
         The returned particle container can be used to query
         and change the related data inside LAMMPS.
 
         Parameters
         ----------
-        name : str
-            name of particle container to return
+        name: str
+            name of CUDS container to be retrieved.
+
+        Returns
+        -------
+        container :
+            A proxy of the dataset named ``name`` that is stored
+            internally in the Engine.
+
+        Raises
+        ------
+        ValueError:
+            If there is no dataset with the given name
+
         """
         if name in self._data_manager:
             return self._data_manager[name]
@@ -103,13 +121,19 @@ class LammpsWrapper(ABCModelingEngine):
             raise KeyError(
                 'Particle container \'{}\` does not exist'.format(name))
 
-    def delete_particles(self, name):
-        """Delete particles
+    def remove_dataset(self, name):
+        """ Remove a dataset
 
         Parameters
         ----------
-        name : str
-            name of particles to delete
+        name: str
+            name of CUDS container to be deleted
+
+        Raises
+        ------
+        ValueError:
+            If there is no dataset with the given name
+
         """
         if name in self._data_manager:
             del self._data_manager[name]
@@ -117,17 +141,14 @@ class LammpsWrapper(ABCModelingEngine):
             raise KeyError(
                 'Particles \'{n}\` does not exist'.format(n=name))
 
-    def iter_particles(self, names=None):
-        """Returns an iterator over a subset or all
-        of the particle containers. The iterator iterator yields
-        (name, particlecontainer) tuples for each particle container.
+    def iter_datasets(self, names=None):
+        """ Returns an iterator over a subset or all of the containers.
 
         Parameters
         ----------
-        names : list of str
-            names of specific particle containers to be iterated over.
-            If names is not given, then all particle containers will
-            be iterated over.
+        names : sequence of str, optional
+            names of specific containers to be iterated over. If names is not
+            given, then all containers will be iterated over.
 
         """
         if names is None:
@@ -193,30 +214,6 @@ class LammpsWrapper(ABCModelingEngine):
 
                 # after running, we read any changes from lammps
                 self._data_manager.read(output_data_filename)
-
-    def add_lattice(self, lattice):
-        raise NotImplementedError()
-
-    def add_mesh(self, mesh):
-        raise NotImplementedError()
-
-    def delete_lattice(self, name):
-        raise NotImplementedError()
-
-    def delete_mesh(self, name):
-        raise NotImplementedError()
-
-    def get_lattice(self, name):
-        raise NotImplementedError()
-
-    def get_mesh(self, name):
-        raise NotImplementedError()
-
-    def iter_lattices(self, names=None):
-        raise NotImplementedError()
-
-    def iter_meshes(self, names=None):
-        raise NotImplementedError()
 
 
 def _combine(data_container, data_container_extension):
