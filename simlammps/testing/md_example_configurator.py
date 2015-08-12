@@ -34,7 +34,7 @@ class MDExampleConfigurator:
         """
 
         # CM
-        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10000
+        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10
         wrapper.CM[CUBA.TIME_STEP] = 0.003
         wrapper.CM_extension[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
 
