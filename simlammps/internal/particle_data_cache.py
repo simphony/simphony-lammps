@@ -70,19 +70,11 @@ class ParticleDataCache(object):
         for entry in self._data_entries:
             values = self._cache[entry.CUBA]
 
-            extract = self._lammps.extract_atom(entry.lammps_name,
-                                                _get_extract_type(entry))
-
-            if entry.count == 1:
-                for i in range(len(values)):
-                    extract[i] = values[i]
-            elif entry.count == 3:
-                for i in range(len(values)/3):
-                    for j in range(entry.count):
-                        extract[i][j] = values[i*3+j]
-            else:
-                raise RuntimeError("Unsupported count {}".format(
-                    entry.count))
+            self._lammps.scatter_atoms(
+                entry.lammps_name,
+                entry.type,
+                entry.count,
+                (_get_ctype(entry) * len(values))(*values))
 
     def get_particle_data(self, uid):
         """ get particle data
@@ -156,30 +148,18 @@ class ParticleDataCache(object):
         return tuple(coords)
 
 
-def _get_extract_type(entry):
-    """ get LAMMPS "extract" type for extract_atoms method
+def _get_ctype(entry):
+    """ get ctype's type for entry
 
     Parameters
     ----------
     entry : LammpsData
         info about the atom parameter
-
-    for the method extract_atoms, the parameter 'type' can be:
-       0 = vector of ints
-       1 = array of ints
-       2 = vector of doubles
-       3 = array of doubles
-
     """
-    if entry.count == 1 and entry.type == 0:
-        return 0
-    elif entry.count == 3 and entry.type == 0:
-        return 1
-    elif entry.count == 1 and entry.type == 1:
-        return 2
-    elif entry.count == 3 and entry.type == 1:
-        return 3
+    if entry.type == 0:
+        return ctypes.c_int
+    elif entry.type == 1:
+        return ctypes.c_double
     else:
         raise RuntimeError(
-            "Unsupported type {} and count {}".format(entry.type,
-                                                      entry.count))
+            "Unsupported type {}".format(entry.type))
