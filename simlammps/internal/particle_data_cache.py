@@ -5,6 +5,7 @@ import ctypes
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 
+# name is lammps'name (e.g. "x")
 # type = 0 = int or 1 = double
 # count = # of per-atom values, 1 or 3, etc
 _LammpsData = namedtuple(
@@ -41,7 +42,10 @@ class ParticleDataCache(object):
         # map from uid to index in lammps arrays
         self._index_of_uid = {}
 
+        # cache of particle-related data (stored by CUBA keyword)
         self._cache = {}
+
+        # cache of coordinates
         self._coordinates = []
 
         for entry in self._data_entries:
