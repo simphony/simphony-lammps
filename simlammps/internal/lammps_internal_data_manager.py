@@ -390,7 +390,9 @@ class LammpsInternalDataManager(ABCDataManager):
             uid of added particle
 
         """
-        coordinates = ' '.join(map(str, particle.coordinates))
+        coordinates = ("{0[0]:.16e} "
+                       "{0[1]:.16e} "
+                       "{0[2]:.16e}").format(particle.coordinates)
 
         p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
 
