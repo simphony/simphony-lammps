@@ -15,6 +15,12 @@ class MDExampleConfigurator:
 
     """
 
+    # box origin and box vectors
+    box_origin = (0.0, 0.0, 0.0)
+    box_vectors = [(101.0, 0.0, 0.0),
+                   (0.0, 101.0, 0.0),
+                   (0.0, 0.0, 1001.0)]
+
     @staticmethod
     def set_configuration(wrapper):
         """ Configure example engine with example settings
@@ -28,7 +34,7 @@ class MDExampleConfigurator:
         """
 
         # CM
-        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10000
+        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10
         wrapper.CM[CUBA.TIME_STEP] = 0.003
         wrapper.CM_extension[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
 
@@ -102,9 +108,17 @@ class MDExampleConfigurator:
 
             random.seed(42)
             for _ in range(10):
-                coord = (random.uniform(0.0, 25.0),
-                         random.uniform(0.0, 22.0),
-                         0.0)
+                # determine valid coordinates from simulation box
+                xrange = (MDExampleConfigurator.box_origin[0],
+                          MDExampleConfigurator.box_vectors[0][0])
+                yrange = (MDExampleConfigurator.box_origin[1],
+                          MDExampleConfigurator.box_vectors[1][1])
+                zrange = (MDExampleConfigurator.box_origin[2],
+                          MDExampleConfigurator.box_vectors[2][2])
+
+                coord = (random.uniform(xrange[0], xrange[1]),
+                         random.uniform(yrange[0], yrange[1]),
+                         random.uniform(zrange[0], zrange[1]))
                 p = Particle(coordinates=coord)
                 p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
                 pc.add_particle(p)
@@ -139,13 +153,11 @@ class MDExampleConfigurator:
 
         pc.data = data
 
+        pc.data_extension = {CUBAExtension.BOX_VECTORS:
+                             MDExampleConfigurator.box_vectors,
+                             CUBAExtension.BOX_ORIGIN:
+                             MDExampleConfigurator.box_origin}
+
         pc_w = wrapper.add_particles(pc)
 
-        # TODO this should be a class variable
-        vectors = [(25.0, 0.0, 0.0),
-                   (0.0, 22.0, 0.0),
-                   (0.0, 0.0, 1.0)]
-
-        pc_w.data_extension = {CUBAExtension.BOX_VECTORS: vectors,
-                               CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
         return pc_w

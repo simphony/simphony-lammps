@@ -2,7 +2,7 @@ import os
 
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
-from simphony.cuds.particles import Particles
+from simphony.cuds.particles import Particles, Particle
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
 from simlammps.config.domain import get_box
@@ -114,8 +114,11 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         self._pc_cache[uname] = pc
 
-        # create empty dc extension
-        self._dc_extension_cache[uname] = {}
+        if hasattr(particles, 'data_extension'):
+            self._dc_extension_cache[uname] = dict(particles.data_extension)
+        else:
+            # create empty dc extension
+            self._dc_extension_cache[uname] = {}
 
     def get_particle(self, uid, uname):
         """Get particle
@@ -130,6 +133,32 @@ class LammpsFileIoDataManager(ABCDataManager):
         """
         return self._pc_cache[uname].get_particle(uid)
 
+    def _get_supported_particle(self, particle):
+        """Get particle with only supported data
+
+        Parameters
+        ----------
+        particle : Particle
+            Particle
+
+        Returns
+        -------
+        particle
+           particle with only supported data
+
+
+        """
+        # TODO derive supported cuba from atom type
+        _SUPPORTED_CUBA = [CUBA.VELOCITY]
+
+        data = particle.data
+        supported_data = {cuba: data[cuba] for cuba
+                          in data if cuba in _SUPPORTED_CUBA}
+        p = Particle(coordinates=particle.coordinates,
+                     uid=particle.uid,
+                     data=supported_data)
+        return p
+
     def update_particle(self, particle, uname):
         """Update particle
 
@@ -141,7 +170,8 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        self._pc_cache[uname].update_particle(particle)
+        self._pc_cache[uname].update_particle(
+            self._get_supported_particle(particle))
 
     def add_particle(self, particle, uname):
         """Add particle
@@ -154,7 +184,9 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        return self._pc_cache[uname].add_particle(particle)
+        particle.uid = self._pc_cache[uname].add_particle(
+            self._get_supported_particle(particle))
+        return particle.uid
 
     def remove_particle(self, uid, uname):
         """Remove particle

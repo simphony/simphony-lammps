@@ -17,13 +17,6 @@ def _create_pc(name):
     pc = Particles(name)
 
     data = DataContainer()
-
-    # TODO these values should be gotten from MDExampleConfigurator
-    data[CUBA.MASS] = 1
-    data[CUBA.MATERIAL_TYPE] = 1
-    pc.data = data
-
-    data = DataContainer()
     data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
 
     pc.add_particle(Particle(coordinates=(1.01, 1.01, 1.01), data=data))
@@ -61,11 +54,13 @@ class ABCLammpsMDEngineCheck(object):
         """
 
     def test_add_particles(self):
-        self.wrapper.add_particles(_create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
         self.wrapper.get_particles("foo")
 
     def test_add_same_particles(self):
-        self.wrapper.add_particles(_create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
         with self.assertRaises(ValueError):
             self.wrapper.add_particles(_create_pc("foo"))
 
@@ -74,7 +69,8 @@ class ABCLammpsMDEngineCheck(object):
             self.wrapper.get_particles("foo")
 
     def test_delete_particles(self):
-        self.wrapper.add_particles(_create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
         self.wrapper.get_particles("foo")
 
         self.wrapper.delete_particles("foo")
@@ -87,7 +83,8 @@ class ABCLammpsMDEngineCheck(object):
             self.wrapper.delete_particles("foo")
 
     def test_particles_rename(self):
-        pc = self.wrapper.add_particles(_create_pc("foo"))
+        pc = MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                           _create_pc("foo"))
         pc.name = "bar"
 
         # we should not be able to use the old name "foo"
@@ -104,11 +101,14 @@ class ABCLammpsMDEngineCheck(object):
 
         # and we should be able to use the no-longer used
         # "foo" name when adding another container of particles
-        self.wrapper.add_particles(_create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
 
     def test_iter_particles(self):
-        self.wrapper.add_particles(_create_pc("foo"))
-        self.wrapper.add_particles(_create_pc("bar"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("foo"))
+        MDExampleConfigurator.add_configure_particles(self.wrapper,
+                                                      _create_pc("bar"))
 
         pc_name_list = list(
             pc.name for pc in self.wrapper.iter_particles())
@@ -127,8 +127,7 @@ class ABCLammpsMDEngineCheck(object):
         MDExampleConfigurator.configure_wrapper(self.wrapper)
         self.wrapper.run()
 
-    # TODO not yet supported
-    def DUMMY_test_run_delete_particle(self):
+    def test_run_remove_particle(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)
 
         removed_particle, particles = _get_particle(self.wrapper)
@@ -146,16 +145,31 @@ class ABCLammpsMDEngineCheck(object):
 
     def test_0_step_run(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)
-
         foo = Particles(name="foo")
-        for i in range(0, 10):
+        particles_uids = []
+        for i in range(0, 5):
             p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 0+0.1*i))
-            p.data[CUBA.VELOCITY] = (1+0.1*i, 1+0.1*i, 1+0.1*i)
-            foo.add_particle(p)
+            p.data[CUBA.VELOCITY] = (0+0.001*i, 0+0.0001*i, 0+0.0001*i)
+            uid = foo.add_particle(p)
+            particles_uids.append(uid)
 
         # add to wrapper
         foo_w = MDExampleConfigurator.add_configure_particles(self.wrapper,
                                                               foo)
+
+        # remove one particle and update another
+        uid_to_remove = particles_uids[len(particles_uids)/2]
+        uid_to_update = particles_uids[len(particles_uids)/2-1]
+
+        foo_w.remove_particle(uid_to_remove)
+        foo.remove_particle(uid_to_remove)
+
+        # update another point
+        p = foo.get_particle(uid_to_update)
+        p.coordinates = (1.42, 1.42, 1.42)
+        p.data[CUBA.VELOCITY] = (0.0042, 0.0042, 0.0042)
+        foo.update_particle(p)
+        foo_w.update_particle(p)
 
         # check if information matches up
         for p in foo.iter_particles():
@@ -173,6 +187,23 @@ class ABCLammpsMDEngineCheck(object):
 
             assert_almost_equal(p_w.coordinates, p.coordinates)
             assert_almost_equal(p_w.data[CUBA.VELOCITY], p.data[CUBA.VELOCITY])
+
+        # update again
+        p = foo.get_particle(uid_to_update)
+        p.coordinates = (1.24, 1.24, 1.24)
+        foo.update_particle(p)
+        foo_w.update_particle(p)
+
+        self.wrapper.run()
+        # check if information matches up
+        for p in foo.iter_particles():
+            p_w = foo_w.get_particle(p.uid)
+            assert_almost_equal(p_w.coordinates, p.coordinates)
+
+        self.wrapper.run()
+        for p in foo.iter_particles():
+            p_w = foo_w.get_particle(p.uid)
+            assert_almost_equal(p_w.coordinates, p.coordinates)
 
     def test_run_incomplete_cm(self):
         MDExampleConfigurator.configure_wrapper(self.wrapper)

@@ -1,8 +1,11 @@
 from collections import namedtuple
 
+import ctypes
+
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 
+# name is lammps'name (e.g. "x")
 # type = 0 = int or 1 = double
 # count = # of per-atom values, 1 or 3, etc
 _LammpsData = namedtuple(
@@ -15,7 +18,6 @@ class ParticleDataCache(object):
     Class stores all particle-related data and has methods
     in order to retrieve this data from LAMMPS and send this
     data to LAMMPS.
-
 
     Parameters
     ----------
@@ -37,27 +39,22 @@ class ParticleDataCache(object):
                                           lammps_name="type",
                                           type=0,  # int
                                           count=1)]
+        # map from uid to index in lammps arrays
+        self._index_of_uid = {}
 
+        # cache of particle-related data (stored by CUBA keyword)
         self._cache = {}
+
+        # cache of coordinates
         self._coordinates = []
-        self._id_cache = None
 
         for entry in self._data_entries:
             self._cache[entry.CUBA] = []
 
     def retrieve(self):
-        """ Retrieve
-
-        Parameters
-        ----------
-        particle : Particle
-            particle to be set
-        uname : string
-            non-changing unique name of particle container
+        """ Retrieve all data from lammps
 
         """
-
-        self._id_cache = self._lammps.gather_atoms("id", 0, 1)
         self._coordinates = self._lammps.gather_atoms("x", 1, 3)
 
         for entry in self._data_entries:
@@ -67,31 +64,29 @@ class ParticleDataCache(object):
                 entry.count)
 
     def send(self):
+        """ Send data to lammps
+
+        """
+        self._lammps.scatter_atoms(
+            "x", 1, 3,
+            (ctypes.c_double * len(self._coordinates))(*self._coordinates))
+
         for entry in self._data_entries:
             values = self._cache[entry.CUBA]
 
-            extract = self._lammps.extract_atom(entry.lammps_name,
-                                                _get_extract_type(entry))
+            self._lammps.scatter_atoms(
+                entry.lammps_name,
+                entry.type,
+                entry.count,
+                (_get_ctype(entry) * len(values))(*values))
 
-            if entry.count == 1:
-                for i in range(len(values)):
-                    extract[i] = values[i]
-            elif entry.count == 3:
-                for i in range(len(values)/3):
-                    for j in range(entry.count):
-                        extract[i][j] = values[i*3+j]
-            else:
-                raise RuntimeError("Unsupported count {}".format(
-                    entry.count))
-            return
-
-    def get_particle_data(self, index):
+    def get_particle_data(self, uid):
         """ get particle data
 
         Parameters
         ----------
-        index : int
-            index location of particle in cache
+        uid : UUID
+            uid for particle
 
         Returns
         -------
@@ -100,7 +95,7 @@ class ParticleDataCache(object):
         """
         data = DataContainer()
         for entry in self._data_entries:
-            i = index * entry.count
+            i = self._index_of_uid[uid] * entry.count
             if entry.count > 1:
                 # always assuming that its a tuple
                 # ( see https://github.com/simphony/simphony-common/issues/18 )
@@ -110,7 +105,7 @@ class ParticleDataCache(object):
                 data[entry.CUBA] = self._cache[entry.CUBA][i]
         return data
 
-    def set_particle(self, coordinates, data, index):
+    def set_particle(self, coordinates, data, uid):
         """ set particle coordinates and data
 
         Parameters
@@ -119,13 +114,17 @@ class ParticleDataCache(object):
             particle coordinates
         data : DataContainer
             data of the particle
-        index : int
-            index location of particle in cache to be updated
+        uid : uuid
+            uuid of the particle
 
         """
-        i = index * 3
+        if uid not in self._index_of_uid:
+            self._index_of_uid[uid] = len(self._index_of_uid)
+
+        i = self._index_of_uid[uid] * 3
         self._coordinates[i:i+3] = coordinates[0:3]
 
+        index = self._index_of_uid[uid]
         for entry in self._data_entries:
             i = index * entry.count
             if entry.count > 1:
@@ -137,48 +136,34 @@ class ParticleDataCache(object):
                 elif i == len(self._cache[entry.CUBA]):
                     self._cache[entry.CUBA].append(data[entry.CUBA])
                 else:
-                    msg = "Problem with index {}".format(index)
-                    msg += "When particle data is first set it," \
-                           " it must be set in order (from 0 to N"
+                    msg = "Problem with index {}".format(uid)
                     raise IndexError(msg)
 
-    def get_coordinates(self, index):
+    def get_coordinates(self, uid):
         """ Get coordinates for a particle
 
         Parameters
         ----------
-        index : int
-            index location of particle in array
+        uid : uid
+            uid of particle
         """
-        i = index * 3
+        i = self._index_of_uid[uid] * 3
         coords = self._coordinates[i:i+3]
         return tuple(coords)
 
 
-def _get_extract_type(entry):
-    """ get LAMMPS "extract" type for extract_atoms method
+def _get_ctype(entry):
+    """ get ctype's type for entry
 
     Parameters
     ----------
     entry : LammpsData
         info about the atom parameter
-
-    for the method extract_atoms, the parameter 'type' can be:
-       0 = vector of ints
-       1 = array of ints
-       2 = vector of doubles
-       3 = array of doubles
-
     """
-    if entry.count == 1 and entry.type == 0:
-        return 0
-    elif entry.count == 3 and entry.type == 0:
-        return 1
-    elif entry.count == 1 and entry.type == 1:
-        return 2
-    elif entry.count == 3 and entry.type == 1:
-        return 3
+    if entry.type == 0:
+        return ctypes.c_int
+    elif entry.type == 1:
+        return ctypes.c_double
     else:
         raise RuntimeError(
-            "Unsupported type {} and count {}".format(entry.type,
-                                                      entry.count))
+            "Unsupported type {}".format(entry.type))

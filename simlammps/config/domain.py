@@ -1,7 +1,9 @@
 from simlammps.cuba_extension import CUBAExtension
 
 
-def get_box(particle_data_containers, command_format=False):
+def get_box(particle_data_containers,
+            command_format=False,
+            change_existing=False):
     """ Get simulation box commands
 
     Using CUBA.BOX_VECTORS and CUBA.BOX_ORIGIN, return the
@@ -19,6 +21,9 @@ def get_box(particle_data_containers, command_format=False):
         if command format is true, then box command suitable
         for lammps-command is returned.  Otherwise, the
         string returned is suitable for LAMMPS data file.
+    change_existing: boolean
+        if true, the lammps-command suitable for changing the
+        simulation box is returned
     """
     origin = None
     vectors = None
@@ -29,13 +34,15 @@ def get_box(particle_data_containers, command_format=False):
         if CUBAExtension.BOX_VECTORS in dc:
             if (vectors and
                     vectors != dc[CUBAExtension.BOX_VECTORS]):
-                # TODO provide more info in exception message
-                raise RuntimeError("Box vectors need to match")
+                raise RuntimeError(
+                    "Box vectors of each Particles need to match")
             vectors = dc[CUBAExtension.BOX_VECTORS]
+        else:
+            raise RuntimeError("CUBAExtension.BOX_VECTORS  was not set")
         if CUBAExtension.BOX_ORIGIN in dc:
             if origin and origin != dc[CUBAExtension.BOX_ORIGIN]:
-                # TODO provide more info in exception message
-                raise RuntimeError("Box origin need to match")
+                raise RuntimeError(
+                    "Box origin of each Particles need to match")
             origin = dc[CUBAExtension.BOX_ORIGIN]
 
     # origin is optional
@@ -59,13 +66,18 @@ def get_box(particle_data_containers, command_format=False):
 
     box_string = ""
     if command_format:
-        box_string = _get_command_region_box_string()
+        if change_existing:
+            box_string = _get_change_region_box_string()
+        else:
+            box_string = _get_command_region_box_string()
     else:
+        if change_existing:
+            RuntimeError("change existing is not supported for data file")
         box_string = _get_data_file_box_string()
 
-    return box_string.format(origin[0], vectors[0][0]-origin[0],
-                             origin[1], vectors[1][1]-origin[1],
-                             origin[2], vectors[2][2]-origin[2])
+    return box_string.format(origin[0], vectors[0][0]+origin[0],
+                             origin[1], vectors[1][1]+origin[1],
+                             origin[2], vectors[2][2]+origin[2])
 
 
 def _check_vectors(vectors):
@@ -92,4 +104,11 @@ def _get_command_region_box_string():
     box = "region box block {:.16e} {:.16e} "
     box += "{:.16e} {:.16e} "
     box += "{:.16e} {:.16e}\n"
+    return box
+
+
+def _get_change_region_box_string():
+    box = "change_box all x final {:.16e} {:.16e} "
+    box += "y final {:.16e} {:.16e} "
+    box += "z final {:.16e} {:.16e}\n"
     return box

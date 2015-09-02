@@ -3,7 +3,8 @@ python:
   - "2.7"
 
 env:
-  - SIMPHONY_VERSION=0.1.3
+  - SIMPHONY_VERSION=0.1.4
+  - SIMPHONY_VERSION=0.1.5
   - SIMPHONY_VERSION=master
 matrix:
   allow_failures:

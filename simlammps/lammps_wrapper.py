@@ -153,16 +153,21 @@ class LammpsWrapper(ABCModelingEngine):
 
             # TODO this has to be rewritten as
             # we only want to send configuration commands
-            # once (or after they change) but the 'run'
-            # command each time
+            # once (or after whenever they change) but we want
+            # to send the the 'run' command each time
             commands = ""
-
             commands += ScriptWriter.get_pair_style(
                 _combine(self.SP, self.SP_extension))
             commands += ScriptWriter.get_fix(CM=_combine(self.CM,
                                                          self.CM_extension))
             commands += ScriptWriter.get_pair_coeff(
                 _combine(self.SP, self.SP_extension))
+            # changing existing boundary (which was already
+            # sent by LammpsInternalDataManager)
+            commands += ScriptWriter.get_boundary(
+                _combine(self.BC,
+                         self.BC_extension),
+                change_existing_boundary=True)
             commands += ScriptWriter.get_run(CM=_combine(self.CM,
                                                          self.CM_extension))
 
@@ -171,7 +176,7 @@ class LammpsWrapper(ABCModelingEngine):
 
             # after running, we read any changes from lammps
             # TODO rework
-            self._data_manager.read("dummy")
+            self._data_manager.read()
         else:
             with _temp_directory() as temp_dir:
                 input_data_filename = os.path.join(

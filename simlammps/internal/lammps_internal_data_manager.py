@@ -12,34 +12,11 @@ from simlammps.cuba_extension import CUBAExtension
 from simlammps.config.script_writer import ScriptWriter
 
 
-class _IDGenerator(object):
-    """Class keeps track of what is next LAMMPS id
-
-    TODO provide ids that can be reused (i.e. become available
-     after deletions) or complains when we have used too many..
-
-    """
-    def __init__(self):
-        self._next_id = 0
-
-    def get_new_id(self):
-        """ returns next lammps-id
-        """
-        self._next_id += 1
-        return self._next_id
-
-
 class LammpsInternalDataManager(ABCDataManager):
     """  Class managing LAMMPS data information using file-io
 
-    The class performs communicating the data to and from LAMMPS using FILE-IO
-    communications (i.e. through input and output files). The class manages
-    data existing in LAMMPS (via LAMMPS data file) and allows this data to be
-    queried and to be changed.
-
-    Class maintains a cache of the particle information.  This information
-    is read from file whenever the read() method is called and written to
-    the file whenever the flush() method is called.
+    The class performs communicating the data to and from LAMMPS using the
+    internal interface (i.e. LAMMPS shared library).
 
     Parameters
     ----------
@@ -61,33 +38,22 @@ class LammpsInternalDataManager(ABCDataManager):
         for command in commands.splitlines():
             self._lammps.command(command)
 
-        # TODO This is a hack as due to pc.data_extension
-        # being empty at this point (we choose a vectors
-        # that corresponds with the dimensions used in our
-        # unit testing and in simple_nve.py
+        # create initial box with dummy values
         vectors = [(25.0, 0.0, 0.0),
                    (0.0, 22.0, 0.0),
                    (0.0, 0.0, 6.196)]
-        dummy_data = {CUBAExtension.BOX_VECTORS: vectors,
-                      CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
-        self._lammps.command(get_box([dummy_data], command_format=True))
+        dummy_box_data = {CUBAExtension.BOX_VECTORS: vectors,
+                          CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
+        self._lammps.command(get_box([dummy_box_data], command_format=True))
+
         # due to not being able to alter the number of types (issue #66),
         # we set the number of supported types to a high number and then
         # give dummy values for the unused types
         self._lammps.command(
             "create_box {} box".format(globals.MAX_NUMBER_TYPES))
 
-        self._id_generator = _IDGenerator()
-
-        # map from lammps-id to simphony-uid
-        # (note lammps-id is also the index)
-        self._lammpsid_to_uid = {}
-
-        # map from simphony-uid (with uname) to lammps-id
-        self._uid_to_lammpsid = {}
-
-        # map from lammpsid to index location of data
-        self._lammpsid_to_index = {}
+        # map from uname of Particles to Set of (particle) uids
+        self._particles = {}
 
         # cache of coordinates and point data
         self._particle_data_cache = ParticleDataCache(lammps=self._lammps)
@@ -95,8 +61,6 @@ class LammpsInternalDataManager(ABCDataManager):
         # cache of particle containers's data
         self._pc_data = {}
         self._pc_data_extension = {}
-
-        self._dummy_box = None
 
     def get_data(self, uname):
         """Returns data container associated with particle container
@@ -151,11 +115,14 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
+        uids_to_be_deleted = [uid for uid in self._particles[uname]]
+
+        for uid in uids_to_be_deleted:
+            self.remove_particle(uid, uname)
+
         del self._pc_data[uname]
         del self._pc_data_extension[uname]
-
-        # TODO delete id->uid info
-        del self._uid_to_lammpsid[uname]
+        del self._particles[uname]
 
     def _handle_new_particles(self, uname, particles):
         """Add new particle container to this manager.
@@ -169,27 +136,18 @@ class LammpsInternalDataManager(ABCDataManager):
             particle container to be added
 
         """
-        # create empty stand-alone particle container
-        # to use as a cache of for input/output to LAMMPS
 
-        self._uid_to_lammpsid[uname] = {}
+        self._particles[uname] = set()
 
         self._pc_data[uname] = DataContainer(particles.data)
-        self._pc_data_extension[uname] = {}
 
-        # TODO This is a hack as due to pc.data_extension
-        # being empty at this point (we choose a vectors
-        # that corresponds with the dimensions used in our
-        # unit testing and in simple_nve.py
-        vectors = [(25.0, 0.0, 0.0),
-                   (0.0, 22.0, 0.0),
-                   (0.0, 0.0, 6.196)]
-        self._pc_data_extension[uname][CUBAExtension.BOX_VECTORS] = vectors
-        self._pc_data_extension[uname][CUBAExtension.BOX_ORIGIN] = (0.0,
-                                                                    0.0,
-                                                                    0.0)
+        if hasattr(particles, 'data_extension'):
+            self._pc_data_extension[uname] = dict(particles.data_extension)
+        else:
+            # create empty dc extension
+            self._pc_data_extension[uname] = {}
 
-        # self._update_simulation_box()
+        self._update_simulation_box()
 
         # TODO have uniform way to check what is needed
         # and perform a check at a different spot.
@@ -198,35 +156,18 @@ class LammpsInternalDataManager(ABCDataManager):
 
         # add each item
         for p in particles.iter_particles():
-            self._add_atom(p, uname)
+            self._add_atom(particle=p, uname=uname)
 
         # TODO bonds
 
     def _update_simulation_box(self):
         """Update simulation box
 
-
         """
-        # TODO remove this hack. here we only set the simulation box
-        # once as we don't support it being changed.
-        if self._dummy_box:
-            # delete old box
-            self._lammps.command("region delete box")
-        box = get_box([de for _, de in self._pc_data_extension.iteritems()],
-                      command_format=True)
-
-        if box != self._dummy_box:
-            # we update our region and then
-            # update the simulation box if
-            # the dimensions have changed
-            self._lammps.command(box)
-
-            # TODO
-            types = set()
-            for _, data in self._pc_data.iteritems():
-                types.add(data[CUBA.MATERIAL_TYPE])
-            self._lammps.command("create_box {} box".format(len(types)))
-            self.dummy_box = box
+        cmd = get_box([de for _, de in self._pc_data_extension.iteritems()],
+                      command_format=True,
+                      change_existing=True)
+        self._lammps.command(cmd)
 
     def get_particle(self, uid, uname):
         """Get particle
@@ -239,10 +180,9 @@ class LammpsInternalDataManager(ABCDataManager):
             name of particle container
 
         """
-        if uid in self._uid_to_lammpsid[uname]:
-            index = self._lammpsid_to_index[self._uid_to_lammpsid[uname][uid]]
-            coordinates = self._particle_data_cache.get_coordinates(index)
-            data = self._particle_data_cache.get_particle_data(index)
+        if uid in self._particles[uname]:
+            coordinates = self._particle_data_cache.get_coordinates(uid)
+            data = self._particle_data_cache.get_particle_data(uid)
 
             # TODO removing type from data as it not kept as a per-particle
             # data but currently it is on the container.
@@ -268,7 +208,7 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        if particle.uid in self._uid_to_lammpsid[uname]:
+        if particle.uid in self._particles[uname]:
             self._set_particle(particle, uname)
         else:
             raise ValueError(
@@ -285,7 +225,7 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        if particle.uid not in self._uid_to_lammpsid[uname]:
+        if particle.uid not in self._particles[uname]:
             self._add_atom(particle, uname)
             return particle.uid
         else:
@@ -293,7 +233,7 @@ class LammpsInternalDataManager(ABCDataManager):
                 "particle with same uid ({}) alread exists".format(
                     particle.uid))
 
-    def remove_particle(self, uid, uname):
+    def remove_particle(self, deleted_uid, uname):
         """Remove particle
 
         Parameters
@@ -304,7 +244,32 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        raise NotImplementedError()
+
+        # remove the deleted id from our book keeping
+        self._particles[uname].remove(deleted_uid)
+
+        # Make a local copy of ALL the particles EXCEPT for the deleted one
+        saved_particles = {}
+        for uname in self._particles:
+            saved_particles[uname] = {}
+            for uid in self._particles[uname]:
+                coordinates = self._particle_data_cache.get_coordinates(uid)
+                data = self._particle_data_cache.get_particle_data(uid)
+
+                p = Particle(uid=uid,
+                             coordinates=coordinates,
+                             data=data)
+                saved_particles[uname][uid] = p
+
+        self._lammps.command("delete_atoms group all compress yes")
+
+        # Use the new cache
+        self._particle_data_cache = ParticleDataCache(lammps=self._lammps)
+
+        # re-add the saved atoms
+        for uname in saved_particles:
+            for particle in saved_particles[uname]:
+                self._add_atom(saved_particles[uname][particle], uname)
 
     def has_particle(self, uid, uname):
         """Has particle
@@ -317,7 +282,7 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        return uid in self._uid_to_lammpsid[uname]
+        return uid in self._particles[uname]
 
     def iter_particles(self, uname, uids=None):
         """Iterate over the particles of a certain type
@@ -335,21 +300,17 @@ class LammpsInternalDataManager(ABCDataManager):
             for uid in uids:
                 yield self.get_particle(uid, uname)
         else:
-            for uid in self._uid_to_lammpsid[uname].iterkeys():
+            for uid in self._particles[uname]:
                 yield self.get_particle(uid, uname)
 
-    def read(self, output_data_filename):
-        """read from file
+    def read(self):
+        """read latest state
 
-        Parameters
-        ----------
-        output_data_filename :
-            name of data-file where info read from (i.e lammps's output).
         """
         self._update_from_lammps()
 
     def flush(self):
-        """flush to file
+        """flush state
 
         """
         if self._pc_data:
@@ -387,7 +348,6 @@ class LammpsInternalDataManager(ABCDataManager):
 
     def _update_from_lammps(self):
         self._particle_data_cache.retrieve()
-        self._invalid = False
 
     def _set_particle(self, particle, uname):
         """ Set coordinates and data for a particle
@@ -400,11 +360,6 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particle container
 
         """
-
-        # TODO have arguments as particle and index
-        lammpsid = self._uid_to_lammpsid[uname][particle.uid]
-        index = self._lammpsid_to_index[lammpsid]
-
         # TODO using type from container.  in lammps it is only
         # stored as a per-atom based attribute.
         # this should be changed once #9 issue is addressed
@@ -414,7 +369,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         self._particle_data_cache.set_particle(particle.coordinates,
                                                data,
-                                               index)
+                                               particle.uid)
 
     def _add_atom(self, particle, uname):
         """ Add a atom at point's position to lammps
@@ -427,15 +382,15 @@ class LammpsInternalDataManager(ABCDataManager):
         particle : Particle
             particle with CUBA.MATERIAL_TYPE
 
+        uname : str
+            non-changing unique name of particle container
+
         Returns
         -------
         int :
             lammps-id of added atom
 
         """
-        if particle.coordinates[2] > 100:
-            raise RuntimeError(
-                "{} coordinates are incorrect".format(particle.coordinates))
         coordinates = ' '.join(map(str, particle.coordinates))
 
         p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
@@ -446,16 +401,7 @@ class LammpsInternalDataManager(ABCDataManager):
         if particle.uid is None:
             particle.uid = uuid.uuid4()
 
-        lammps_id = self._id_generator.get_new_id()
-
-        self._lammpsid_to_uid[lammps_id] = particle.uid
-        self._uid_to_lammpsid[uname][particle.uid] = lammps_id
-        self._lammpsid_to_index[lammps_id] = len(self._lammpsid_to_uid) - 1
-        # TODO we probably do not need both lammpsid and index as in the
-        # case of the INTERNAL wrapper, the values are ordered by
-        # lammps-ids (1..N) so what the index is clear when one has
-        # the lammps id.  Need to evaluate this once we support
-        # the deletion of particles
+        self._particles[uname].add(particle.uid)
 
         self._set_particle(particle, uname)
 
