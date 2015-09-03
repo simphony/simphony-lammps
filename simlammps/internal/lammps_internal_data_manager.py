@@ -226,8 +226,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         """
         if particle.uid not in self._particles[uname]:
-            self._add_atom(particle, uname)
-            return particle.uid
+            return self._add_atom(particle, uname)
         else:
             raise ValueError(
                 "particle with same uid ({}) alread exists".format(
@@ -372,7 +371,7 @@ class LammpsInternalDataManager(ABCDataManager):
                                                particle.uid)
 
     def _add_atom(self, particle, uname):
-        """ Add a atom at point's position to lammps
+        """ Add a atom to lammps
 
         If particle has uid equal to NONE, we will give
         it an uuid
@@ -387,11 +386,13 @@ class LammpsInternalDataManager(ABCDataManager):
 
         Returns
         -------
-        int :
-            lammps-id of added atom
+        uuid :
+            uid of added particle
 
         """
-        coordinates = ' '.join(map(str, particle.coordinates))
+        coordinates = ("{0[0]:.16e} "
+                       "{0[1]:.16e} "
+                       "{0[2]:.16e}").format(particle.coordinates)
 
         p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
 
