@@ -1,16 +1,24 @@
 Simphony-Lammps CHANGELOG
 ======================
 
+Release 0.1.4
+-------------
+* Ensure wrapper only returns low-level state that it uses (#13)
+* Support delete_particle in INTERNAL wrapper (#68)
+* Fix various bugs in INTERNAL wrapper (#81, #86, #89)
+* Use scatter_atom/gather atom instead of extract_atom (#87)
+* Perform CI testing using both stable and latest of simphony-common (#79)
+* Add conversion from LAMMPS data file to Particles (#78) 
+
 Release 0.1.3
+-------------
 * support using the internal interface of LAMMPS (INTERNAL) (#67, #58, #57, #55, #54)
 * use simphony-common version 0.1.3
 
--------------
-
 Release 0.1.2
+-------------
 * uuid is being used instead of uid (#48)
 * use simphony-common version 0.1.1 (#50, #46)
--------------
 
 Release 0.1.1
 -------------
