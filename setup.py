@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 with open('README.rst', 'r') as readme:
     README_TEXT = readme.read()
 
-VERSION = '0.1.4'
+VERSION = '0.1.5.dev0'
 
 
 def write_version_py(filename=None):
