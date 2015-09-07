@@ -302,6 +302,17 @@ class LammpsInternalDataManager(ABCDataManager):
             for uid in self._particles[uname]:
                 yield self.get_particle(uid, uname)
 
+    def number_of_particles(self, uname):
+        """Get number of particles in a container
+
+        Parameters
+        ----------
+        uname : string
+            non-changing unique name of particles
+
+        """
+        return len(self._particles[uname])
+
     def read(self):
         """read latest state
 

@@ -25,7 +25,7 @@ Requirements
 ------------
 
 - pyyaml >= 3.11
-- `simphony-common`_ >= 0.1.4, <= 0.1.5
+- `simphony-common`_ >= 0.2.0
 
 Optional requirements
 ~~~~~~~~~~~~~~~~~~~~~

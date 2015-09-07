@@ -265,6 +265,17 @@ class ABCDataManager(object):
         """
 
     @abc.abstractmethod
+    def number_of_particles(self, uname):
+        """Get number of particles in a container
+
+        Parameters
+        ----------
+        uname : string
+            non-changing unique name of particles
+
+        """
+
+    @abc.abstractmethod
     def flush(self, input_data_filename=None):
         """flush to file
 

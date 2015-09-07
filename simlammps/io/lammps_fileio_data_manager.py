@@ -1,6 +1,7 @@
 import os
 
 from simphony.core.cuba import CUBA
+from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particles, Particle
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
@@ -107,10 +108,12 @@ class LammpsFileIoDataManager(ABCDataManager):
         # to use as a cache of for input/output to LAMMPS
         pc = Particles(name="_")
         pc.data = DataContainer(particles.data)
+
         for p in particles.iter_particles():
-            pc.add_particle(p)
-        for p in particles.iter_bonds():
-            pc.add_bond(p)
+            pc.add_particles([p])
+
+        for b in particles.iter_bonds():
+            pc.add_bonds([b])
 
         self._pc_cache[uname] = pc
 
@@ -170,8 +173,8 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        self._pc_cache[uname].update_particle(
-            self._get_supported_particle(particle))
+        self._pc_cache[uname].update_particles([
+            self._get_supported_particle(particle)])
 
     def add_particle(self, particle, uname):
         """Add particle
@@ -184,8 +187,9 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        particle.uid = self._pc_cache[uname].add_particle(
-            self._get_supported_particle(particle))
+        uids = self._pc_cache[uname].add_particles([
+            self._get_supported_particle(particle)])
+        particle.uid = uids[0]
         return particle.uid
 
     def remove_particle(self, uid, uname):
@@ -199,7 +203,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        self._pc_cache[uname].remove_particle(uid)
+        self._pc_cache[uname].remove_particles([uid])
 
     def has_particle(self, uid, uname):
         """Has particle
@@ -225,6 +229,17 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         """
         return self._pc_cache[uname].iter_particles(uids)
+
+    def number_of_particles(self, uname):
+        """Get number of particles in a container
+
+        Parameters
+        ----------
+        uname : string
+            non-changing unique name of particles
+
+        """
+        return self._pc_cache[uname].count_of(CUDSItem.PARTICLE)
 
     def flush(self, input_data_filename):
         """flush to file
@@ -290,7 +305,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             cache_pc = self._pc_cache[uname]
             p = cache_pc.get_particle(uid)
             p.coordinates = tuple(atom[1:4])
-            cache_pc.update_particle(p)
+            cache_pc.update_particles([p])
 
             # set the pc's material type
             # (current requirement/assumption is that each
@@ -303,7 +318,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             cache_pc = self._pc_cache[uname]
             p = cache_pc.get_particle(uid)
             p.data[CUBA.VELOCITY] = tuple(velocity)
-            cache_pc.update_particle(p)
+            cache_pc.update_particles([p])
 
     def _write_data_file(self, filename):
         """ Write data file containing current state of simulation

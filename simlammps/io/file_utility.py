@@ -61,6 +61,6 @@ def read_data_file(filename):
         p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id])
 
         atom_type = atom[0]
-        type_to_particles_map[atom_type].add_particle(p)
+        type_to_particles_map[atom_type].add_particles([p])
 
     return type_to_particles_map.values()
