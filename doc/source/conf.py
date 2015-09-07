@@ -20,9 +20,10 @@ def mock_modules():
             'simphony.testing',
             'simphony.testing.utils',
             'simphony.cuds',
-            'simphony.cuds.abstractmesh',
-            'simphony.cuds.abstractparticles',
-            'simphony.cuds.abstractlattice'])
+            'simphony.cuds.abc_modeling_engine',
+            'simphony.cuds.abc_mesh',
+            'simphony.cuds.abc_particles',
+            'simphony.cuds.abc_mesh'])
 
     class Mock(MagicMock):
         @classmethod
@@ -68,8 +69,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'SimPhoNy-LAMMPS'
-copyright = (u'2015, SimPhoNy, EU FP7 Project (Nr. 604005) '
-             u'www.simphony-project.eu')
+copyright = u'2015, SimPhoNy, EU FP7 Project (Nr. 604005)'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -290,10 +290,8 @@ texinfo_documents = [
 # Bibliographic Dublin Core info.
 epub_title = u'SimPhoNy-LAMMPS'
 epub_author = u'SimPhoNy, EU FP7 Project (Nr. 604005) www.simphony-project.eu'
-epub_publisher = (u'SimPhoNy, EU FP7 Project (Nr. 604005)',
-                  u' www.simphony-project.eu')
-epub_copyright = (u'2015, SimPhoNy, EU FP7 Project (Nr. 604005)',
-                  ' www.simphony-project.eu')
+epub_publisher = u'SimPhoNy, EU FP7 Project (Nr. 604005)'
+epub_copyright = u'2015, SimPhoNy, EU FP7 Project (Nr. 604005)'
 
 # The basename for the epub file. It defaults to the project name.
 # epub_basename = u'SimPhoNy-LAMMPS'
