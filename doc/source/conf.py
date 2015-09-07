@@ -290,10 +290,8 @@ texinfo_documents = [
 # Bibliographic Dublin Core info.
 epub_title = u'SimPhoNy-LAMMPS'
 epub_author = u'SimPhoNy, EU FP7 Project (Nr. 604005) www.simphony-project.eu'
-epub_publisher = (u'SimPhoNy, EU FP7 Project (Nr. 604005)',
-                  u' www.simphony-project.eu')
-epub_copyright = (u'2015, SimPhoNy, EU FP7 Project (Nr. 604005)',
-                  ' www.simphony-project.eu')
+epub_publisher = u'SimPhoNy, EU FP7 Project (Nr. 604005)'
+epub_copyright = u'2015, SimPhoNy, EU FP7 Project (Nr. 604005)'
 
 # The basename for the epub file. It defaults to the project name.
 # epub_basename = u'SimPhoNy-LAMMPS'
