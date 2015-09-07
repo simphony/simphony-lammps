@@ -24,7 +24,6 @@ simphony-lammps is hosted on github: https://github.com/simphony/simphony-lammps
 Requirements
 ------------
 
-- enum34 >= 1.0.4
 - pyyaml >= 3.11
 - `simphony-common`_ >= 0.1.4, <= 0.1.5
 
@@ -34,11 +33,7 @@ Optional requirements
 To support the documentation built you need the following packages:
 
 - sphinx >= 1.2.3
-
-To run the unit tests you additionally need the following packages:
-
-- numpy >= 1.4.1
-
+- sphinxcontrib-napoleon >= 0.2.10
 
 Installation
 ------------

@@ -3,4 +3,3 @@ pyyaml >= 3.11
 coverage
 flake8
 numpy >= 1.4.1
-sphinxcontrib-napoleon >= 0.2.10
