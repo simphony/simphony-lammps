@@ -21,7 +21,6 @@ install:
   - pip install -r dev_requirements.txt
   - pip install git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony
   - pip install -r doc_requirements.txt
-  - pip install coveralls
   - python setup.py develop
 
 script:
@@ -30,4 +29,5 @@ script:
   - python setup.py build_sphinx
 
 after_success:
-  - coveralls
+  - pip install codecov
+  - codecov
