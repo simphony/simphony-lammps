@@ -7,8 +7,8 @@ The LAMMPS engine-wrapper for the SimPhoNy framework (www.simphony-project.eu).
     :target: https://travis-ci.org/simphony/simphony-lammps-md
       :alt: Build status
 
-.. image:: https://coveralls.io/repos/simphony/simphony-lammps-md/badge.svg
-   :target: https://coveralls.io/r/simphony/simphony-lammps-md
+.. image:: http://codecov.io/github/simphony/simphony-lammps-md/coverage.svg?branch=master
+   :target: http://codecov.io/github/simphony/simphony-lammps-md?branch=master
       :alt: Test coverage
 
 .. image:: https://readthedocs.org/projects/simphony-lammps-md/badge/?version=master
