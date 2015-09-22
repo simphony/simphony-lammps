@@ -1,3 +1,8 @@
+from collections import namedtuple
+
+_Tests = namedtuple(
+    '_Tests', ['method', 'name'])
+
 from simphony.engine import lammps
 from simphony.bench.util import bench
 from simphony.core.cuba import CUBA
@@ -7,7 +12,7 @@ from simlammps.bench.util import get_particles
 from simlammps.testing.md_example_configurator import MDExampleConfigurator
 
 
-def configure_wrapper(wrapper, particles):
+def configure_wrapper(wrapper, particles, number_time_steps):
     """  Configure wrapper
 
     Parameters:
@@ -16,25 +21,17 @@ def configure_wrapper(wrapper, particles):
         wrapper to be configured
     particles : iterable of ABCParticles
         particles to use
-
-    Returns
-    --------
-    steps : int
-        number of steps which were run
-    number of particles : int
-        number of point configured
-
+    number_time_steps : int
+        number of time steps to run
     """
     material_types = []
-    number_particles = 0
     for dataset in particles:
         material_types.append(dataset.data[CUBA.MATERIAL_TYPE])
         wrapper.add_dataset(dataset)
-        number_particles += dataset.count_of(CUDSItem.PARTICLE)
 
-    MDExampleConfigurator.set_configuration(wrapper, material_types)
-
-    return wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS], number_particles
+    MDExampleConfigurator.set_configuration(wrapper,
+                                            material_types,
+                                            number_time_steps)
 
 
 def run(wrapper):
@@ -65,49 +62,54 @@ def describe(name, number_particles, number_steps, is_internal):
     return result
 
 
+def run_test(func, wrapper):
+    func(wrapper)
+
 if __name__ == '__main__':
 
-    for y_range in [3000, 8000]:
-        for is_internal in [True, False]:
+    run_wrapper_tests = [_Tests(method=run,
+                                name="run"),
+                         _Tests(method=run_iterate,
+                                name="run_iterate"),
+                         _Tests(method=run_update_run,
+                                name="run_update_run")]
 
+    for is_internal in [True, False]:
+        for y_range in [3000, 8000]:
+
+            # test different run scenarios
+            particles = get_particles(y_range)
+            number_particles = sum(p.count_of(
+                CUDSItem.PARTICLE) for p in particles)
+            number_time_steps = 10
+
+            for test in run_wrapper_tests:
+                lammps_wrapper = lammps.LammpsWrapper(
+                    use_internal_interface=is_internal)
+                configure_wrapper(lammps_wrapper,
+                                  particles,
+                                  number_time_steps=number_time_steps)
+
+                results = bench(lambda: run_test(test.method, lammps_wrapper),
+                                repeat=1,
+                                adjust_runs=False)
+
+                print(describe(test.name,
+                               number_particles,
+                               number_time_steps,
+                               is_internal), results)
+
+            # test configuration
             lammps_wrapper = lammps.LammpsWrapper(
                 use_internal_interface=is_internal)
-            particles = get_particles(y_range)
-            number_steps, number_particles = configure_wrapper(lammps_wrapper,
-                                                               particles)
 
-            results = bench(lambda: run(lammps_wrapper),
+            results = bench(lambda: configure_wrapper(lammps_wrapper,
+                                                      particles,
+                                                      number_time_steps),
                             repeat=1,
                             adjust_runs=False)
-            print(describe("run",
-                           number_particles,
-                           number_steps,
-                           is_internal),
-                  results)
 
-            results = bench(lambda: run(lammps_wrapper),
-                            repeat=1,
-                            adjust_runs=False)
-            print(describe("run",
-                           number_particles,
-                           number_steps,
-                           is_internal),
-                  results)
-
-            results = bench(lambda: run_iterate(lammps_wrapper),
-                            repeat=1,
-                            adjust_runs=False)
-            print(describe("run_iterate",
-                           number_particles,
-                           number_steps,
-                           is_internal),
-                  results)
-
-            results = bench(lambda: run_update_run(lammps_wrapper),
-                            repeat=1,
-                            adjust_runs=False)
-            print(describe("run_update_run",
-                           number_particles,
-                           number_steps,
-                           is_internal),
-                  results)
+            print(describe("configure_wrapper",
+                  number_particles,
+                  number_time_steps,
+                  is_internal), results)

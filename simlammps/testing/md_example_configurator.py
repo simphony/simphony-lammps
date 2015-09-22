@@ -22,7 +22,7 @@ class MDExampleConfigurator:
                    (0.0, 0.0, 1001.0)]
 
     @staticmethod
-    def set_configuration(wrapper, material_types=None):
+    def set_configuration(wrapper, material_types=None, number_time_steps=10):
         """ Configure example engine with example settings
 
         The wrapper is configured with required CM, SP, BC parameters
@@ -35,11 +35,13 @@ class MDExampleConfigurator:
             material type that needs to be configured (used for pair
             potentials). If None, then 3 (i.e. 1,2,3) material types
             are assumed.
+        number_time_steps : int
+            number of time steps to run
 
         """
 
         # CM
-        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10
+        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = number_time_steps
         wrapper.CM[CUBA.TIME_STEP] = 0.003
         wrapper.CM_extension[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
 
