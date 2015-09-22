@@ -42,6 +42,7 @@ def read_data_file(filename):
     for atom_type, mass in masses.iteritems():
         data = DataContainer()
         data[CUBA.MASS] = mass
+        data[CUBA.MATERIAL_TYPE] = atom_type
 
         data_extension = {}
         data_extension[CUBAExtension.BOX_ORIGIN] = box_origin
