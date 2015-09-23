@@ -204,8 +204,8 @@ class ABCDataManager(object):
 
         Parameters
         ----------
-        uid :
-            uid of particle
+        particle : Particle
+            particle to be udpated
         uname : string
             non-changing unique name of particles
 
@@ -217,8 +217,8 @@ class ABCDataManager(object):
 
         Parameters
         ----------
-        uid :
-            uid of particle
+        particle : Particle
+            particle to be added
         uname : string
             non-changing unique name of particles
 

@@ -199,8 +199,8 @@ class LammpsInternalDataManager(ABCDataManager):
 
         Parameters
         ----------
-        uid :
-            uid of particle
+        particle : Particle
+            particle to be updated
         uname : string
             non-changing unique name of particles
 
@@ -216,8 +216,8 @@ class LammpsInternalDataManager(ABCDataManager):
 
         Parameters
         ----------
-        uid :
-            uid of particle
+        particle : Particle
+            particle to be added
         uname : string
             non-changing unique name of particles
 
