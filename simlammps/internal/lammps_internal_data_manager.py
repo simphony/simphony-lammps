@@ -1,7 +1,6 @@
 import uuid
 
 from simphony.core.cuba import CUBA
-from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
 
@@ -128,7 +127,6 @@ class LammpsInternalDataManager(ABCDataManager):
     def _handle_new_particles(self, uname, particles):
         """Add new particle container to this manager.
 
-
         Parameters
         ----------
         uname : string
@@ -155,7 +153,7 @@ class LammpsInternalDataManager(ABCDataManager):
         if CUBA.MATERIAL_TYPE not in self._pc_data[uname]:
             raise ValueError("Missing the required CUBA.MATERIAL_TYPE")
 
-        self._add_atoms(particles=particles, uname=uname)
+        self._add_atoms(particles=particles.iter_particles(), uname=uname)
 
         # TODO bonds
 
@@ -225,10 +223,10 @@ class LammpsInternalDataManager(ABCDataManager):
 
         """
         if particle.uid not in self._particles[uname]:
-            return self._add_atom(particle, uname)
+            return self._add_atoms([particle], uname)[0]
         else:
             raise ValueError(
-                "particle with same uid ({}) alread exists".format(
+                "particle with same uid ({}) already exists".format(
                     particle.uid))
 
     def remove_particle(self, deleted_uid, uname):
@@ -266,8 +264,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         # re-add the saved atoms
         for uname in saved_particles:
-            for particle in saved_particles[uname]:
-                self._add_atom(saved_particles[uname][particle], uname)
+            self._add_atoms(saved_particles[uname].values(), uname)
 
     def has_particle(self, uid, uname):
         """Has particle
@@ -380,44 +377,6 @@ class LammpsInternalDataManager(ABCDataManager):
                                                data,
                                                particle.uid)
 
-    def _add_atom(self, particle, uname):
-        """ Add a atom to lammps
-
-        If particle has uid equal to NONE, we will give
-        it an uuid
-
-        Parameters
-        ----------
-        particle : Particle
-            particle with CUBA.MATERIAL_TYPE
-
-        uname : str
-            non-changing unique name of particle container
-
-        Returns
-        -------
-        uuid :
-            uid of added particle
-
-        """
-        coordinates = ("{0[0]:.16e} "
-                       "{0[1]:.16e} "
-                       "{0[2]:.16e}").format(particle.coordinates)
-
-        p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
-
-        self._lammps.command(
-            "create_atoms {} single {} units box".format(p_type, coordinates))
-
-        if particle.uid is None:
-            particle.uid = uuid.uuid4()
-
-        self._particles[uname].add(particle.uid)
-
-        self._set_particle(particle, uname)
-
-        return particle.uid
-
     def _add_atoms(self, particles, uname):
         """ Add multiple particles as atoms to lammps
 
@@ -429,20 +388,31 @@ class LammpsInternalDataManager(ABCDataManager):
 
         Parameters
         ----------
-        particles : ABCParticles
+        particles : iterable Particle
             particle with CUBA.MATERIAL_TYPE
 
         uname : str
             non-changing unique name of particle container
 
+        Returns
+        -------
+        uuid : list of UUID4
+            uids of added particles
+
         """
         p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
 
-        number_particles = particles.count_of(CUDSItem.PARTICLE)
-        self._lammps.command(
-            "create_atoms {} random {} 42 NULL".format(p_type,
-                                                       number_particles))
+        uids = []
+        for particle in particles:
+            if particle.uid is None:
+                particle.uid = uuid.uuid4()
 
-        for particle in particles.iter_particles():
             self._particles[uname].add(particle.uid)
             self._set_particle(particle, uname)
+
+            uids.append(particle.uid)
+
+        self._lammps.command(
+            "create_atoms {} random {} 42 NULL".format(p_type,
+                                                       len(uids)))
+        return uids
