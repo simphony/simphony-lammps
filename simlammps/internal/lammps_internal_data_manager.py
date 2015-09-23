@@ -1,6 +1,7 @@
 import uuid
 
 from simphony.core.cuba import CUBA
+from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
 
@@ -154,9 +155,7 @@ class LammpsInternalDataManager(ABCDataManager):
         if CUBA.MATERIAL_TYPE not in self._pc_data[uname]:
             raise ValueError("Missing the required CUBA.MATERIAL_TYPE")
 
-        # add each item
-        for p in particles.iter_particles():
-            self._add_atom(particle=p, uname=uname)
+        self._add_atoms(particles=particles, uname=uname)
 
         # TODO bonds
 
@@ -418,3 +417,32 @@ class LammpsInternalDataManager(ABCDataManager):
         self._set_particle(particle, uname)
 
         return particle.uid
+
+    def _add_atoms(self, particles, uname):
+        """ Add multiple particles as atoms to lammps
+
+        The particles are assumed to all have a uuid (i.e. not None).
+
+        The number of atoms to be added are randomly added somewhere
+        in the simulation box by LAMMPS and then their positions (and
+        other values are corrected/updated)
+
+        Parameters
+        ----------
+        particles : ABCParticles
+            particle with CUBA.MATERIAL_TYPE
+
+        uname : str
+            non-changing unique name of particle container
+
+        """
+        p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
+
+        number_particles = particles.count_of(CUDSItem.PARTICLE)
+        self._lammps.command(
+            "create_atoms {} random {} 42 NULL".format(p_type,
+                                                       number_particles))
+
+        for particle in particles.iter_particles():
+            self._particles[uname].add(particle.uid)
+            self._set_particle(particle, uname)
