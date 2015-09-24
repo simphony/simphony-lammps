@@ -73,17 +73,13 @@ class LammpsParticles(ABCParticles):
             when there is a particle with an uids that already exists
             in the container.
         """
-        uids = []
-        for particle in iterable:
-            uids.append(self._manager.add_particle(particle, self._uname))
-        return uids
+        return self._manager.add_particles(iterable, self._uname)
 
     def update_particles(self, iterable):
-        """Update particle
+        """Update particles
 
         """
-        for particle in iterable:
-            self._manager.update_particle(particle, self._uname)
+        self._manager.update_particles(iterable, self._uname)
 
     def get_particle(self, uid):
         """Get particle

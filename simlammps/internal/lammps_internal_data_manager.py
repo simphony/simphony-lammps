@@ -153,7 +153,9 @@ class LammpsInternalDataManager(ABCDataManager):
         if CUBA.MATERIAL_TYPE not in self._pc_data[uname]:
             raise ValueError("Missing the required CUBA.MATERIAL_TYPE")
 
-        self._add_atoms(particles=particles.iter_particles(), uname=uname)
+        self._add_atoms(iterable=particles.iter_particles(),
+                        uname=uname,
+                        safe=True)
 
         # TODO bonds
 
@@ -194,40 +196,22 @@ class LammpsInternalDataManager(ABCDataManager):
         else:
             raise KeyError("uid ({}) was not found".format(uid))
 
-    def update_particle(self, particle, uname):
-        """Update particle
-
-        Parameters
-        ----------
-        particle : Particle
-            particle to be updated
-        uname : string
-            non-changing unique name of particles
+    def update_particles(self, iterable, uname):
+        """Update particles
 
         """
-        if particle.uid in self._particles[uname]:
-            self._set_particle(particle, uname)
-        else:
-            raise ValueError(
-                "particle id ({}) was not found".format(particle.uid))
+        for particle in iterable:
+            if particle.uid in self._particles[uname]:
+                self._set_particle(particle, uname)
+            else:
+                raise ValueError(
+                    "particle id ({}) was not found".format(particle.uid))
 
-    def add_particle(self, particle, uname):
+    def add_particles(self, iterable, uname):
         """Add particle
 
-        Parameters
-        ----------
-        particle : Particle
-            particle to be added
-        uname : string
-            non-changing unique name of particles
-
         """
-        if particle.uid not in self._particles[uname]:
-            return self._add_atoms([particle], uname)[0]
-        else:
-            raise ValueError(
-                "particle with same uid ({}) already exists".format(
-                    particle.uid))
+        return self._add_atoms(iterable, uname, safe=False)
 
     def remove_particle(self, deleted_uid, uname):
         """Remove particle
@@ -264,7 +248,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         # re-add the saved atoms
         for uname in saved_particles:
-            self._add_atoms(saved_particles[uname].values(), uname)
+            self._add_atoms(saved_particles[uname].values(), uname, safe=True)
 
     def has_particle(self, uid, uname):
         """Has particle
@@ -377,10 +361,8 @@ class LammpsInternalDataManager(ABCDataManager):
                                                data,
                                                particle.uid)
 
-    def _add_atoms(self, particles, uname):
+    def _add_atoms(self, iterable, uname, safe=False):
         """ Add multiple particles as atoms to lammps
-
-        The particles are assumed to all have a uuid (i.e. not None).
 
         The number of atoms to be added are randomly added somewhere
         in the simulation box by LAMMPS and then their positions (and
@@ -388,11 +370,16 @@ class LammpsInternalDataManager(ABCDataManager):
 
         Parameters
         ----------
-        particles : iterable Particle
+        iterable : iterable of Particle objects
             particle with CUBA.MATERIAL_TYPE
 
         uname : str
             non-changing unique name of particle container
+
+        safe : bool
+            True if uids do not need to be to be checked (e.g.. in the
+            case that all particles are being added to an empty particle
+            container). False if uids need to be checked.
 
         Returns
         -------
@@ -403,15 +390,21 @@ class LammpsInternalDataManager(ABCDataManager):
         p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
 
         uids = []
-        for particle in particles:
+        for particle in iterable:
             if particle.uid is None:
                 particle.uid = uuid.uuid4()
+
+            if not safe and particle.uid in self._particles[uname]:
+                raise ValueError(
+                    "particle with same uid ({}) already exists".format(
+                        particle.uid))
 
             self._particles[uname].add(particle.uid)
             self._set_particle(particle, uname)
 
             uids.append(particle.uid)
 
+        # create atoms in lammps
         self._lammps.command(
             "create_atoms {} random {} 42 NULL".format(p_type,
                                                        len(uids)))

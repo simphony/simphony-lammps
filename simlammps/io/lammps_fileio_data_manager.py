@@ -10,6 +10,27 @@ from simlammps.config.domain import get_box
 
 from simlammps.abc_data_manager import ABCDataManager
 
+# TODO derive supported cuba from atom type
+_SUPPORTED_CUBA = [CUBA.VELOCITY]
+
+
+def filter_unsupported_data(iterable):
+    """Ensure iterators only provide particles with only supported data
+
+    Parameters
+    ----------
+    iterable : iterator of Particles
+
+    """
+    for particle in iterable:
+        data = particle.data
+        supported_data = {cuba: data[cuba] for cuba in
+                          data if cuba in _SUPPORTED_CUBA}
+        supported_particle = Particle(coordinates=particle.coordinates,
+                                      uid=particle.uid,
+                                      data=supported_data)
+        yield supported_particle
+
 
 class LammpsFileIoDataManager(ABCDataManager):
     """  Class managing Lammps data information using file-io
@@ -136,61 +157,24 @@ class LammpsFileIoDataManager(ABCDataManager):
         """
         return self._pc_cache[uname].get_particle(uid)
 
-    def _get_supported_particle(self, particle):
-        """Get particle with only supported data
-
-        Parameters
-        ----------
-        particle : Particle
-            Particle
-
-        Returns
-        -------
-        particle
-           particle with only supported data
-
+    def update_particles(self, iterable, uname):
+        """Update particles
 
         """
-        # TODO derive supported cuba from atom type
-        _SUPPORTED_CUBA = [CUBA.VELOCITY]
+        self._pc_cache[uname].update_particles(
+            filter_unsupported_data(iterable))
 
-        data = particle.data
-        supported_data = {cuba: data[cuba] for cuba
-                          in data if cuba in _SUPPORTED_CUBA}
-        p = Particle(coordinates=particle.coordinates,
-                     uid=particle.uid,
-                     data=supported_data)
-        return p
-
-    def update_particle(self, particle, uname):
-        """Update particle
-
-        Parameters
-        ----------
-        uid :
-            uid of particle
-        uname : string
-            name of particle container
+    def add_particles(self, iterable, uname):
+        """Add particles
 
         """
-        self._pc_cache[uname].update_particles([
-            self._get_supported_particle(particle)])
+        uids = self._pc_cache[uname].add_particles(iterable)
 
-    def add_particle(self, particle, uname):
-        """Add particle
+        # filter the cached particles of unsupported CUBA
+        self._pc_cache[uname].update_particles(filter_unsupported_data(
+            self._pc_cache[uname].iter_particles(uids)))
 
-        Parameters
-        ----------
-        uid :
-            uid of particle
-        uname : string
-            name of particle container
-
-        """
-        uids = self._pc_cache[uname].add_particles([
-            self._get_supported_particle(particle)])
-        particle.uid = uids[0]
-        return particle.uid
+        return uids
 
     def remove_particle(self, uid, uname):
         """Remove particle

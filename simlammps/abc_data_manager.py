@@ -199,28 +199,37 @@ class ABCDataManager(object):
         """
 
     @abc.abstractmethod
-    def update_particle(self, particle, uname):
+    def update_particles(self, iterable, uname):
         """Update particle
 
         Parameters
         ----------
-        particle : Particle
-            particle to be udpated
+        iterable : iterable of Particle objects
+            the particles that will be updated.
         uname : string
             non-changing unique name of particles
+
+        Raises
+        ------
+        ValueError :
+            If any particle inside the iterable does not exist.
 
         """
 
     @abc.abstractmethod
-    def add_particle(self, particle, uname):
-        """Add particle
+    def add_particles(self, iterable, uname):
+        """Add particles
 
         Parameters
         ----------
-        particle : Particle
-            particle to be added
+        iterable : iterable of Particle objects
+            the particles that will be added.
         uname : string
             non-changing unique name of particles
+
+        ValueError :
+            when there is a particle with an uids that already exists
+            in the container.
 
         """
 
