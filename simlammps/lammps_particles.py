@@ -46,7 +46,7 @@ class LammpsParticles(ABCParticles):
 
     # Particle methods ######################################################
 
-    def add_particles(self, particles):
+    def add_particles(self, iterable):
         """Adds a set of particles from the provided iterable
         to the container.
 
@@ -74,15 +74,15 @@ class LammpsParticles(ABCParticles):
             in the container.
         """
         uids = []
-        for particle in particles:
+        for particle in iterable:
             uids.append(self._manager.add_particle(particle, self._uname))
         return uids
 
-    def update_particles(self, particles):
+    def update_particles(self, iterable):
         """Update particle
 
         """
-        for particle in particles:
+        for particle in iterable:
             self._manager.update_particle(particle, self._uname)
 
     def get_particle(self, uid):
