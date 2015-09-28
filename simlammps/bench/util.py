@@ -28,8 +28,8 @@ def get_particles(y_range):
     data_name = os.path.join(temp_dir, "output")
     try:
         with open(script_name, "w") as script_file:
-            script_file.write(lammps_script.format(y_range,
-                                                   data_name))
+            script_file.write(lammps_script.format(y_range=y_range,
+                                                   data_name=data_name))
         cmd = ("lammps -screen none"
                " -log none -echo none"
                " < {}").format(script_name)
@@ -46,11 +46,13 @@ atom_style	atomic
 
 # create geometry
 lattice		hex .7
-region		box block 0 {} 0 10 -0.25 0.25
-create_box	1 box
+region		box block 0 {y_range} 0 10 -0.25 0.25
+create_box	3 box
 create_atoms	1 box
 
 mass		1 1.0
+mass		2 1.0
+mass		3 1.0
 
 # LJ potentials
 pair_style	lj/cut 1.12246
@@ -64,10 +66,13 @@ group	     upper region 2
 group	     boundary union lower upper
 group	     flow subtract all boundary
 
+set          group lower type 2
+set          group upper type 3
+
 # initial velocities
 compute      mobile flow temp
 velocity     flow create 1.0 482748 temp mobile
 velocity     boundary set 0.0 0.0 0.0
 
 # write atoms to a lammps data file
-write_data {}"""
+write_data {data_name}"""
