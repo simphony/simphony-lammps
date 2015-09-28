@@ -121,6 +121,13 @@ class LammpsWrapper(ABCModelingEngine):
             raise KeyError(
                 'Particle container \'{}\` does not exist'.format(name))
 
+    def get_dataset_names(self):
+        """ Returns the names of all the datasets
+
+        """
+        for name in self._data_manager:
+            yield name
+
     def remove_dataset(self, name):
         """ Remove a dataset
 
