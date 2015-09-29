@@ -22,7 +22,7 @@ class MDExampleConfigurator:
                    (0.0, 0.0, 1001.0)]
 
     @staticmethod
-    def set_configuration(wrapper):
+    def set_configuration(wrapper, material_types=None, number_time_steps=10):
         """ Configure example engine with example settings
 
         The wrapper is configured with required CM, SP, BC parameters
@@ -30,42 +30,38 @@ class MDExampleConfigurator:
         Parameters
         ----------
         wrapper : ABCModelingEngine
+            wrapper to be configured
+        material_types : iterable of int
+            material type that needs to be configured (used for pair
+            potentials). If None, then 3 (i.e. 1,2,3) material types
+            are assumed.
+        number_time_steps : int
+            number of time steps to run
 
         """
 
         # CM
-        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = 10
+        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = number_time_steps
         wrapper.CM[CUBA.TIME_STEP] = 0.003
         wrapper.CM_extension[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
+
+        if material_types is None:
+            material_types = set([1, 2, 3])
+        else:
+            material_types = set(material_types)
 
         # SP
         pair_potential = ("lj:\n"
                           "  global_cutoff: 1.12246\n"
-                          "  parameters:\n"
-                          "  - pair: [1, 1]\n"
-                          "    epsilon: 1.0\n"
-                          "    sigma: 1.0\n"
-                          "    cutoff: 1.2246\n"
-                          "  - pair: [1, 2]\n"
-                          "    epsilon: 1.0\n"
-                          "    sigma: 1.0\n"
-                          "    cutoff: 1.2246\n"
-                          "  - pair: [1, 3]\n"
-                          "    epsilon: 1.0\n"
-                          "    sigma: 1.0\n"
-                          "    cutoff: 1.2246\n"
-                          "  - pair: [2, 2]\n"
-                          "    epsilon: 1.0\n"
-                          "    sigma: 1.0\n"
-                          "    cutoff: 1.2246\n"
-                          "  - pair: [2, 3]\n"
-                          "    epsilon: 1.0\n"
-                          "    sigma: 1.0\n"
-                          "    cutoff: 1.2246\n"
-                          "  - pair: [3, 3]\n"
-                          "    epsilon: 1.0\n"
-                          "    sigma: 1.0\n"
-                          "    cutoff: 1.0001\n")
+                          "  parameters:\n")
+        while material_types:
+            m_type = material_types.pop()
+            for other in ([t for t in material_types] + [m_type]):
+                pair_potential += "  - pair: [{}, {}]\n".format(m_type,
+                                                                other)
+                pair_potential += ("    epsilon: 1.0\n"
+                                   "    sigma: 1.0\n"
+                                   "    cutoff: 1.2246\n")
         wrapper.SP_extension[CUBAExtension.PAIR_POTENTIALS] = pair_potential
 
         # BC

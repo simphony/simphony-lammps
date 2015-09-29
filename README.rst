@@ -94,11 +94,18 @@ Directory structure
 -------------------
 
 - simlammps -- hold the lammps-md wrapper implementation
+    
+    - bench - benchmarking
+    - common - contains general global files
+    - config - holds configuration related files
+    - internal - internal library communication with LAMMPS
+    - io -- file-io related communication with LAMMPS
+    - testing -- testing related utilities
 - examples -- holds different examples
 - doc -- Documentation related files
 
-  - source -- Sphinx rst source files
-  - build -- Documentation build directory, if documentation has been generated
-    using the ``make`` script in the ``doc`` directory.
+    - source -- Sphinx rst source files
+    - build -- Documentation build directory, if documentation has been generated
+      using the ``make`` script in the ``doc`` directory.
 
 .. _simphony-common: https://github.com/simphony/simphony-common
