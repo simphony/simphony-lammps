@@ -89,8 +89,7 @@ class LammpsWrapper(ABCModelingEngine):
                 'Particle container \'{n}\` already exists'.format(
                     n=container.name))
         else:
-            return self._data_manager.new_particles(
-                container)
+            self._data_manager.new_particles(container)
 
     def get_dataset(self, name):
         """ Get the dataset
