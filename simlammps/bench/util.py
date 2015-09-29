@@ -54,10 +54,6 @@ mass		1 1.0
 mass		2 1.0
 mass		3 1.0
 
-# LJ potentials
-pair_style	lj/cut 1.12246
-pair_coeff	* * 1.0 1.0 1.12246
-
 # define groups
 region	     1 block INF INF INF 1.25 INF INF
 group	     lower region 1
@@ -68,11 +64,6 @@ group	     flow subtract all boundary
 
 set          group lower type 2
 set          group upper type 3
-
-# initial velocities
-compute      mobile flow temp
-velocity     flow create 1.0 482748 temp mobile
-velocity     boundary set 0.0 0.0 0.0
 
 # write atoms to a lammps data file
 write_data {data_name}"""
