@@ -31,6 +31,8 @@ class TestFileUtility(unittest.TestCase):
         number_particles = 0
         for particles in particles_list:
             number_particles += sum(1 for _ in particles.iter_particles())
+            self.assertEqual(str(particles.data[CUBA.MATERIAL_TYPE]),
+                             particles.name)
             assert_almost_equal(
                 particles.data_extension[CUBAExtension.BOX_ORIGIN],
                 (0.0000000000000000e+00,
