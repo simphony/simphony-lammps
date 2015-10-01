@@ -12,7 +12,7 @@ class LammpsProcess(object):
 
     Parameters
     ----------
-    lammps_name :
+    lammps_name : str
         name of LAMMPS executable
     log_directory : str, optional
         name of directory of log file ('log.lammps') for lammps.

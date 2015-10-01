@@ -13,10 +13,21 @@ class LammpsDataFileParser(object):
     the data in memory (see LammpsSimpleDataHandler) or write it some other
     data file (e.g. a CUDS-file).
 
+    Handler classes have the following methods:
+        def process_number_atom_types(self, number_types):
+        def process_atoms(id, values):
+        def process_masses(id, value):
+        def process_velocities(id, values):
+        def process_box_origin(values):
+        def process_box_vectors(values):
+
+
     Parameters
     ----------
     handler :
-       handler will handle the parsed information provided by this class """
+       handler will handle the parsed information provided by this class
+
+    """
     def __init__(self, handler):
         self._handler = handler
 

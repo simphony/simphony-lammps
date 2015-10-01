@@ -6,6 +6,8 @@ from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particles, Particle
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
+from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
+
 from simlammps.config.domain import get_box
 
 from simlammps.abc_data_manager import ABCDataManager
@@ -40,7 +42,7 @@ class LammpsFileIoDataManager(ABCDataManager):
     data existing in Lammps (via lammps data file) and allows this data to be
     queried and to be changed.
 
-    Class maintains a cache of the particle information.  This information
+    Class maintains a cache of the particle information. This information
     is read from file whenever the read() method is called and written to
     the file whenever the flush() method is called.
 
@@ -125,8 +127,8 @@ class LammpsFileIoDataManager(ABCDataManager):
             particle container to be added
 
         """
-        # create empty stand-alone particle container
-        # to use as a cache of for input/output to LAMMPS
+        # create stand-alone particle container to use
+        # as a cache of for input/output to LAMMPS
         pc = Particles(name="_")
         pc.data = DataContainer(particles.data)
 
@@ -263,6 +265,8 @@ class LammpsFileIoDataManager(ABCDataManager):
         parser = LammpsDataFileParser(handler)
         parser.parse(output_data_filename)
 
+        interpreter = LammpsDataLineInterpreter()
+
         atoms = handler.get_atoms()
         velocities = handler.get_velocities()
         masses = handler.get_masses()
@@ -284,17 +288,23 @@ class LammpsFileIoDataManager(ABCDataManager):
             for key, value in data.iteritems():
                 pc.data[key] = value
 
-        for lammpsid, atom in atoms.iteritems():
-            uname, uid = self._lammpsid_to_uid[lammpsid]
+        for lammps_id, values in atoms.iteritems():
+            uname, uid = self._lammpsid_to_uid[lammps_id]
             cache_pc = self._pc_cache[uname]
             p = cache_pc.get_particle(uid)
-            p.coordinates = tuple(atom[1:4])
+            p.coordinates, p.data = interpreter.convert_atom_values(values)
             cache_pc.update_particles([p])
+
+            # TODO #9 (removing material type
+            atom_type = p.data[CUBA.MATERIAL_TYPE]
+            del p.data[CUBA.MATERIAL_TYPE]
+
+            p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id])
 
             # set the pc's material type
             # (current requirement/assumption is that each
             # pc has particle containers of one type)
-            atom_type = atom[0]
+            # (also related to #9)
             cache_pc.data[CUBA.MATERIAL_TYPE] = atom_type
 
         for lammpsid, velocity in velocities.iteritems():

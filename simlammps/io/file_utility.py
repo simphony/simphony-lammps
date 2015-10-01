@@ -4,6 +4,7 @@ from simphony.core.cuba import CUBA
 
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
+from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
 from simlammps.cuba_extension import CUBAExtension
 
 
@@ -27,6 +28,9 @@ def read_data_file(filename):
     """
     handler = LammpsSimpleDataHandler()
     parser = LammpsDataFileParser(handler=handler)
+
+    interpreter = LammpsDataLineInterpreter()
+
     parser.parse(filename)
 
     atoms = handler.get_atoms()
@@ -55,13 +59,16 @@ def read_data_file(filename):
         type_to_particles_map[atom_type] = particles
 
     # add each particle to each Particles
-    for lammps_id, atom in atoms.iteritems():
+    for lammps_id, values in atoms.iteritems():
         p = Particle()
-        p.coordinates = tuple(atom[1:4])
+        p.coordinates, p.data = interpreter.convert_atom_values(values)
+
+        # TODO #9 (removing material type
+        atom_type = p.data[CUBA.MATERIAL_TYPE]
+        del p.data[CUBA.MATERIAL_TYPE]
 
         p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id])
 
-        atom_type = atom[0]
         type_to_particles_map[atom_type].add_particles([p])
 
     return type_to_particles_map.values()
