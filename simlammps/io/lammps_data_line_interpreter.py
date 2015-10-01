@@ -22,7 +22,7 @@ class _ValueEntry(object):
     """
     def __init__(self, cuba_key, conversion=None):
         self.cuba_key = cuba_key
-        self._conversion_operation = conversion
+        self._conversion = conversion
 
     def process(self, values, index):
         """ return cuba value and
