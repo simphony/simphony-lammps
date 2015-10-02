@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 from simphony.core.cuba import CUBA
 from simphony.core.keywords import KEYWORDS
 
@@ -68,20 +69,25 @@ Styles = {AtomStyle.ATOMIC: [],
 class LammpsDataLineInterpreter(object):
     """  Class interprets lines in LAMMPS data files using atom-style
 
-    For example, the following lines should be interpreted differently
-    based upon their atom style (e.g. sphere or atomic):
-        Atoms # sphere
+    Lines should be interpreted differently based upon their atom style.
+    For example, sphere atom style::
 
-        1 1 0.5 1.0000000000000000e+00 -5.0 0.0 0.0000000000000000e+00 0 0 0
-        2 1 0.5 1.0000000000000000e+00 10.0 0.0 0.0000000000000000e+00 0 0 0
+       Atoms # sphere
+       1 1 0.5 1.0000000000000000e+00 -5.0 0.0 0.0000000000000000e+00 0 0 0
+       2 1 0.5 1.0000000000000000e+00 10.0 0.0 0.0000000000000000e+00 0 0 0
 
-        Atoms # atomic
-        1 3 1.00000000000000e+00 1.0000000000000e+00 1.00000000000000e+00 0 0 0
-        2 1 2.00000000000000e+00 2.0000000000000e+00 2.0000000000000e+00 0 0 0
+    The "sphere" atom style is interpreted as::
 
-    The "sphere" is interpreted as:
        atom-ID atom-type diameter density x y z
-    The "atomic" is interpreted as:
+
+    While "atomic" atom style::
+
+       Atoms # atomic
+       1 3 1.00000000000000e+00 1.0000000000000e+00 1.00000000000000e+00 0 0 0
+       2 1 2.00000000000000e+00 2.0000000000000e+00 2.0000000000000e+00 0 0 0
+
+    is interpreted as::
+
        atom-ID atom-type x y z
 
     Note that the last 3 values were not discussed because in the lammps

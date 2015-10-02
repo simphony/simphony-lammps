@@ -3,7 +3,7 @@ Engine
 
 The LAMMPS engine for SimPhoNy (``LammpsWrapper`` in module
 ``simlammps.lammps_wrapper``) implements the SimPhoNy's abstract interface
-definition for engines (``ABCModelingEngine``).  This LAMMPS engine is available
+definition for engines (``ABCModelingEngine``). This LAMMPS engine is available
 through the engine plug-in to the SimPhoNy library.
 
 
