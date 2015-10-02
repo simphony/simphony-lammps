@@ -34,8 +34,11 @@ class _ValueEntry(object):
 
         Returns:
         --------
-        cuba_value, index : CUBA, int
-            value in correct cuba form (e.g. type) and new index
+        cuba_value : CUBA
+            value in correct cuba form (e.g. type)
+        index : int
+            incremented index (i.e. incremented pass this value)
+
         """
         keyword = KEYWORDS[self.cuba_key.name]
 
@@ -112,10 +115,13 @@ class LammpsDataLineInterpreter(object):
         values : iterable of numbers
             numbers read from line in atom section of LAMMPS data file
 
-        Returns
-        -------
-        (coordinates, cuba_values) : ((float, float, float), dict)
-            (x-y-z coordinates, dictionary with CUBA keys/values)
+        Returns:
+        --------
+        coordinates : (float, float, float)
+            x-y-z coordinates
+        cuba_values : dict
+            dictionary with CUBA keys/values
+
         """
 
         # material type is always first
