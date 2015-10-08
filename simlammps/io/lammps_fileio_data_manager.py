@@ -299,7 +299,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             atom_type = p.data[CUBA.MATERIAL_TYPE]
             del p.data[CUBA.MATERIAL_TYPE]
 
-            p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id])
+            p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id][0:3])
 
             # set the pc's material type
             # (current requirement/assumption is that each

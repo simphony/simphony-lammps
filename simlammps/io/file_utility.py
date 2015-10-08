@@ -6,9 +6,10 @@ from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
 from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
 from simlammps.cuba_extension import CUBAExtension
+from simlammps.io.atom_style import (AtomStyle, get_atom_style)
 
 
-def read_data_file(filename):
+def read_data_file(filename, atom_style=None):
     """ Reads LAMMPS data file and create CUDS objects
 
     Reads LAMMPS data file and create list of Particles. The returned list
@@ -16,10 +17,18 @@ def read_data_file(filename):
     CUBA.MATERIAL_TYPE). The name of the Particles will be the atom type (e.g.
     a Particles with atom_type/CUBA.MATERIAL_TYPE of 1 will have the name "1")
 
+    The attributes for each particle are based upon what atom-style
+    the file contains (i.e. "sphere" means that particles will have
+    a CUBA.RADIUS and CUBA.DENSITY).  See 'atom_style'.
+
     Parameters
     ----------
     filename : str
         filename of lammps data file
+
+    atom_style : AtomStyle
+        type of atoms in the file.  If None, then an attempt of
+        intepreting the atom-style in the file is performed.
 
     Returns
     -------
@@ -29,10 +38,17 @@ def read_data_file(filename):
     handler = LammpsSimpleDataHandler()
     parser = LammpsDataFileParser(handler=handler)
 
-    interpreter = LammpsDataLineInterpreter()
-
     parser.parse(filename)
 
+    if atom_style is None:
+        atom_style = (
+            get_atom_style(handler.get_atom_type())
+            if handler.get_atom_type()
+            else AtomStyle.ATOMIC)
+
+    interpreter = LammpsDataLineInterpreter(atom_style)
+
+    types = (atom_t for atom_t in range(1, handler.get_number_atom_types()+1))
     atoms = handler.get_atoms()
     velocities = handler.get_velocities()
     masses = handler.get_masses()
@@ -43,20 +59,24 @@ def read_data_file(filename):
     type_to_particles_map = {}
 
     # set up a Particles for each different type
-    for atom_type, mass in masses.iteritems():
+    for atom_type in types:
         data = DataContainer()
-        data[CUBA.MASS] = mass
         data[CUBA.MATERIAL_TYPE] = atom_type
 
-        data_extension = {}
-        data_extension[CUBAExtension.BOX_ORIGIN] = box_origin
-        data_extension[CUBAExtension.BOX_VECTORS] = box_vectors
+        data_extension = {CUBAExtension.BOX_ORIGIN: box_origin,
+                          CUBAExtension.BOX_VECTORS: box_vectors}
 
         particles = Particles(name="{}".format(atom_type))
         particles.data = data
         particles.data_extension = dict(data_extension)
 
         type_to_particles_map[atom_type] = particles
+
+    # set masses
+    for atom_type, mass in masses.iteritems():
+        data = type_to_particles_map[atom_type].data
+        data[CUBA.MASS] = mass
+        type_to_particles_map[atom_type].data = data
 
     # add each particle to each Particles
     for lammps_id, values in atoms.iteritems():
@@ -67,7 +87,7 @@ def read_data_file(filename):
         atom_type = p.data[CUBA.MATERIAL_TYPE]
         del p.data[CUBA.MATERIAL_TYPE]
 
-        p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id])
+        p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id][0:3])
 
         type_to_particles_map[atom_type].add_particles([p])
 

@@ -1,14 +1,7 @@
-from enum import Enum
-
-
 from simphony.core.cuba import CUBA
 from simphony.core.keywords import KEYWORDS
 
-
-class AtomStyle(Enum):
-    ATOMIC = 0
-    GRANULAR = 1
-    SPHERE = 1  # "granular" in LIGGHTS
+from simlammps.io.atom_style import AtomStyle
 
 
 class _ValueEntry(object):
@@ -104,7 +97,7 @@ class LammpsDataLineInterpreter(object):
         style that lammps is using for "atoms"
 
     """
-    def __init__(self, atom_style=AtomStyle.ATOMIC):
+    def __init__(self, atom_style):
         self._atom_style = atom_style
 
     def convert_atom_values(self, values):

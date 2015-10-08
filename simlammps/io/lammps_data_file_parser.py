@@ -15,11 +15,12 @@ class LammpsDataFileParser(object):
 
     Handler classes have the following methods:
         def process_number_atom_types(self, number_types):
-        def process_atoms(id, values):
-        def process_masses(id, value):
-        def process_velocities(id, values):
-        def process_box_origin(values):
-        def process_box_vectors(values):
+        def process_atoms(self, id, values):
+        def process_masses(self, id, value):
+        def process_velocities(self, id, values):
+        def process_box_origin(self, values):
+        def process_box_vectors(self, values):
+        def process_atom_type(self, atom_type)
 
 
     Parameters
@@ -65,6 +66,13 @@ class LammpsDataFileParser(object):
                         for v in map(float, values[2:]):
                             type_coord_etc.append(v)
                         self._handler.process_atoms(id, type_coord_etc)
+                    elif state is _ReadState.ATOMS_BEGIN:
+                        # atom-type is listed after '#', e.g: "Atom # sphere"
+                        values = line.split('#', 1)
+                        if len(values) > 1:
+                            atom_type = values[1].strip()
+                            if atom_type:
+                                self._handler.process_atom_type(atom_type)
                     elif state is _ReadState.VELOCITIES:
                         values = line.split()
                         self._handler.process_velocities(
