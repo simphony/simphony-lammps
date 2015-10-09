@@ -7,6 +7,7 @@ from simphony.cuds.particles import Particles, Particle
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
 from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
+from simlammps.io.atom_style import get_atom_style
 
 from simlammps.config.domain import get_box
 
@@ -265,7 +266,8 @@ class LammpsFileIoDataManager(ABCDataManager):
         parser = LammpsDataFileParser(handler)
         parser.parse(output_data_filename)
 
-        interpreter = LammpsDataLineInterpreter()
+        interpreter = LammpsDataLineInterpreter(
+            get_atom_style(handler.get_atom_type()))
 
         atoms = handler.get_atoms()
         velocities = handler.get_velocities()
