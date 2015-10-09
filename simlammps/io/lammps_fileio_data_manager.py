@@ -4,6 +4,7 @@ from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particles, Particle
+
 from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
 from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
@@ -329,11 +330,11 @@ class LammpsFileIoDataManager(ABCDataManager):
         # determine the number of particles
         # and collect the different material types
         # in oder to determine the number of types
-        num_particles = 0
-        types = set()
-        for _, pc in self._pc_cache.iteritems():
-            types.add(pc.data[CUBA.MATERIAL_TYPE])
-            num_particles += sum(1 for _ in pc.iter_particles())
+        num_particles = sum(
+            pc.count_of(
+                CUDSItem.PARTICLE) for pc in self._pc_cache.itervalues())
+        types = set(pc.data[CUBA.MATERIAL_TYPE]
+                    for pc in self._pc_cache.itervalues())
 
         box = get_box([de for _, de in self._dc_extension_cache.iteritems()])
 
