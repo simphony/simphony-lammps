@@ -1,6 +1,7 @@
 import re
 import string
 from enum import Enum
+from collections import OrderedDict
 
 
 class LammpsDataFileParser(object):
@@ -31,6 +32,7 @@ class LammpsDataFileParser(object):
     """
     def __init__(self, handler):
         self._handler = handler
+        self._simulation_box = SimulationBoxParser(self._handler)
 
     def parse(self, file_name):
         """ Read in data file containing current state of simulation
@@ -79,7 +81,7 @@ class LammpsDataFileParser(object):
                             int(values[0]),
                             map(float, values[1:]))
                     elif state is _ReadState.SIMULATION_BOX_BOUNDARIES:
-                        simulation_box_parse(self._handler, line)
+                        self._simulation_box.parse(line)
                     else:
                         continue
             except Exception:
@@ -135,43 +137,49 @@ class _ReadState(Enum):
         return new_state
 
 
-def simulation_box_parse(handler, line, _stored={}):
-    """ parses lines related to simulation box
+class SimulationBoxParser(object):
+    """ Classes parses lines related to simulation box
 
-        parses lines related to simulation box and then calls the
-        related handler methods when enough information is read
-        (i.e. all related lines in file have been read)
+    parses lines related to simulation box and then calls the
+    related handler methods when enough information is read
+    (i.e. all related lines in file have been read)
 
-        The relevant lines have the form:
-            0.0000000000000000e+00 2.5687134504920127e+01 xlo xhi
-            -2.2245711031688635e-03 2.2247935602791809e+01 ylo yhi
-            -3.2108918131150160e-01 3.2108918131150160e-01 zlo zhi
+    The relevant lines have the form:
+        0.0000000000000000e+00 2.5687134504920127e+01 xlo xhi
+        -2.2245711031688635e-03 2.2247935602791809e+01 ylo yhi
+        -3.2108918131150160e-01 3.2108918131150160e-01 zlo zhi
 
-        TODO the use of _stored is a hack and this function should
-        be reworked into a class
+    Once all needed information is parsed, then the "handler"'s
+    process_box_vectors is called.
+
+    Parameters
+    ----------
+    handler :
+        handler's 'process_box_vectors' and 'process_box_origin' methods
+        will be called once the required information has been parsed
 
     """
-    values = map(float, line.split()[:2])
+    _components = ['x', 'y', 'z']
 
-    if 'x' in line:
-        _stored['x'] = values
-    elif 'y' in line:
-        _stored['y'] = values
-    elif 'z' in line:
-        _stored['z'] = values
+    def __init__(self, handler):
+        self._handler = handler
+        self._stored = OrderedDict()
 
-    if 'x' in _stored and 'y' in _stored and 'z' in _stored:
-        handler.process_box_origin((
-            _stored['x'][0],
-            _stored['y'][0],
-            _stored['z'][0]))
+    def parse(self, line):
+        values = map(float, line.split()[:2])
 
-        xdiff = _stored['x'][1] - _stored['x'][0]
-        ydiff = _stored['y'][1] - _stored['y'][0]
-        zdiff = _stored['z'][1] - _stored['z'][0]
+        for component in SimulationBoxParser._components:
+            if component in line:
+                self._stored[component] = values
+                break
 
-        vectors = [(xdiff, 0.0, 0.0),
-                   (0.0, ydiff, 0.0),
-                   (0.0, 0.0, zdiff)]
-        handler.process_box_vectors(vectors)
-        _stored.clear()
+        if SimulationBoxParser._components == self._stored.keys():
+            origin = tuple(
+                value[0] for value in self._stored.values())  # xlo, ylo, zlo
+            self._handler.process_box_origin(origin)
+
+            diffs = [value[1] - value[0] for value in self._stored.values()]
+            vectors = [(diffs[0], 0.0, 0.0),
+                       (0.0, diffs[1], 0.0),
+                       (0.0, 0.0, diffs[2])]
+            self._handler.process_box_vectors(vectors)
