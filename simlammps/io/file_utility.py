@@ -18,8 +18,9 @@ def read_data_file(filename, atom_style=None):
     a Particles with atom_type/CUBA.MATERIAL_TYPE of 1 will have the name "1")
 
     The attributes for each particle are based upon what atom-style
-    the file contains (i.e. "sphere" means that particles will have
-    a CUBA.RADIUS and CUBA.DENSITY).  See 'atom_style'.
+    the file contains (i.e. "sphere" means that particles in addition to having
+    CUBA.VELOCITY will also have a CUBA.RADIUS and CUBA.DENSITY). See
+    'atom_style' for more details.
 
     Parameters
     ----------
@@ -28,11 +29,14 @@ def read_data_file(filename, atom_style=None):
 
     atom_style : AtomStyle
         type of atoms in the file.  If None, then an attempt of
-        intepreting the atom-style in the file is performed.
+        interpreting the atom-style in the file is performed.
 
     Returns
     -------
     particles_list : list of Particles
+        list of Particles where each Particles has a name equal
+        to their CUBA.MATERIAL_TYPE and is filled up with
+        particles of that type.
 
     """
     handler = LammpsSimpleDataHandler()
