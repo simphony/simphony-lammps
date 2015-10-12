@@ -1,8 +1,9 @@
 import unittest
 
 from simphony.core.cuba import CUBA
-from simlammps.io.lammps_data_line_interpreter import \
-    (LammpsDataLineInterpreter, AtomStyle)
+
+from simlammps.common.atom_style import AtomStyle
+from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
 
 
 class TestLammpsDataLineInterpreter(unittest.TestCase):

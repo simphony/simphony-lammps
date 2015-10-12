@@ -1,66 +1,8 @@
 from simphony.core.cuba import CUBA
 from simphony.core.keywords import KEYWORDS
 
-from simlammps.io.atom_style import AtomStyle
+from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 
-
-class _ValueEntry(object):
-    """  Information needed to interpret a value entry as CUBA value
-
-    Parameters:
-    -----------
-    cuba_key : CUBA
-        what CUBA attribute this value corresponds to
-    conversion :
-        method to value(s) to CUBA representation
-    """
-    def __init__(self, cuba_key, conversion=None):
-        self.cuba_key = cuba_key
-        self._conversion = conversion
-
-    def process(self, values, index):
-        """ return cuba value and
-
-        Parameters
-        ----------
-        values : list of int
-
-        Returns:
-        --------
-        cuba_value : CUBA
-            value in correct cuba form (e.g. type)
-        index : int
-            incremented index (i.e. incremented pass this value)
-
-        """
-        keyword = KEYWORDS[self.cuba_key.name]
-
-        # TODO we are assuming that we only have a single
-        # -dimension array (e.g. shape is [1] or [3]
-        # instead of shape being something like [2, 3])
-        shape = keyword.shape
-        if shape == [1]:
-            cuba_value = values[index]
-            index += 1
-        else:
-            cuba_value = tuple(values[index.index+shape[0]])
-            index += shape[0]
-
-        if self._conversion:
-            cuba_value = self._conversion(cuba_value)
-
-        return cuba_value, index
-
-
-# map from AtomStyle to associated list of data-properties
-Styles = {AtomStyle.ATOMIC: [],
-          AtomStyle.GRANULAR:
-              [_ValueEntry(cuba_key=CUBA.RADIUS,
-                           conversion=lambda x: x / 2),  # diameter to radius
-               _ValueEntry(cuba_key=CUBA.DENSITY)]}
-
-
-# TODO possibly attempt to interpret style from file (i.e. "Atoms # sphere")
 
 class LammpsDataLineInterpreter(object):
     """  Class interprets lines in LAMMPS data files using atom-style
@@ -121,10 +63,52 @@ class LammpsDataLineInterpreter(object):
         cuba_values = {CUBA.MATERIAL_TYPE: values[0]}
 
         index = 1
-        for entry in Styles[self._atom_style]:
-            cuba_values[entry.cuba_key], index = entry.process(values, index)
+        for value_info in ATOM_STYLE_DESCRIPTIONS[self._atom_style]:
+            cuba_values[value_info.cuba_key], index = \
+                LammpsDataLineInterpreter.process_value(value_info,
+                                                        values,
+                                                        index)
 
         # coordinates come next
         coordinates = tuple(values[index:index+3])
 
         return coordinates, cuba_values
+
+    @staticmethod
+    def process_value(value_info, values, index):
+        """ return cuba value and updated index
+
+        Parameters
+        ----------
+        value_info : ValueInfo
+            information on value info
+        values : list of numbers
+            values to be processed
+        index : int
+            starting index of values to be processed
+
+        Returns:
+        --------
+        cuba_value : CUBA
+            value in correct cuba form (e.g. type)
+        index : int
+            incremented index (i.e. incremented pass this value)
+
+        """
+        keyword = KEYWORDS[value_info.cuba_key.name]
+
+        # TODO we are assuming that we only have a single
+        # -dimension array (e.g. shape is [1] or [3]
+        # instead of shape being something like [2, 3])
+        shape = keyword.shape
+        if shape == [1]:
+            cuba_value = values[index]
+            index += 1
+        else:
+            cuba_value = tuple(values[index.index+shape[0]])
+            index += shape[0]
+
+        if value_info.convert_to_cuba:
+            cuba_value = value_info.convert_to_cuba(cuba_value)
+
+        return cuba_value, index
