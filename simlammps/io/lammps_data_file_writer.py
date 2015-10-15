@@ -121,16 +121,14 @@ class LammpsDataFileWriter(object):
                                format_cuba_value(particle.data[CUBA.VELOCITY],
                                                  CUBA.VELOCITY)))
 
+        if self._written_atoms == self._number_atoms:
+            self._file.write("\nVelocities\n\n")
+            self._file.writelines(self._velocity_lines)
+            self._file.write("\n")
+
         return lammps_id
 
-    def _write_velocities(self):
-        self._file.write("\nVelocities\n\n")
-        self._file.writelines(self._velocity_lines)
-        self._file.write("\n")
-
     def close(self):
-        self._write_velocities()
-
         self._file.close()
         if self._written_atoms != self._number_atoms:
             raise RuntimeError(
