@@ -56,9 +56,6 @@ The installation of LAMMPS differs depending on what interface is used:
 Limitations of the INTERNAL interface
 -------------------------------------
 The following are known limitations when using the INTERNAL interface to LAMMPS:
- - Deletion of particles (i.e. ``delete_particle``) is not yet supported
- - Adding particles to the LAMMPSParticleContainer can fail when coordinates of
-   the added particles is outside of the simulation box configured by the user.
  - Currently an upper limit of particle types (CUBA.MATERIAL_TYPE) is set due to
    the fact that LAMMPS only allows the number of types be configured at start
    (and not changed later)
