@@ -63,7 +63,7 @@ class LammpsDataLineInterpreter(object):
         cuba_values = {CUBA.MATERIAL_TYPE: values[0]}
 
         index = 1
-        for value_info in ATOM_STYLE_DESCRIPTIONS[self._atom_style]:
+        for value_info in ATOM_STYLE_DESCRIPTIONS[self._atom_style].attributes:
             cuba_values[value_info.cuba_key], index = \
                 LammpsDataLineInterpreter.process_value(value_info,
                                                         values,

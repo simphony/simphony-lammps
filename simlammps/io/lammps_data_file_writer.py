@@ -27,7 +27,7 @@ class LammpsDataFileWriter(object):
         number of atom types
     simulation_box : str
         simulation box
-    material_type_to_mass : map of masses according to type
+    material_type_to_mass : map of masses according to type, optional
         masses of each type
 
     """
@@ -95,6 +95,9 @@ class LammpsDataFileWriter(object):
         """
         self._written_atoms += 1
 
+        if self._written_atoms > self._number_atoms:
+            raise RuntimeError("Trying to write more atoms than expected")
+
         lammps_id = self._written_atoms
         atom_type = material_type
 
@@ -103,7 +106,7 @@ class LammpsDataFileWriter(object):
             lammps_id, atom_type))
 
         # then write everything that is specific to this atom_style
-        for info in ATOM_STYLE_DESCRIPTIONS[self._atom_style]:
+        for info in ATOM_STYLE_DESCRIPTIONS[self._atom_style].attributes:
             value = info.convert_from_cuba(particle.data[info.cuba_key]) \
                 if info.convert_from_cuba else particle.data[info.cuba_key]
 

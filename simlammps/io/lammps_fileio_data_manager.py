@@ -9,7 +9,8 @@ from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
 from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
 from simlammps.io.lammps_data_file_writer import LammpsDataFileWriter
-from simlammps.common.atom_style import (get_atom_style, AtomStyle)
+from simlammps.common.atom_style import get_atom_style
+from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 
 from simlammps.config.domain import get_box
 
@@ -50,8 +51,17 @@ class LammpsFileIoDataManager(ABCDataManager):
     the file whenever the flush() method is called.
 
     """
-    def __init__(self):
+    def __init__(self, atom_style):
+        """ initialize
+
+        Parameters
+        ----------
+        atom_style : AtomStyle
+           atom_style
+        """
         super(LammpsFileIoDataManager, self).__init__()
+
+        self._atom_style = atom_style
 
         # map from lammps-id to simphony-uid
         self._lammpsid_to_uid = {}
@@ -336,12 +346,15 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         box = get_box([de for _, de in self._dc_extension_cache.iteritems()])
 
+        mass = self._get_mass() \
+            if ATOM_STYLE_DESCRIPTIONS[self._atom_style].has_mass \
+            else None
         writer = LammpsDataFileWriter(filename,
-                                      atom_style=AtomStyle.ATOMIC,  # TODO
+                                      atom_style=self._atom_style,
                                       number_atoms=num_particles,
                                       number_atom_types=len(types),
                                       simulation_box=box,
-                                      material_type_to_mass=self._get_mass())
+                                      material_type_to_mass=mass)
         for uname, pc in self._pc_cache.iteritems():
             material_type = pc.data[CUBA.MATERIAL_TYPE]
             for p in pc.iter_particles():
