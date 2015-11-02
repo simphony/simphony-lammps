@@ -87,14 +87,14 @@ def read_data_file(filename, atom_style=None):
 
     # add each particle to each Particles
     for lammps_id, values in atoms.iteritems():
-        p = Particle()
-        p.coordinates, p.data = interpreter.convert_atom_values(values)
+        coordinates, data = interpreter.convert_atom_values(values)
+        data.update(interpreter.convert_velocity_values(velocities[lammps_id]))
+
+        p = Particle(coordinates=coordinates, data=data)
 
         # TODO #9 (removing material type
         atom_type = p.data[CUBA.MATERIAL_TYPE]
         del p.data[CUBA.MATERIAL_TYPE]
-
-        p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id][0:3])
 
         type_to_particles_map[atom_type].add_particles([p])
 

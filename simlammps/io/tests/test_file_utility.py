@@ -2,6 +2,7 @@ import unittest
 import tempfile
 import shutil
 import os
+import itertools
 
 from numpy.testing import assert_almost_equal
 
@@ -83,6 +84,7 @@ class TestFileUtility(unittest.TestCase):
             box)
 
         for p in particles.iter_particles():
+            assert_almost_equal(p.data[CUBA.ANGULAR_VELOCITY], [0.0, 0.0, 1.0])
             assert_almost_equal(p.data[CUBA.VELOCITY], [5.0, 0.0, 0.0])
             assert_almost_equal(p.data[CUBA.RADIUS], 0.5/2)
             assert_almost_equal(p.data[CUBA.MASS], 1.0)
@@ -103,12 +105,10 @@ class TestFileUtility(unittest.TestCase):
         self.assertEqual(len(original_particles_list),
                          len(read_particles_list))
 
-        # TODO have list of attributes provided here for this type of particles
-        attribute_keys = [attribute.cuba_key for attribute in
-                          ATOM_STYLE_DESCRIPTIONS[AtomStyle.SPHERE].attributes]
         _compare_list_of_named_particles(read_particles_list,
                                          original_particles_list,
-                                         attribute_keys,
+                                         _get_expected_attributes(
+                                             AtomStyle.SPHERE),
                                          self)
 
     def test_write_file_atom(self):
@@ -127,11 +127,22 @@ class TestFileUtility(unittest.TestCase):
         self.assertEqual(len(original_particles_list),
                          len(read_particles_list))
 
-        attributes_keys = [CUBA.VELOCITY]
         _compare_list_of_named_particles(read_particles_list,
                                          original_particles_list,
-                                         attributes_keys,
+                                         _get_expected_attributes(
+                                             AtomStyle.ATOMIC),
                                          self)
+
+
+def _get_expected_attributes(atom_style):
+    """ Return list of CUBA-key expected on particle
+
+    """
+    atom_style_description = ATOM_STYLE_DESCRIPTIONS[atom_style]
+    return [attribute.cuba_key for attribute in
+            itertools.chain(
+                atom_style_description.attributes,
+                atom_style_description.velocity_attributes)]
 
 
 def _compare_list_of_named_particles(read_particles_list,
@@ -222,7 +233,7 @@ _explicit_sphere_style_file_contents = """LAMMPS data file via write_data, versi
 -7.5000000000000000e+00 7.5000000000000000e+00 ylo yhi
 -5.0000000000000000e-01 5.0000000000000000e-01 zlo zhi
 
-Atoms # sphere
+Atoms # granular
 
 1 1 0.5 1.0000000000000000e+00 -5.0 0.0 0.0000000000000000e+00 0 0 0
 2 1 0.5 1.0000000000000000e+00 10.0 0.0 0.0000000000000000e+00 0 0 0
@@ -230,9 +241,9 @@ Atoms # sphere
 
 Velocities
 
-1 5.0 0.0 0.0 0.0000000000000000e+00 0.0000000000000000e+00 0.0
-2 5.0 0.0 0.0 0.0000000000000000e+00 0.0000000000000000e+00 0.0
-3 5.0 0.0 0.0 0.0000000000000000e+00 0.0000000000000000e+00 0.0
+1 5.0 0.0 0.0 0.0 0.0 1.0
+2 5.0 0.0 0.0 0.0 0.0 1.0
+3 5.0 0.0 0.0 0.0 0.0 1.0
 """
 
 if __name__ == '__main__':

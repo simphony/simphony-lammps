@@ -8,22 +8,33 @@ class AtomStyleDescription(object):
 
     Each atom style has a particular set of attributes that it supports
     (or provides). This class contains a list of what  attributes it
-    contains. Note that the order of items in 'attributes' corresponds
-    to the order they appear in lammps-data file.
+    contains. Note that the order of items in 'attributes' corresponds to
+    the order they appear in lammps-data file.
 
     Attributes
     ----------
     attributes : list of ValueInfo
-         a list of what attributes it contains is listed
+         ordered list of what attributes each particle/atom contains
+    velocity_attributes : list of ValueInfo
+         ordered list of what velocity related attributes each atom contains
+         (CUBA.VELOCITY is always included)
     has_mass_per_type : bool (optional)
-        True if this style requires a mass (specifically mass-per-type)
+        True if this style requires a mass (specifically mass-per-atom_type)
 
     """
-    def __init__(self, attributes=None, has_mass_per_type=False):
+    def __init__(self,
+                 attributes=None,
+                 velocity_attributes=None,
+                 has_mass_per_type=False):
         if attributes is None:
             self.attributes = []
         else:
             self.attributes = attributes
+
+        self.velocity_attributes = [ValueInfo(cuba_key=CUBA.VELOCITY)]
+        if velocity_attributes:
+            self.velocity_attributes.extend(velocity_attributes)
+
         self.has_mass_per_type = has_mass_per_type
 
 
@@ -54,7 +65,9 @@ class ValueInfo(object):
 # description of each atom-style
 ATOM_STYLE_DESCRIPTIONS = {
     AtomStyle.ATOMIC:
-        AtomStyleDescription(  # default (i.e. coordinates, velocity..)
+        AtomStyleDescription(
+            # attributes has default (i.e. coordinates)
+            # , velocity..)
             has_mass_per_type=True),  # but with mass
     AtomStyle.GRANULAR:
         AtomStyleDescription(
@@ -63,5 +76,6 @@ ATOM_STYLE_DESCRIPTIONS = {
                           convert_to_cuba=lambda x: x / 2,  # d to radius
                           convert_from_cuba=lambda x: x * 2),  # radius to d
                 ValueInfo(cuba_key=CUBA.MASS)],
+            velocity_attributes=[ValueInfo(cuba_key=CUBA.ANGULAR_VELOCITY)],
             has_mass_per_type=False)
 }

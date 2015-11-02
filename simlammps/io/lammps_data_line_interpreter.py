@@ -74,6 +74,32 @@ class LammpsDataLineInterpreter(object):
 
         return coordinates, cuba_values
 
+    def convert_velocity_values(self, values):
+        """  Converts list of velocity values to CUBA/value dictionary
+
+        Parameters
+        ----------
+        values : iterable of numbers
+            numbers read from line in velocity section of LAMMPS data file
+
+        Returns:
+        --------
+        cuba_velocity_values : dict
+            dictionary with CUBA keys/values (related to velocity)
+
+        """
+
+        index = 0
+        cuba_velocity_values = {}
+        atom_style_description = ATOM_STYLE_DESCRIPTIONS[self._atom_style]
+        for value_info in atom_style_description.velocity_attributes:
+            cuba_velocity_values[value_info.cuba_key], index = \
+                LammpsDataLineInterpreter.process_value(value_info,
+                                                        values,
+                                                        index)
+
+        return cuba_velocity_values
+
     @staticmethod
     def process_value(value_info, values, index):
         """ return cuba value and updated index
@@ -99,13 +125,13 @@ class LammpsDataLineInterpreter(object):
 
         # TODO we are assuming that we only have a single
         # -dimension array (e.g. shape is [1] or [3]
-        # instead of shape being something like [2, 3])
+        # instead of shape being something like a [2, 3] matrix)
         shape = keyword.shape
         if shape == [1]:
             cuba_value = values[index]
             index += 1
         else:
-            cuba_value = tuple(values[index.index+shape[0]])
+            cuba_value = tuple(values[index:index+shape[0]])
             index += shape[0]
 
         if value_info.convert_to_cuba:

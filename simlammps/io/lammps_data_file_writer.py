@@ -101,28 +101,33 @@ class LammpsDataFileWriter(object):
         lammps_id = self._written_atoms
         atom_type = material_type
 
-        # first write 'id' and 'type'
-        self._file.write('{0} {1} '.format(
-            lammps_id, atom_type))
+        # first comes 'id' and 'type'
+        atom_line = '{0} {1}'.format(lammps_id, atom_type)
 
         # then write everything that is specific to this atom_style
-        for info in ATOM_STYLE_DESCRIPTIONS[self._atom_style].attributes:
+        atom_description = ATOM_STYLE_DESCRIPTIONS[self._atom_style]
+        for info in atom_description.attributes:
             value = info.convert_from_cuba(particle.data[info.cuba_key]) \
                 if info.convert_from_cuba else particle.data[info.cuba_key]
 
-            self._file.write('{} '.format(format_cuba_value(value,
-                                                            info.cuba_key)))
+            atom_line += ' {}'.format(format_cuba_value(value,
+                                                        info.cuba_key))
 
         # then write the coordinates
         coordinates = format_cuba_value(particle.coordinates,
                                         CUBA.VELOCITY)  # using similar type
-        self._file.write('{} 0 0 0\n'.format(coordinates))
+        atom_line += ' {} 0 0 0\n'.format(coordinates)
+        self._file.write(atom_line)
 
         # save velocity line which will be written later
-        self._velocity_lines.append(
-            '{0} {1}\n'.format(lammps_id,
-                               format_cuba_value(particle.data[CUBA.VELOCITY],
-                                                 CUBA.VELOCITY)))
+        velocity_line = '{0}'.format(lammps_id)
+        for info in atom_description.velocity_attributes:
+            value = info.convert_from_cuba(particle.data[info.cuba_key]) \
+                if info.convert_from_cuba else particle.data[info.cuba_key]
+
+            velocity_line += ' {}'.format(
+                format_cuba_value(value, info.cuba_key))
+        self._velocity_lines.append(velocity_line + '\n')
 
         if self._written_atoms == self._number_atoms:
             self._file.write("\nVelocities\n\n")
