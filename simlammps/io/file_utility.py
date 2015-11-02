@@ -22,7 +22,7 @@ def read_data_file(filename, atom_style=None):
 
     The attributes for each particle are based upon what atom-style
     the file contains (i.e. "sphere" means that particles in addition to having
-    CUBA.VELOCITY will also have a CUBA.RADIUS and CUBA.DENSITY). See
+    CUBA.VELOCITY will also have a CUBA.RADIUS and CUBA.MASS). See
     'atom_style' for more details.
 
     Parameters

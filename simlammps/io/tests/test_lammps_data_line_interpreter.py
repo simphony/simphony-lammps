@@ -29,7 +29,7 @@ class TestLammpsDataLineInterpreter(unittest.TestCase):
         self.assertEqual(coordinates, tuple(atomic_values[3:6]))
         self.assertEqual(data[CUBA.MATERIAL_TYPE], atomic_values[0])
         self.assertEqual(data[CUBA.RADIUS], atomic_values[1]/2)
-        self.assertEqual(data[CUBA.DENSITY], atomic_values[2])
+        self.assertEqual(data[CUBA.MASS], atomic_values[2])
 
 
 if __name__ == '__main__':

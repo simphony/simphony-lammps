@@ -16,7 +16,7 @@ class LammpsDataLineInterpreter(object):
 
     The "sphere" atom style is interpreted as::
 
-       atom-ID atom-type diameter density x y z
+       atom-ID atom-type diameter mass x y z
 
     While "atomic" atom style::
 

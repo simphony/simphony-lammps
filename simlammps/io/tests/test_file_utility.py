@@ -13,6 +13,7 @@ from simlammps.io.file_utility import (read_data_file,
                                        write_data_file)
 from simlammps.cuba_extension import CUBAExtension
 from simlammps.common.atom_style import AtomStyle
+from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 
 
 class TestFileUtility(unittest.TestCase):
@@ -60,8 +61,11 @@ class TestFileUtility(unittest.TestCase):
         self.assertEqual(4, total_number_particles)
 
     def test_read_sphere_style_data_file(self):
+        # when
         particles_list = read_data_file(self._write_example_file(
             _explicit_sphere_style_file_contents))
+
+        # then
         self.assertEqual(1, len(particles_list))
 
         particles = particles_list[0]
@@ -81,7 +85,7 @@ class TestFileUtility(unittest.TestCase):
         for p in particles.iter_particles():
             assert_almost_equal(p.data[CUBA.VELOCITY], [5.0, 0.0, 0.0])
             assert_almost_equal(p.data[CUBA.RADIUS], 0.5/2)
-            assert_almost_equal(p.data[CUBA.DENSITY], 1.0)
+            assert_almost_equal(p.data[CUBA.MASS], 1.0)
 
     def test_write_file_sphere(self):
         # given
@@ -100,10 +104,11 @@ class TestFileUtility(unittest.TestCase):
                          len(read_particles_list))
 
         # TODO have list of attributes provided here for this type of particles
-        attributes_keys = [CUBA.VELOCITY, CUBA.DENSITY, CUBA.RADIUS]
+        attribute_keys = [attribute.cuba_key for attribute in
+                          ATOM_STYLE_DESCRIPTIONS[AtomStyle.SPHERE].attributes]
         _compare_list_of_named_particles(read_particles_list,
                                          original_particles_list,
-                                         attributes_keys,
+                                         attribute_keys,
                                          self)
 
     def test_write_file_atom(self):

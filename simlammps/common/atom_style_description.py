@@ -62,6 +62,6 @@ ATOM_STYLE_DESCRIPTIONS = {
                 ValueInfo(cuba_key=CUBA.RADIUS,  # but diameter in LAMMPS
                           convert_to_cuba=lambda x: x / 2,  # d to radius
                           convert_from_cuba=lambda x: x * 2),  # radius to d
-                ValueInfo(cuba_key=CUBA.DENSITY)],
+                ValueInfo(cuba_key=CUBA.MASS)],
             has_mass=False)
 }

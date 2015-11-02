@@ -73,7 +73,7 @@ class LammpsDataFileWriter(object):
         Atom lines should be written based on their atom style.  For example,
         "sphere" items are written as:::
 
-           atom-ID atom-type diameter density x y z
+           atom-ID atom-type diameter mass x y z
 
         While "atomic" atom style::
 
