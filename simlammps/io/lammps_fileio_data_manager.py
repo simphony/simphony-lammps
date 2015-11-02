@@ -347,7 +347,7 @@ class LammpsFileIoDataManager(ABCDataManager):
         box = get_box([de for _, de in self._dc_extension_cache.iteritems()])
 
         mass = self._get_mass() \
-            if ATOM_STYLE_DESCRIPTIONS[self._atom_style].has_mass \
+            if ATOM_STYLE_DESCRIPTIONS[self._atom_style].has_mass_per_type \
             else None
         writer = LammpsDataFileWriter(filename,
                                       atom_style=self._atom_style,

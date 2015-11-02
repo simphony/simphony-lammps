@@ -15,16 +15,16 @@ class AtomStyleDescription(object):
     ----------
     attributes : list of ValueInfo
          a list of what attributes it contains is listed
-    has_mass : bool (optional)
-        True if this style requires a mass
+    has_mass_per_type : bool (optional)
+        True if this style requires a mass (specifically mass-per-type)
 
     """
-    def __init__(self, attributes=None, has_mass=False):
+    def __init__(self, attributes=None, has_mass_per_type=False):
         if attributes is None:
             self.attributes = []
         else:
             self.attributes = attributes
-        self.has_mass = has_mass
+        self.has_mass_per_type = has_mass_per_type
 
 
 class ValueInfo(object):
@@ -55,7 +55,7 @@ class ValueInfo(object):
 ATOM_STYLE_DESCRIPTIONS = {
     AtomStyle.ATOMIC:
         AtomStyleDescription(  # default (i.e. coordinates, velocity..)
-            has_mass=True),  # but with mass
+            has_mass_per_type=True),  # but with mass
     AtomStyle.GRANULAR:
         AtomStyleDescription(
             attributes=[
@@ -63,5 +63,5 @@ ATOM_STYLE_DESCRIPTIONS = {
                           convert_to_cuba=lambda x: x / 2,  # d to radius
                           convert_from_cuba=lambda x: x * 2),  # radius to d
                 ValueInfo(cuba_key=CUBA.MASS)],
-            has_mass=False)
+            has_mass_per_type=False)
 }
