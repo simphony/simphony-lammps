@@ -1,3 +1,5 @@
+import itertools
+
 from simphony.core.cuba import CUBA
 
 from simlammps.common.atom_style import AtomStyle
@@ -79,3 +81,14 @@ ATOM_STYLE_DESCRIPTIONS = {
             velocity_attributes=[ValueInfo(cuba_key=CUBA.ANGULAR_VELOCITY)],
             has_mass_per_type=False)
 }
+
+
+def get_attributes(atom_style):
+    """ Return list of CUBA-key expected on particle
+
+    """
+    atom_style_description = ATOM_STYLE_DESCRIPTIONS[atom_style]
+    return [attribute.cuba_key for attribute in
+            itertools.chain(
+                atom_style_description.attributes,
+                atom_style_description.velocity_attributes)]

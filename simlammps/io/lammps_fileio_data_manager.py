@@ -9,29 +9,30 @@ from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
 from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
 from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
 from simlammps.io.lammps_data_file_writer import LammpsDataFileWriter
-from simlammps.common.atom_style import get_atom_style
-from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
+
+from simlammps.common.atom_style_description import (ATOM_STYLE_DESCRIPTIONS,
+                                                     get_attributes)
 
 from simlammps.config.domain import get_box
 
 from simlammps.abc_data_manager import ABCDataManager
 
-# TODO derive supported cuba from atom type
-_SUPPORTED_CUBA = [CUBA.VELOCITY]
 
-
-def filter_unsupported_data(iterable):
+def _filter_unsupported_data(iterable, supported_cuba):
     """Ensure iterators only provide particles with only supported data
 
     Parameters
     ----------
     iterable : iterator of Particles
+        iterable of particles
+    supported_cuba: list of CUBA
+        what cuba is supported
 
     """
     for particle in iterable:
         data = particle.data
         supported_data = {cuba: data[cuba] for cuba in
-                          data if cuba in _SUPPORTED_CUBA}
+                          data if cuba in supported_cuba}
         supported_particle = Particle(coordinates=particle.coordinates,
                                       uid=particle.uid,
                                       data=supported_data)
@@ -50,15 +51,12 @@ class LammpsFileIoDataManager(ABCDataManager):
     is read from file whenever the read() method is called and written to
     the file whenever the flush() method is called.
 
+    Parameters
+    ----------
+    atom_style : str
+
     """
     def __init__(self, atom_style):
-        """ initialize
-
-        Parameters
-        ----------
-        atom_style : AtomStyle
-           atom_style
-        """
         super(LammpsFileIoDataManager, self).__init__()
 
         self._atom_style = atom_style
@@ -71,6 +69,8 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         # cache of data container extensions
         self._dc_extension_cache = {}
+
+        self._supported_cuba = get_attributes(self._atom_style)
 
     def get_data(self, uname):
         """Returns data container associated with particle container
@@ -177,7 +177,7 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         """
         self._pc_cache[uname].update_particles(
-            filter_unsupported_data(iterable))
+            _filter_unsupported_data(iterable, self._supported_cuba))
 
     def add_particles(self, iterable, uname):
         """Add particles
@@ -186,8 +186,8 @@ class LammpsFileIoDataManager(ABCDataManager):
         uids = self._pc_cache[uname].add_particles(iterable)
 
         # filter the cached particles of unsupported CUBA
-        self._pc_cache[uname].update_particles(filter_unsupported_data(
-            self._pc_cache[uname].iter_particles(uids)))
+        self._pc_cache[uname].update_particles(_filter_unsupported_data(
+            self._pc_cache[uname].iter_particles(uids), self._supported_cuba))
 
         return uids
 
@@ -278,10 +278,10 @@ class LammpsFileIoDataManager(ABCDataManager):
         parser = LammpsDataFileParser(handler)
         parser.parse(output_data_filename)
 
-        interpreter = LammpsDataLineInterpreter(
-            get_atom_style(handler.get_atom_type()))
+        interpreter = LammpsDataLineInterpreter(self._atom_style)
 
         atoms = handler.get_atoms()
+        number_atom_types = handler.get_number_atom_types()
         velocities = handler.get_velocities()
         masses = handler.get_masses()
 
@@ -289,8 +289,10 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         type_data = {}
 
-        for atom_type, mass in masses.iteritems():
+        for atom_type in range(1, number_atom_types+1):
             type_data[atom_type] = DataContainer()
+
+        for atom_type, mass in masses.iteritems():
             type_data[atom_type][CUBA.MASS] = mass
 
         # update each particle container with these
@@ -307,26 +309,20 @@ class LammpsFileIoDataManager(ABCDataManager):
             cache_pc = self._pc_cache[uname]
             p = cache_pc.get_particle(uid)
             p.coordinates, p.data = interpreter.convert_atom_values(values)
+            p.data.update(
+                interpreter.convert_velocity_values(velocities[lammps_id]))
+
             cache_pc.update_particles([p])
 
             # TODO #9 (removing material type
             atom_type = p.data[CUBA.MATERIAL_TYPE]
             del p.data[CUBA.MATERIAL_TYPE]
 
-            p.data[CUBA.VELOCITY] = tuple(velocities[lammps_id][0:3])
-
             # set the pc's material type
             # (current requirement/assumption is that each
             # pc has particle containers of one type)
             # (also related to #9)
             cache_pc.data[CUBA.MATERIAL_TYPE] = atom_type
-
-        for lammpsid, velocity in velocities.iteritems():
-            uname, uid = self._lammpsid_to_uid[lammpsid]
-            cache_pc = self._pc_cache[uname]
-            p = cache_pc.get_particle(uid)
-            p.data[CUBA.VELOCITY] = tuple(velocity)
-            cache_pc.update_particles([p])
 
     def _write_data_file(self, filename):
         """ Write data file containing current state of simulation

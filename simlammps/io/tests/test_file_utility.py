@@ -2,7 +2,6 @@ import unittest
 import tempfile
 import shutil
 import os
-import itertools
 
 from numpy.testing import assert_almost_equal
 
@@ -14,7 +13,7 @@ from simlammps.io.file_utility import (read_data_file,
                                        write_data_file)
 from simlammps.cuba_extension import CUBAExtension
 from simlammps.common.atom_style import AtomStyle
-from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
+from simlammps.common.atom_style_description import get_attributes
 
 
 class TestFileUtility(unittest.TestCase):
@@ -107,7 +106,7 @@ class TestFileUtility(unittest.TestCase):
 
         _compare_list_of_named_particles(read_particles_list,
                                          original_particles_list,
-                                         _get_expected_attributes(
+                                         get_attributes(
                                              AtomStyle.SPHERE),
                                          self)
 
@@ -129,20 +128,9 @@ class TestFileUtility(unittest.TestCase):
 
         _compare_list_of_named_particles(read_particles_list,
                                          original_particles_list,
-                                         _get_expected_attributes(
+                                         get_attributes(
                                              AtomStyle.ATOMIC),
                                          self)
-
-
-def _get_expected_attributes(atom_style):
-    """ Return list of CUBA-key expected on particle
-
-    """
-    atom_style_description = ATOM_STYLE_DESCRIPTIONS[atom_style]
-    return [attribute.cuba_key for attribute in
-            itertools.chain(
-                atom_style_description.attributes,
-                atom_style_description.velocity_attributes)]
 
 
 def _compare_list_of_named_particles(read_particles_list,

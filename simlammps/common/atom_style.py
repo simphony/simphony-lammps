@@ -2,6 +2,9 @@ from enum import Enum
 
 
 class AtomStyle(Enum):
+    """ Supported atom styles
+
+    """
     ATOMIC = 0
     GRANULAR = 1
     SPHERE = 1  # same as GRANULAR in LIGGHTS

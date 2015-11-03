@@ -62,6 +62,12 @@ class LammpsWrapper(ABCModelingEngine):
 
         self._use_internal_interface = use_internal_interface
 
+        atom_style = AtomStyle.GRANULAR \
+            if engine_type == EngineType.DEM else AtomStyle.ATOMIC
+        self._executable_name = "ligghts" \
+            if engine_type == EngineType.DEM else "lammps"
+        self._script_writer = ScriptWriter(atom_style)
+
         if self._use_internal_interface:
             if engine_type == EngineType.DEM:
                 raise RuntimeError(
@@ -69,11 +75,9 @@ class LammpsWrapper(ABCModelingEngine):
 
             import lammps
             self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
-            self._data_manager = LammpsInternalDataManager(self._lammps)
+            self._data_manager = LammpsInternalDataManager(self._lammps,
+                                                           atom_style)
         else:
-            atom_style = AtomStyle.GRANULAR \
-                if engine_type == EngineType.DEM else AtomStyle.ATOMIC
-
             self._data_manager = LammpsFileIoDataManager(atom_style)
 
         self.BC = DataContainer()
@@ -233,14 +237,15 @@ class LammpsWrapper(ABCModelingEngine):
                 # before running, we flush any changes to lammps
                 self._data_manager.flush(input_data_filename)
 
-                commands = ScriptWriter.get_configuration(
+                commands = self._script_writer.get_configuration(
                     input_data_file=input_data_filename,
                     output_data_file=output_data_filename,
                     BC=_combine(self.BC, self.BC_extension),
                     CM=_combine(self.CM, self.CM_extension),
                     SP=_combine(self.SP, self.SP_extension))
-                lammps_process = LammpsProcess(log_directory=temp_dir)
-                lammps_process.run(commands)
+                process = LammpsProcess(lammps_name=self._executable_name,
+                                        log_directory=temp_dir)
+                process.run(commands)
 
                 # after running, we read any changes from lammps
                 self._data_manager.read(output_data_filename)

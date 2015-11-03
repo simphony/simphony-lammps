@@ -8,7 +8,7 @@ import subprocess
 
 
 class LammpsProcess(object):
-    """ Class runs the lammps program
+    """ Class runs the lammps/ligghts program
 
     Parameters
     ----------

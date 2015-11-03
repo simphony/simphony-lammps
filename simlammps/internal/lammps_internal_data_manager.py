@@ -22,8 +22,10 @@ class LammpsInternalDataManager(ABCDataManager):
     ----------
     lammps :
         lammps python wrapper
+    atom_style : AtomStyle
+           atom_style
     """
-    def __init__(self, lammps):
+    def __init__(self, lammps, atom_style):
         super(LammpsInternalDataManager, self).__init__()
 
         self._lammps = lammps
@@ -32,7 +34,8 @@ class LammpsInternalDataManager(ABCDataManager):
                                               "periodic",
                                               "periodic")}
         commands = "dimension 3\n"
-        commands = ScriptWriter.get_initial_setup()
+        script_writer = ScriptWriter(atom_style)
+        commands = script_writer.get_initial_setup()
 
         commands += ScriptWriter.get_boundary(dummy_bc)
         for command in commands.splitlines():
