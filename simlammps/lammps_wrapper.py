@@ -147,8 +147,8 @@ class LammpsWrapper(ABCModelingEngine):
         """ Returns the names of all the datasets
 
         """
-        for name in self._data_manager:
-            yield name
+        # TODO  (simphony-common #218)
+        return [name for name in self._data_manager]
 
     def remove_dataset(self, name):
         """ Remove a dataset
