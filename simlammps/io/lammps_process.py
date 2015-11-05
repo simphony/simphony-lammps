@@ -1,6 +1,6 @@
 """ LAMMPS Process
 
-This module provides a way to run the lammps process
+This module provides a way to run the lammps or liggghts process
 """
 
 import os
@@ -8,7 +8,7 @@ import subprocess
 
 
 class LammpsProcess(object):
-    """ Class runs the lammps/ligghts program
+    """ Class runs the lammps/liggghts program
 
     Parameters
     ----------

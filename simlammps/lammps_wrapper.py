@@ -64,7 +64,7 @@ class LammpsWrapper(ABCModelingEngine):
 
         atom_style = AtomStyle.GRANULAR \
             if engine_type == EngineType.DEM else AtomStyle.ATOMIC
-        self._executable_name = "ligghts" \
+        self._executable_name = "liggghts" \
             if engine_type == EngineType.DEM else "lammps"
         self._script_writer = ScriptWriter(atom_style)
 

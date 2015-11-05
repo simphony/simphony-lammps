@@ -7,7 +7,7 @@ class AtomStyle(Enum):
     """
     ATOMIC = 0
     GRANULAR = 1
-    SPHERE = 1  # same as GRANULAR in LIGGHTS
+    SPHERE = 1  # same as GRANULAR in LIGGGHTS
 
 # mapping from lammps style to AtomStyle
 LAMMPS_STYLE = {
