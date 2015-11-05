@@ -26,7 +26,7 @@ API Reference
    :maxdepth: 2
 
    api/engine
-
+   api/io
 
 
 Indices and tables

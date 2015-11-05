@@ -6,6 +6,7 @@ import contextlib
 import os
 import tempfile
 import shutil
+from enum import (IntEnum, unique)
 
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_particles import ABCParticles
@@ -16,6 +17,7 @@ from simlammps.io.lammps_process import LammpsProcess
 from simlammps.internal.lammps_internal_data_manager import (
     LammpsInternalDataManager)
 from simlammps.config.script_writer import ScriptWriter
+from simlammps.common.atom_style import AtomStyle
 
 
 @contextlib.contextmanager
@@ -30,16 +32,27 @@ def _temp_directory():
     shutil.rmtree(temp_dir)
 
 
+@unique
+class EngineType(IntEnum):
+    MD = 0
+    DEM = 1
+
+
 class LammpsWrapper(ABCModelingEngine):
     """ Wrapper to LAMMPS-md
 
 
     """
-    def __init__(self, use_internal_interface=False):
+    def __init__(self,
+                 engine_type=EngineType.MD,
+                 use_internal_interface=False):
         """ Constructor.
 
         Parameters
         ----------
+        engine_type : EngineType
+            type of engine
+
         use_internal_interface : bool, optional
             If true, then the internal interface (library) is used when
             communicating with LAMMPS, if false, then file-io interface is
@@ -49,13 +62,23 @@ class LammpsWrapper(ABCModelingEngine):
 
         self._use_internal_interface = use_internal_interface
 
+        atom_style = AtomStyle.GRANULAR \
+            if engine_type == EngineType.DEM else AtomStyle.ATOMIC
+        self._executable_name = "liggghts" \
+            if engine_type == EngineType.DEM else "lammps"
+        self._script_writer = ScriptWriter(atom_style)
+
         if self._use_internal_interface:
-            # TODO
+            if engine_type == EngineType.DEM:
+                raise RuntimeError(
+                    "DEM using the INTERNAL interface is not yet supported")
+
             import lammps
             self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
-            self._data_manager = LammpsInternalDataManager(self._lammps)
+            self._data_manager = LammpsInternalDataManager(self._lammps,
+                                                           atom_style)
         else:
-            self._data_manager = LammpsFileIoDataManager()
+            self._data_manager = LammpsFileIoDataManager(atom_style)
 
         self.BC = DataContainer()
         self.CM = DataContainer()
@@ -89,8 +112,7 @@ class LammpsWrapper(ABCModelingEngine):
                 'Particle container \'{n}\` already exists'.format(
                     n=container.name))
         else:
-            return self._data_manager.new_particles(
-                container)
+            self._data_manager.new_particles(container)
 
     def get_dataset(self, name):
         """ Get the dataset
@@ -215,14 +237,15 @@ class LammpsWrapper(ABCModelingEngine):
                 # before running, we flush any changes to lammps
                 self._data_manager.flush(input_data_filename)
 
-                commands = ScriptWriter.get_configuration(
+                commands = self._script_writer.get_configuration(
                     input_data_file=input_data_filename,
                     output_data_file=output_data_filename,
                     BC=_combine(self.BC, self.BC_extension),
                     CM=_combine(self.CM, self.CM_extension),
                     SP=_combine(self.SP, self.SP_extension))
-                lammps_process = LammpsProcess(log_directory=temp_dir)
-                lammps_process.run(commands)
+                process = LammpsProcess(lammps_name=self._executable_name,
+                                        log_directory=temp_dir)
+                process.run(commands)
 
                 # after running, we read any changes from lammps
                 self._data_manager.read(output_data_filename)

@@ -1,6 +1,6 @@
 """ LAMMPS Process
 
-This module provides a way to run the lammps process
+This module provides a way to run the lammps or liggghts process
 """
 
 import os
@@ -8,11 +8,11 @@ import subprocess
 
 
 class LammpsProcess(object):
-    """ Class runs the lammps program
+    """ Class runs the lammps/liggghts program
 
     Parameters
     ----------
-    lammps_name :
+    lammps_name : str
         name of LAMMPS executable
     log_directory : str, optional
         name of directory of log file ('log.lammps') for lammps.
@@ -37,9 +37,9 @@ class LammpsProcess(object):
         try:
             self.run(" ")
         except Exception:
-            msg = "LAMMPS could not be started."
+            msg = "LAMMPS/LIGGGHTS could not be started."
             if self._returncode == 127:
-                msg += " LAMMPS executable was not found."
+                msg += " executable '{}' was not found.".format(lammps_name)
             else:
                 msg += " stdout/err: " + self._stdout + " " + self._stderr
             raise RuntimeError(msg)
@@ -65,7 +65,8 @@ class LammpsProcess(object):
         self._returncode = proc.returncode
 
         if self._returncode != 0 or self._stderr:
-            msg = "LAMMPS did not run correctly. "
+            msg = "LAMMPS/LIGGGHTS ('{}') did not run correctly. ".format(
+                self._lammps_name)
             msg += "Error code: {} ".format(proc.returncode)
             if self._stderr:
                 msg += "stderr: \'{}\n\' ".format(self._stderr)

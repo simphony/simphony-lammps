@@ -154,6 +154,5 @@ class MDExampleConfigurator:
                              CUBAExtension.BOX_ORIGIN:
                              MDExampleConfigurator.box_origin}
 
-        pc_w = wrapper.add_dataset(pc)
-
-        return pc_w
+        wrapper.add_dataset(pc)
+        return wrapper.get_dataset(pc.name)
