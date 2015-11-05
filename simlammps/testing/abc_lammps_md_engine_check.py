@@ -65,7 +65,7 @@ class ABCLammpsMDEngineCheck(object):
             self.wrapper.add_dataset(_create_pc("foo"))
 
     def test_get_non_existing_particles(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             self.wrapper.get_dataset("foo")
 
     def test_delete_particles(self):
@@ -75,11 +75,11 @@ class ABCLammpsMDEngineCheck(object):
 
         self.wrapper.remove_dataset("foo")
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             self.wrapper.get_dataset("foo")
 
     def test_delete_non_existing_particles(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             self.wrapper.remove_dataset("foo")
 
     def test_particles_rename(self):
@@ -88,11 +88,11 @@ class ABCLammpsMDEngineCheck(object):
         pc.name = "bar"
 
         # we should not be able to use the old name "foo"
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             self.wrapper.get_dataset("foo")
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             self.wrapper.remove_dataset("foo")
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError):
             [_ for _ in self.wrapper.iter_datasets(names=["foo"])]
 
         # we should be able to access using the new "bar" name
