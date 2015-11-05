@@ -16,7 +16,7 @@ before_install:
 install:
   # build and install lammps
   - ./install_external.sh
-  - export PATH=$PATH:$PWD/mylammps/src/
+  - export PATH=$PATH:$PWD/mylammps/src/:$PWD/myliggghts/src/
 
   - pip install -r dev_requirements.txt
   - pip install git+https://github.com/simphony/simphony-common.git@${SIMPHONY_VERSION}#egg=simphony

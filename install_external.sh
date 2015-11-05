@@ -19,3 +19,10 @@ pushd mylammps/python
 sudo python install.py /usr/lib/ $VIRTUAL_ENV/lib/python2.7/site-packages/
 popd
 python check_lammps_python.py
+
+# build liggghts
+git clone --branch 3.3.0 --depth 1 git://github.com/CFDEMproject/LIGGGHTS-PUBLIC.git myliggghts
+pushd myliggghts/src
+make -j 2 fedora
+ln -s lmp_fedora liggghts
+popd
