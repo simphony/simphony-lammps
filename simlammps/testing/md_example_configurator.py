@@ -156,3 +156,18 @@ class MDExampleConfigurator:
 
         wrapper.add_dataset(pc)
         return wrapper.get_dataset(pc.name)
+
+    @staticmethod
+    def create_particles(name, mass=1, material_type=1):
+        data = DataContainer()
+        data[CUBA.MASS] = mass
+        data[CUBA.MATERIAL_TYPE] = material_type
+
+        pc = Particles(name)
+        pc.data = data
+
+        pc.data_extension = {CUBAExtension.BOX_VECTORS:
+                             MDExampleConfigurator.box_vectors,
+                             CUBAExtension.BOX_ORIGIN:
+                             MDExampleConfigurator.box_origin}
+        return pc

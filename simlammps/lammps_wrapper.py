@@ -109,8 +109,8 @@ class LammpsWrapper(ABCModelingEngine):
 
         if container.name in self._data_manager:
             raise ValueError(
-                'Particle container \'{n}\` already exists'.format(
-                    n=container.name))
+                'Particle container \'{}\' already exists'.format(
+                    container.name))
         else:
             self._data_manager.new_particles(container)
 
@@ -140,15 +140,15 @@ class LammpsWrapper(ABCModelingEngine):
         if name in self._data_manager:
             return self._data_manager[name]
         else:
-            raise KeyError(
+            raise ValueError(
                 'Particle container \'{}\` does not exist'.format(name))
 
     def get_dataset_names(self):
         """ Returns the names of all the datasets
 
         """
-        for name in self._data_manager:
-            yield name
+        # TODO  (simphony-common #218)
+        return [name for name in self._data_manager]
 
     def remove_dataset(self, name):
         """ Remove a dataset
@@ -167,8 +167,8 @@ class LammpsWrapper(ABCModelingEngine):
         if name in self._data_manager:
             del self._data_manager[name]
         else:
-            raise KeyError(
-                'Particles \'{n}\` does not exist'.format(n=name))
+            raise ValueError(
+                'Particles \'{}\' does not exist'.format(name))
 
     def iter_datasets(self, names=None):
         """ Returns an iterator over a subset or all of the containers.
@@ -188,9 +188,9 @@ class LammpsWrapper(ABCModelingEngine):
                 if name in self._data_manager:
                     yield self._data_manager[name]
                 else:
-                    raise KeyError(
-                        'Particle container \'{n}\` does not exist'.format(
-                            n=name))
+                    raise ValueError(
+                        'Particle container \'{}\` does not exist'.format(
+                            name))
 
     def run(self):
         """ Run lammps-engine based on configuration and data

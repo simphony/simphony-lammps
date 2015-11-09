@@ -113,36 +113,38 @@ class LammpsParticles(ABCParticles):
         """Add bonds
 
         """
-        pass
+        raise NotImplementedError
 
     def update_bonds(self, bonds):
         """Update particle
 
         """
-        pass
+        raise NotImplementedError
 
     def get_bond(self, uid):
         """Get bond
 
         """
-        pass
+        raise NotImplementedError
 
     def remove_bonds(self, uid):
         """Remove bond
 
         """
-        pass
+        raise NotImplementedError
 
     def has_bond(self, uid):
         """Has bond
 
         """
+        raise NotImplementedError
 
     def iter_bonds(self, uids=None):
         """Get iterator over bonds
 
         """
-        pass
+        for _ in []:
+            yield _
 
     # count methods #######################################################
     def count_of(self, item_type):
