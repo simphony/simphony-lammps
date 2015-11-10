@@ -22,3 +22,10 @@ class Material(object):
         self.data = data if data else DataContainer()
         self.uid = uid if uid else uuid.uuid4()
         self.description = description
+
+    @classmethod
+    def from_material(cls, material):
+        return cls(
+            uid=material.uid,
+            description=material.description,
+            data=DataContainer(material.data))
