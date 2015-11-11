@@ -8,6 +8,7 @@ from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
 from simlammps.config.domain import get_box
 from simlammps.cuba_extension import CUBAExtension
 from simlammps.common.atom_style import (AtomStyle, get_atom_style)
+from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 from simlammps.io.lammps_data_file_writer import LammpsDataFileWriter
 from simlammps.state_data import StateData
 from simlammps.material import Material
@@ -169,8 +170,7 @@ def _style_has_masses(atom_style):
     """ Returns if atom style has masses
 
     """
-    # TODO have a relationship between atom_style and if masses are needed
-    return atom_style != AtomStyle.GRANULAR
+    return ATOM_STYLE_DESCRIPTIONS[atom_style].has_mass_per_type
 
 
 def _get_mass(state_data):
