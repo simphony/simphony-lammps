@@ -36,11 +36,13 @@ class LammpsDataFileWriter(object):
                  number_atoms,
                  number_atom_types,
                  atom_style,
+                 material_type_to_atom_type,
                  simulation_box=None,
                  material_type_to_mass=None
                  ):
         self._file = open(filename, 'w')
         self._atom_style = atom_style
+        self._material_type_to_atom_type = material_type_to_atom_type
         self._number_atoms = number_atoms
         self._written_atoms = 0
         self._velocity_lines = []
@@ -58,8 +60,9 @@ class LammpsDataFileWriter(object):
         if material_type_to_mass:
             lines.append("Masses\n\n")
             for material_type in sorted(material_type_to_mass):
+                atom_type = material_type_to_atom_type[material_type]
                 mass = material_type_to_mass[material_type]
-                lines.append('{} {}\n'.format(material_type, mass))
+                lines.append('{} {}\n'.format(atom_type, mass))
             lines.append("\n")
 
         self._file.writelines(lines)
@@ -67,7 +70,7 @@ class LammpsDataFileWriter(object):
         self._file.write("\nAtoms # {}\n\n".format(
             get_lammps_string(self._atom_style)))
 
-    def write_atom(self, particle, material_type):
+    def write_atom(self, particle):
         """ Write an atom
 
         Atom lines should be written based on their atom style.  For example,
@@ -99,7 +102,8 @@ class LammpsDataFileWriter(object):
             raise RuntimeError("Trying to write more atoms than expected")
 
         lammps_id = self._written_atoms
-        atom_type = material_type
+        atom_type = self._material_type_to_atom_type[
+            particle.data[CUBA.MATERIAL_TYPE]]
 
         # first comes 'id' and 'type'
         atom_line = '{0} {1}'.format(lammps_id, atom_type)

@@ -30,48 +30,35 @@ class TestFileUtility(unittest.TestCase):
         return filename
 
     def test_read_atomic_style_data_file(self):
-        particles_list = read_data_file(self._write_example_file(
+        particles, SD = read_data_file(self._write_example_file(
             _explicit_atomic_style_file_contents))
 
-        self.assertEqual(3, len(particles_list))
+        masses = [material.data[CUBA.MASS] for material in SD.iter_materials()]
+        self.assertItemsEqual(masses, [3, 42, 1])
 
-        masses = set(particles.data[CUBA.MASS] for particles in particles_list)
-        self.assertEqual(masses, set([3, 42, 1]))
+        self.assertEqual(4, particles.count_of(CUDSItem.PARTICLE))
+        assert_almost_equal(
+            particles.data_extension[CUBAExtension.BOX_ORIGIN],
+            (0.0000000000000000e+00,
+             -2.2245711031688635e-03,
+             -3.2108918131150160e-01))
+        box = [(2.5687134504920127e+01, 0.0, 0.0),
+               (0.0, 2.2247935602791809e+01+2.2245711031688635e-03, 0.0),
+               (0.0, 0.0, 3.2108918131150160e-01-(-3.210891813115016e-01))]
+        assert_almost_equal(
+            particles.data_extension[CUBAExtension.BOX_VECTORS],
+            box)
 
-        total_number_particles = 0
-        for particles in particles_list:
-            total_number_particles += particles.count_of(CUDSItem.PARTICLE)
-            self.assertEqual(str(particles.data[CUBA.MATERIAL_TYPE]),
-                             particles.name)
-            assert_almost_equal(
-                particles.data_extension[CUBAExtension.BOX_ORIGIN],
-                (0.0000000000000000e+00,
-                 -2.2245711031688635e-03,
-                 -3.2108918131150160e-01))
-            box = [(2.5687134504920127e+01, 0.0, 0.0),
-                   (0.0, 2.2247935602791809e+01+2.2245711031688635e-03, 0.0),
-                   (0.0, 0.0, 3.2108918131150160e-01-(-3.210891813115016e-01))]
-            assert_almost_equal(
-                particles.data_extension[CUBAExtension.BOX_VECTORS],
-                box)
-
-            for p in particles.iter_particles():
-                assert_almost_equal(p.data[CUBA.VELOCITY], [1.0, 1.0, 1.0])
-
-        self.assertEqual(4, total_number_particles)
+        for p in particles.iter_particles():
+            assert_almost_equal(p.data[CUBA.VELOCITY], [1.0, 1.0, 1.0])
 
     def test_read_sphere_style_data_file(self):
         # when
-        particles_list = read_data_file(self._write_example_file(
+        particles, SD = read_data_file(self._write_example_file(
             _explicit_sphere_style_file_contents))
 
         # then
-        self.assertEqual(1, len(particles_list))
-
-        particles = particles_list[0]
         self.assertEqual(3, particles.count_of(CUDSItem.PARTICLE))
-        self.assertEqual(str(particles.data[CUBA.MATERIAL_TYPE]),
-                         particles.name)
         assert_almost_equal(
             particles.data_extension[CUBAExtension.BOX_ORIGIN],
             (-10.0, -7.500, -0.500))
@@ -90,59 +77,43 @@ class TestFileUtility(unittest.TestCase):
 
     def test_write_file_sphere(self):
         # given
-        original_particles_list = read_data_file(self._write_example_file(
+        original_particles, SD = read_data_file(self._write_example_file(
             _explicit_sphere_style_file_contents))
         output_filename = os.path.join(self.temp_dir, "output.txt")
 
         # when
         write_data_file(filename=output_filename,
-                        particles_list=original_particles_list,
+                        particles=original_particles,
+                        state_data=SD,
                         atom_style=AtomStyle.SPHERE)
 
         # then
-        read_particles_list = read_data_file(output_filename)
-        self.assertEqual(len(original_particles_list),
-                         len(read_particles_list))
+        read_particles, SD = read_data_file(output_filename)
 
-        _compare_list_of_named_particles(read_particles_list,
-                                         original_particles_list,
-                                         get_attributes(
-                                             AtomStyle.SPHERE),
-                                         self)
+        _compare_particles_averages(read_particles,
+                                    original_particles,
+                                    get_attributes(
+                                        AtomStyle.SPHERE),
+                                    self)
 
     def test_write_file_atom(self):
         # given
-        original_particles_list = read_data_file(self._write_example_file(
+        original_particles, SD = read_data_file(self._write_example_file(
             _explicit_atomic_style_file_contents))
         output_filename = os.path.join(self.temp_dir, "output.txt")
 
         # when
         write_data_file(filename=output_filename,
-                        particles_list=original_particles_list,
+                        particles=original_particles,
+                        state_data=SD,
                         atom_style=AtomStyle.ATOMIC)
 
         # then
-        read_particles_list = read_data_file(output_filename)
-        self.assertEqual(len(original_particles_list),
-                         len(read_particles_list))
-
-        _compare_list_of_named_particles(read_particles_list,
-                                         original_particles_list,
-                                         get_attributes(
-                                             AtomStyle.ATOMIC),
-                                         self)
-
-
-def _compare_list_of_named_particles(read_particles_list,
-                                     reference_particles_list,
-                                     attributes_keys, testcase):
-    for particles in read_particles_list:
-        for reference in reference_particles_list:
-            if reference.name == particles.name:
-                _compare_particles_averages(particles,
-                                            reference,
-                                            attributes_keys,
-                                            testcase)
+        read_particles, SD = read_data_file(output_filename)
+        _compare_particles_averages(read_particles,
+                                    original_particles,
+                                    get_attributes(AtomStyle.ATOMIC),
+                                    self)
 
 
 def _compare_particles_averages(particles,
