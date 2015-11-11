@@ -120,7 +120,11 @@ class LammpsDataFileWriter(object):
         # then write the coordinates
         coordinates = format_cuba_value(particle.coordinates,
                                         CUBA.VELOCITY)  # using similar type
-        atom_line += ' {} 0 0 0\n'.format(coordinates)
+        atom_line += ' {} 0 0 0'.format(coordinates)
+
+        # add some meta-information
+        atom_line += " # uid:'{}'\n".format(particle.uid)
+
         self._file.write(atom_line)
 
         # save velocity line which will be written later

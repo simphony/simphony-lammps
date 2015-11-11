@@ -113,7 +113,7 @@ def write_data_file(filename,
 
     The particles will be annotated with their Simphony-uid. For example::
 
-        10 1 17 -1.0 10.0 5.0 6.0   # particles_name:'foo' uid:'40fb302c-6e71-11e5-b35f-08606e7c2200'  # noqa
+        10 1 17 -1.0 10.0 5.0 6.0   # uid:'40fb302c-6e71-11e5-b35f-08606e7c2200'  # noqa
 
 
     Parameters
