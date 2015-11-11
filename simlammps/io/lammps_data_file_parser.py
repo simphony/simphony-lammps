@@ -57,12 +57,12 @@ class LammpsDataFileParser(object):
                         self._handler.process_number_atom_types(
                             number_types)
                     elif state is _ReadState.MASSES:
-                        values = line.split()
+                        values = remove_comment(line).split()
                         self._handler.process_masses(
                             int(values[0]),
                             int(values[1]))
                     elif state is _ReadState.ATOMS:
-                        values = line.split()
+                        values = remove_comment(line).split()
                         id = int(values[0])
                         type_coord_etc = [int(values[1])]
                         for v in map(float, values[2:]):
@@ -76,7 +76,7 @@ class LammpsDataFileParser(object):
                             if atom_type:
                                 self._handler.process_atom_type(atom_type)
                     elif state is _ReadState.VELOCITIES:
-                        values = line.split()
+                        values = remove_comment(line).split()
                         self._handler.process_velocities(
                             int(values[0]),
                             map(float, values[1:]))
@@ -88,6 +88,16 @@ class LammpsDataFileParser(object):
                 print("problem with line number=", line_number)
                 raise
         self._handler.end()
+
+
+def remove_comment(line):
+    """ Return line without any comments
+
+    Comments look like the following
+      1 2 3 # comment
+
+    """
+    return line.partition("#")[0]
 
 
 class _ReadState(Enum):
