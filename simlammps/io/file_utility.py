@@ -9,6 +9,7 @@ from simlammps.config.domain import get_box
 from simlammps.cuba_extension import CUBAExtension
 from simlammps.common.atom_style import (AtomStyle, get_atom_style)
 from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
+from simlammps.common.utils import create_material_to_atom_type_map
 from simlammps.io.lammps_data_file_writer import LammpsDataFileWriter
 from simlammps.state_data import StateData
 from simlammps.material import Material
@@ -141,13 +142,7 @@ def write_data_file(filename,
         pc.count_of(CUDSItem.PARTICLE) for pc in particles)
 
     # get a mapping from material_type to atom_type
-    #  note that atom_type goes from 1 to N
-    material_to_atom = {}
-    number_atom_types = 0
-    for material in state_data.iter_materials():
-        number_atom_types += 1
-        material_to_atom[material.uid] = number_atom_types
-
+    material_to_atom_type = create_material_to_atom_type_map(state_data)
     box = get_box([pc.data_extension for pc in particles])
 
     material_type_to_mass = None if not _style_has_masses(
@@ -156,8 +151,7 @@ def write_data_file(filename,
     writer = LammpsDataFileWriter(filename,
                                   atom_style=atom_style,
                                   number_atoms=num_particles,
-                                  number_atom_types=number_atom_types,
-                                  material_type_to_atom_type=material_to_atom,
+                                  material_to_atom_type=material_to_atom_type,
                                   simulation_box=box,
                                   material_type_to_mass=material_type_to_mass)
     for pc in particles:

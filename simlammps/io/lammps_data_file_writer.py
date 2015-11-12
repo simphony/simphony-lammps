@@ -20,11 +20,12 @@ class LammpsDataFileWriter(object):
     ----------
     filename : str
         filename
-    atom_style : AtomStyle
     number_atoms : int
         number of atoms
-    number_atom_types : int
-        number of atom types
+    atom_style : AtomStyle
+        style of atoms
+    material_to_atom_type : dict
+        map from material-uid to atom_type
     simulation_box : str
         simulation box
     material_type_to_mass : map of masses according to type, optional
@@ -34,15 +35,14 @@ class LammpsDataFileWriter(object):
     def __init__(self,
                  filename,
                  number_atoms,
-                 number_atom_types,
                  atom_style,
-                 material_type_to_atom_type,
+                 material_to_atom_type,
                  simulation_box=None,
                  material_type_to_mass=None
                  ):
         self._file = open(filename, 'w')
         self._atom_style = atom_style
-        self._material_type_to_atom_type = material_type_to_atom_type
+        self._material_to_atom_type = material_to_atom_type
         self._number_atoms = number_atoms
         self._written_atoms = 0
         self._velocity_lines = []
@@ -51,8 +51,9 @@ class LammpsDataFileWriter(object):
                  ", file written by SimPhony-Lammps,  {}\n\n".format(
                      time.asctime(time.localtime()))]
 
-        lines.append('{} atoms\n'.format(number_atoms))
-        lines.append('{} atom types\n\n'.format(number_atom_types))
+        lines.append('{} atoms\n'.format(self._number_atoms))
+        lines.append('{} atom types\n\n'.format(
+            len(self._material_to_atom_type)))
         lines.append("\n")
         lines.append(simulation_box)
         lines.append("\n")
@@ -60,7 +61,7 @@ class LammpsDataFileWriter(object):
         if material_type_to_mass:
             lines.append("Masses\n\n")
             for material_type in sorted(material_type_to_mass):
-                atom_type = material_type_to_atom_type[material_type]
+                atom_type = self._material_to_atom_type[material_type]
                 mass = material_type_to_mass[material_type]
                 lines.append('{} {}\n'.format(atom_type, mass))
             lines.append("\n")
@@ -87,8 +88,6 @@ class LammpsDataFileWriter(object):
         ---------
         particle : Particle
             particle (containing required info for atom_type)
-        material_type : int
-            material type (i.e. CUBA.MATERIAL_TYPE)
 
         Returns
         -------
@@ -102,7 +101,7 @@ class LammpsDataFileWriter(object):
             raise RuntimeError("Trying to write more atoms than expected")
 
         lammps_id = self._written_atoms
-        atom_type = self._material_type_to_atom_type[
+        atom_type = self._material_to_atom_type[
             particle.data[CUBA.MATERIAL_TYPE]]
 
         # first comes 'id' and 'type'
