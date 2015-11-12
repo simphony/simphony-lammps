@@ -82,6 +82,9 @@ ATOM_STYLE_DESCRIPTIONS = {
             has_mass_per_type=False)
 }
 
+# all particles will have a material type
+_default_attributes = [ValueInfo(cuba_key=CUBA.MATERIAL_TYPE)]
+
 
 def get_attributes(atom_style):
     """ Return list of CUBA-key expected on particle
@@ -91,4 +94,5 @@ def get_attributes(atom_style):
     return [attribute.cuba_key for attribute in
             itertools.chain(
                 atom_style_description.attributes,
-                atom_style_description.velocity_attributes)]
+                atom_style_description.velocity_attributes,
+                _default_attributes)]
