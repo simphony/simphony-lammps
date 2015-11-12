@@ -23,6 +23,7 @@ from simphony.engine import lammps
 from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 from simphony.cuds.particles import Particle, Particles
+from simlammps.material import Material
 
 
 def write_file(particles, file_format, file_name):
@@ -123,6 +124,9 @@ for i in range(0, 3):
 # have seed so the validation can be reproduced
 numpy.random.seed(42)
 
+# Define a material with a certain mass
+material = Material(data={CUBA.MASS: 1.0})
+
 for pos in atoms1:
     pos2 = [pos[0]*a_latt, pos[1]*a_latt, pos[2]*a_latt]
     p = Particle(coordinates=pos2)
@@ -136,6 +140,7 @@ for pos in atoms1:
         numpy.random.uniform(-0.5, 0.5),
         numpy.random.uniform(-0.5, 0.5)
     ]
+    p.data[CUBA.MATERIAL_TYPE] = material.uid
     pc.add_particles([p])
 
 
@@ -158,17 +163,15 @@ for p in pc.iter_particles():
     p.data[CUBA.VELOCITY][1] -= v_cm[1]
     p.data[CUBA.VELOCITY][2] -= v_cm[2]
 
-
-# Define the mass and material type
-pc.data = {CUBA.MATERIAL_TYPE: 1,
-           CUBA.MASS: 1}
-
 super_cell = [
     tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
 pc.data_extension = {lammps.CUBAExtension.BOX_VECTORS: super_cell}
 
 # define the wrapper to use.
 wrapper = lammps.LammpsWrapper()
+
+# Add material
+wrapper.SD.add_material(material)
 
 # define the CM component of the SimPhoNy application model:
 wrapper.CM_extension[lammps.CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
@@ -219,7 +222,7 @@ for run in range(0, number_NVE_cycles):
     number_of_points = 0
     for par in pc_MD.iter_particles():
         number_of_points += 1
-        ke = pc_MD.data[CUBA.MASS]*(
+        ke = material.data[CUBA.MASS]*(
             par.data[CUBA.VELOCITY][0]*par.data[CUBA.VELOCITY][0] +
             par.data[CUBA.VELOCITY][1]*par.data[CUBA.VELOCITY][1] +
             par.data[CUBA.VELOCITY][2]*par.data[CUBA.VELOCITY][2])
