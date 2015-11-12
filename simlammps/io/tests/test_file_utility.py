@@ -3,6 +3,7 @@ import tempfile
 import shutil
 import os
 
+import numpy
 from numpy.testing import assert_almost_equal
 
 from simphony.core.cuba import CUBA
@@ -133,16 +134,33 @@ def _compare_particles_averages(particles,
     len_reference = reference.count_of(CUDSItem.PARTICLE)
     self.assertEqual(len_particles, len_reference)
     for key in attributes_keys:
-        average_particles = _get_average_value(particles, key)
-        average_reference = _get_average_value(reference, key)
-        assert_almost_equal(average_particles, average_reference)
+        keyword = KEYWORDS[CUBA(key).name]
+
+        # TODO remove this as we are missuing MATERIAL_TYPE for our uid
+        #  (so it has a type of 'int' but we are using it to store uids)
+        if key == CUBA.MATERIAL_TYPE:
+            continue
+
+        if (keyword.dtype == numpy.float64 or keyword.dtype == numpy.int32):
+            average_particles = _get_average(particles, key, keyword.shape)
+            average_reference = _get_average(reference, key, keyword.shape)
+            assert_almost_equal(average_particles, average_reference)
 
 
-def _get_average_value(particles, key):
+def _get_average(particles, key, shape):
+    """ Get average value for a particular CUBA key
+
+    Parameters:
+    -----------
+    key : CUBA
+        key of value
+    shape : shape
+        shape of value
+
+    """
     length = particles.count_of(CUDSItem.PARTICLE)
 
-    keyword = KEYWORDS[CUBA(key).name]
-    if keyword.shape == [1]:
+    if shape == [1]:
         return sum(p.data[key] for p in particles.iter_particles())/length
     else:
         return tuple(map(lambda y: sum(y) / float(len(y)), zip(
