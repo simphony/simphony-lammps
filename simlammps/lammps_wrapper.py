@@ -18,6 +18,7 @@ from simlammps.internal.lammps_internal_data_manager import (
     LammpsInternalDataManager)
 from simlammps.config.script_writer import ScriptWriter
 from simlammps.common.atom_style import AtomStyle
+from simlammps.state_data import StateData
 
 
 @contextlib.contextmanager
@@ -60,6 +61,14 @@ class LammpsWrapper(ABCModelingEngine):
 
         """
 
+        self.BC = DataContainer()
+        self.CM = DataContainer()
+        self.SP = DataContainer()
+        self.CM_extension = {}
+        self.SP_extension = {}
+        self.BC_extension = {}
+        self.SD = StateData()
+
         self._use_internal_interface = use_internal_interface
 
         atom_style = AtomStyle.GRANULAR \
@@ -78,14 +87,7 @@ class LammpsWrapper(ABCModelingEngine):
             self._data_manager = LammpsInternalDataManager(self._lammps,
                                                            atom_style)
         else:
-            self._data_manager = LammpsFileIoDataManager(atom_style)
-
-        self.BC = DataContainer()
-        self.CM = DataContainer()
-        self.SP = DataContainer()
-        self.CM_extension = {}
-        self.SP_extension = {}
-        self.BC_extension = {}
+            self._data_manager = LammpsFileIoDataManager(self.SD, atom_style)
 
     def add_dataset(self, container):
         """Add a CUDS container

@@ -37,13 +37,13 @@ class LammpsDataLineInterpreter(object):
     ----------
     atom_style : AtomStyle
         style that lammps is using for "atoms"
-    atom_type_to_material :
+    convert_atom_type_to_material :
         converts from atom_type to material
 
     """
-    def __init__(self, atom_style, atom_type_to_material_map):
+    def __init__(self, atom_style, convert_atom_type_to_material):
         self._atom_style = atom_style
-        self._atom_type_to_material_map = atom_type_to_material_map
+        self._convert_atom_type_to_material = convert_atom_type_to_material
 
     def convert_atom_values(self, values):
         """  Converts list of values to CUBA/value dictionary
@@ -64,7 +64,7 @@ class LammpsDataLineInterpreter(object):
 
         # material type is always first
         cuba_values = {CUBA.MATERIAL_TYPE:
-                       self._atom_type_to_material_map(values[0])}
+                       self._convert_atom_type_to_material(values[0])}
 
         index = 1
         for value_info in ATOM_STYLE_DESCRIPTIONS[self._atom_style].attributes:

@@ -84,10 +84,11 @@ def read_data_file(filename, atom_style=None, name=None):
         material.data[CUBA.MASS] = mass
         SD.update_material(material)
 
-    def get_material(atom_type):
+    def convert_atom_type_to_material(atom_type):
         return type_to_material_map[atom_type]
 
-    interpreter = LammpsDataLineInterpreter(atom_style, get_material)
+    interpreter = LammpsDataLineInterpreter(atom_style,
+                                            convert_atom_type_to_material)
 
     # create particles
     particles = Particles(name=name if name else filename)
