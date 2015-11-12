@@ -162,6 +162,7 @@ for p in pc.iter_particles():
     p.data[CUBA.VELOCITY][0] -= v_cm[0]
     p.data[CUBA.VELOCITY][1] -= v_cm[1]
     p.data[CUBA.VELOCITY][2] -= v_cm[2]
+    pc.update_particles([p])
 
 super_cell = [
     tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
