@@ -85,6 +85,7 @@ class LammpsWrapper(ABCModelingEngine):
             import lammps
             self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
             self._data_manager = LammpsInternalDataManager(self._lammps,
+                                                           self.SD,
                                                            atom_style)
         else:
             self._data_manager = LammpsFileIoDataManager(self.SD, atom_style)

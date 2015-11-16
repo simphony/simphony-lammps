@@ -39,7 +39,7 @@ class ParticleDataCache(object):
                                           lammps_name="type",
                                           type=0,  # int
                                           count=1)]
-        # map from uid to index in lammps arrays
+        # map from uid to 'index in lammps arrays'
         self._index_of_uid = {}
 
         # cache of particle-related data (stored by CUBA keyword)
@@ -72,6 +72,11 @@ class ParticleDataCache(object):
             (ctypes.c_double * len(self._coordinates))(*self._coordinates))
 
         for entry in self._data_entries:
+            if(entry.CUBA == CUBA.MATERIAL_TYPE):
+                # do nothing as MATERIAL_TYPE is used just to deterimine
+                # the index.
+                continue
+
             values = self._cache[entry.CUBA]
 
             self._lammps.scatter_atoms(
@@ -95,6 +100,11 @@ class ParticleDataCache(object):
         """
         data = DataContainer()
         for entry in self._data_entries:
+
+            if entry.CUBA == CUBA.MATERIAL_TYPE:
+                data[CUBA.MATERIAL_TYPE] = uid
+                continue
+
             i = self._index_of_uid[uid] * entry.count
             if entry.count > 1:
                 # always assuming that its a tuple

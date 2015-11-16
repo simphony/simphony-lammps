@@ -5,6 +5,8 @@ from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
 
 import simlammps.common.globals as globals
+from simlammps.common.utils import create_material_to_atom_type_map
+from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 from simlammps.config.domain import get_box
 from simlammps.internal.particle_data_cache import ParticleDataCache
 from simlammps.abc_data_manager import ABCDataManager
@@ -22,19 +24,28 @@ class LammpsInternalDataManager(ABCDataManager):
     ----------
     lammps :
         lammps python wrapper
+    state_data : StateData
+        state data
     atom_style : AtomStyle
            atom_style
     """
-    def __init__(self, lammps, atom_style):
+    def __init__(self, lammps, state_data, atom_style):
         super(LammpsInternalDataManager, self).__init__()
 
         self._lammps = lammps
+        self._state_data = state_data
+        self._atom_style = atom_style
+
+        # TODO this mapping needs to maintained so that changes to SD
+        # are reflected here.
+        self._material_to_atom = create_material_to_atom_type_map(
+            self._state_data)
 
         dummy_bc = {CUBAExtension.BOX_FACES: ("periodic",
                                               "periodic",
                                               "periodic")}
         commands = "dimension 3\n"
-        script_writer = ScriptWriter(atom_style)
+        script_writer = ScriptWriter(self._atom_style)
         commands = script_writer.get_initial_setup()
 
         commands += ScriptWriter.get_boundary(dummy_bc)
@@ -151,11 +162,6 @@ class LammpsInternalDataManager(ABCDataManager):
 
         self._update_simulation_box()
 
-        # TODO have uniform way to check what is needed
-        # and perform a check at a different spot.
-        if CUBA.MATERIAL_TYPE not in self._pc_data[uname]:
-            raise ValueError("Missing the required CUBA.MATERIAL_TYPE")
-
         self._add_atoms(iterable=particles.iter_particles(),
                         uname=uname,
                         safe=True)
@@ -185,12 +191,6 @@ class LammpsInternalDataManager(ABCDataManager):
         if uid in self._particles[uname]:
             coordinates = self._particle_data_cache.get_coordinates(uid)
             data = self._particle_data_cache.get_particle_data(uid)
-
-            # TODO removing type from data as it not kept as a per-particle
-            # data but currently it is on the container.
-            # In lammps it is only stored as a per-atom based attribute.
-            # This should be changed once #9 issue is addressed
-            del data[CUBA.MATERIAL_TYPE]
 
             p = Particle(uid=uid,
                          coordinates=coordinates,
@@ -306,13 +306,11 @@ class LammpsInternalDataManager(ABCDataManager):
         """flush state
 
         """
-        if self._pc_data:
-            # update particles (container)'s data
-            # (updating only MASS at the moment as MATERIAL_TYPE is sent as a
-            # particle-based attribute to LAMMPS even though in SimPhoNy its
-            # a container-based attribute)
+        if ATOM_STYLE_DESCRIPTIONS[self._atom_style].has_mass_per_type:
+            # TODO set once and update only when mass has changed
             self._update_mass()
 
+        if self._particles:
             # update the particle-data
             self._particle_data_cache.send()
         else:
@@ -323,20 +321,26 @@ class LammpsInternalDataManager(ABCDataManager):
         # (i.e. someone has deleted all the particles)
 
     def _update_mass(self):
-        # TODO that mass and type are always consistent
-        types_mass = {}
-        for _, data in self._pc_data.iteritems():
-            if (CUBA.MATERIAL_TYPE in types_mass and
-                    types_mass[data[CUBA.MATERIAL_TYPE]] != data[CUBA.MASS]):
-                msg = "Inconsistent CUBA:MATERIAL_TYPE and CUBA.MASS"
-                raise RuntimeError(msg)
-            types_mass[data[CUBA.MATERIAL_TYPE]] = data[CUBA.MASS]
-        for material_type, mass in types_mass.iteritems():
-            self._lammps.command("mass {} {}".format(material_type, mass))
+
+        self._material_to_atom_type = create_material_to_atom_type_map(
+            self._state_data)
+
+        mass = {}
+        for material in self._state_data.iter_materials():
+            atom_type = self._material_to_atom_type[material.uid]
+            if CUBA.MASS not in material.data:
+                raise RuntimeError(
+                    "Material does not have the required mass")
+            else:
+                mass = material.data[CUBA.MASS]
+                # TODO format mass correctly
+                self._lammps.command("mass {} {}".format(atom_type,
+                                                         mass))
 
         # set the mass of all unused types (see issue #66)
+        atom_types = self._material_to_atom_type.values()
         for material_type in range(1, globals.MAX_NUMBER_TYPES+1):
-            if material_type not in types_mass:
+            if material_type not in atom_types:
                 self._lammps.command("mass {} {}".format(material_type, 1.0))
 
     def _update_from_lammps(self):
@@ -353,15 +357,8 @@ class LammpsInternalDataManager(ABCDataManager):
             non-changing unique name of particle container
 
         """
-        # TODO using type from container.  in lammps it is only
-        # stored as a per-atom based attribute.
-        # this should be changed once #9 issue is addressed
-        p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
-        data = DataContainer(particle.data)
-        data[CUBA.MATERIAL_TYPE] = p_type
-
         self._particle_data_cache.set_particle(particle.coordinates,
-                                               data,
+                                               particle.data,
                                                particle.uid)
 
     def _add_atoms(self, iterable, uname, safe=False):
@@ -369,7 +366,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         The number of atoms to be added are randomly added somewhere
         in the simulation box by LAMMPS and then their positions (and
-        other values are corrected/updated)
+        other values will be corrected/updated..during next flush)
 
         Parameters
         ----------
@@ -390,12 +387,23 @@ class LammpsInternalDataManager(ABCDataManager):
             uids of added particles
 
         """
-        p_type = self._pc_data[uname][CUBA.MATERIAL_TYPE]
+
+        # TODO this mapping needs to maintained so that changes to SD
+        # are reflected here.
+        self._material_to_atom_type = create_material_to_atom_type_map(
+            self._state_data)
+
+        # keep track of how many particles we add per particle type
+        number_added_per_material = {}
+        for material_uid in self._material_to_atom_type.iterkeys():
+            number_added_per_material[material_uid] = 0
 
         uids = []
         for particle in iterable:
             if particle.uid is None:
                 particle.uid = uuid.uuid4()
+
+            number_added_per_material[particle.data[CUBA.MATERIAL_TYPE]] += 1
 
             if not safe and particle.uid in self._particles[uname]:
                 raise ValueError(
@@ -408,7 +416,10 @@ class LammpsInternalDataManager(ABCDataManager):
             uids.append(particle.uid)
 
         # create atoms in lammps
-        self._lammps.command(
-            "create_atoms {} random {} 42 NULL".format(p_type,
-                                                       len(uids)))
+        for material, number in number_added_per_material.iteritems():
+            if number > 0:
+                atom_type = self._material_to_atom_type[material]
+                self._lammps.command(
+                    "create_atoms {} random {} 42 NULL".format(atom_type,
+                                                               number))
         return uids
