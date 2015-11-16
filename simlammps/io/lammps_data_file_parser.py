@@ -60,7 +60,7 @@ class LammpsDataFileParser(object):
                         values = remove_comment(line).split()
                         self._handler.process_masses(
                             int(values[0]),
-                            int(values[1]))
+                            float(values[1]))
                     elif state is _ReadState.ATOMS:
                         values = remove_comment(line).split()
                         id = int(values[0])
