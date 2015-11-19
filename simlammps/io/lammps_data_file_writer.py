@@ -171,4 +171,4 @@ def format_cuba_value(cuba_value, cuba_key):
                                  format_number(cuba_value[1], dtype),
                                  format_number(cuba_value[2], dtype))
     else:
-        raise RuntimeError("Unsupported type: ".format(dtype))
+        raise RuntimeError("Unsupported shape: ".format(shape))
