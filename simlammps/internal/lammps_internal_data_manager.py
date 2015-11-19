@@ -5,13 +5,84 @@ from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
 
 import simlammps.common.globals as globals
-from simlammps.common.utils import create_material_to_atom_type_map
+
 from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 from simlammps.config.domain import get_box
 from simlammps.internal.particle_data_cache import ParticleDataCache
 from simlammps.abc_data_manager import ABCDataManager
 from simlammps.cuba_extension import CUBAExtension
 from simlammps.config.script_writer import ScriptWriter
+
+
+class MaterialAtomTypeManager(object):
+    """ Class keeps track of materials and their repsective atom-types
+
+        In Simphony, we have materials which each have a UID while in
+        lammps there is atom-type (that goes from 1 to N).  The relationship
+        between these two things is managed by this class.
+
+        Parameters:
+        -----------
+        materials : list of Material
+            materials in our system
+    """
+    def __init__(self, materials):
+        self._materials = materials
+
+        # map from material-ui to atom_type
+        self._material_to_atom = {}
+
+        # inverse of _material_to_atom
+        self._atom_to_material = {}
+
+        self.update_materials(materials)
+
+    def update_materials(self, materials):
+        """ Update with new list of materials
+
+        Any materials already known by this manager will be ignored.  New
+        materials will be given the next available atom_type.
+
+        """
+        for material in materials:
+            if material.uid not in self._material_to_atom:
+                atom_type = len(self._material_to_atom) + 1
+                self._material_to_atom[material.uid] = atom_type
+
+        # get inverse
+        if len(self._atom_to_material) != len(self._material_to_atom):
+            self._atom_to_material = {
+                v: k for k, v in self._material_to_atom.iteritems()}
+
+    def get_material_uid(self, atom_type):
+        """ Return material uid
+
+        Raises
+        ------
+        KeyError
+            if atom_type is unknown.
+
+
+        """
+        return self._atom_to_material[atom_type]
+
+    def get_atom_type(self, material_uid):
+        """ Return atom type
+
+        If we are not yet aware of 'material_uid', we will add it to our
+        list and assign it a lammps_atom.
+
+        """
+        if material_uid not in self._material_to_atom:
+            self.update_materials([material_uid])
+        return self._material_to_atom[material_uid]
+
+    def has_atom_type(self, atom_type):
+        return atom_type in self._atom_to_material
+
+    def iter_material_uids(self):
+        for material_ui in self._material_to_atom.iterkeys():
+            yield material_ui
 
 
 class LammpsInternalDataManager(ABCDataManager):
@@ -36,10 +107,8 @@ class LammpsInternalDataManager(ABCDataManager):
         self._state_data = state_data
         self._atom_style = atom_style
 
-        # TODO this mapping needs to maintained so that changes to SD
-        # are reflected here.
-        self._material_to_atom = create_material_to_atom_type_map(
-            self._state_data)
+        materials = [m for m in state_data.iter_materials()]
+        self._material_atom_type_manager = MaterialAtomTypeManager(materials)
 
         dummy_bc = {CUBAExtension.BOX_FACES: ("periodic",
                                               "periodic",
@@ -70,9 +139,12 @@ class LammpsInternalDataManager(ABCDataManager):
         self._particles = {}
 
         # cache of coordinates and point data
-        self._particle_data_cache = ParticleDataCache(lammps=self._lammps)
+        self._particle_data_cache = \
+            ParticleDataCache(self._lammps,
+                              self._atom_style,
+                              self._material_atom_type_manager)
 
-        # cache of particle containers's data
+        # cache of data containers for each Particles-container
         self._pc_data = {}
         self._pc_data_extension = {}
 
@@ -247,7 +319,10 @@ class LammpsInternalDataManager(ABCDataManager):
         self._lammps.command("delete_atoms group all compress yes")
 
         # Use the new cache
-        self._particle_data_cache = ParticleDataCache(lammps=self._lammps)
+        self._particle_data_cache = \
+            ParticleDataCache(self._lammps,
+                              self._atom_style,
+                              self._material_atom_type_manager)
 
         # re-add the saved atoms
         for uname in saved_particles:
@@ -306,6 +381,10 @@ class LammpsInternalDataManager(ABCDataManager):
         """flush state
 
         """
+        # TODO we should improve this as we are calling this although we
+        # don't know if there were any changes to the materials
+        self._update_material_atom_type_manager()
+
         if ATOM_STYLE_DESCRIPTIONS[self._atom_style].has_mass_per_type:
             # TODO set once and update only when mass has changed
             self._update_mass()
@@ -321,13 +400,10 @@ class LammpsInternalDataManager(ABCDataManager):
         # (i.e. someone has deleted all the particles)
 
     def _update_mass(self):
-
-        self._material_to_atom_type = create_material_to_atom_type_map(
-            self._state_data)
-
         mass = {}
         for material in self._state_data.iter_materials():
-            atom_type = self._material_to_atom_type[material.uid]
+            atom_type = self._material_atom_type_manager.get_atom_type(
+                material.uid)
             if CUBA.MASS not in material.data:
                 raise RuntimeError(
                     "Material does not have the required mass")
@@ -338,10 +414,9 @@ class LammpsInternalDataManager(ABCDataManager):
                                                          mass))
 
         # set the mass of all unused types (see issue #66)
-        atom_types = self._material_to_atom_type.values()
-        for material_type in range(1, globals.MAX_NUMBER_TYPES+1):
-            if material_type not in atom_types:
-                self._lammps.command("mass {} {}".format(material_type, 1.0))
+        for atom_type in range(1, globals.MAX_NUMBER_TYPES+1):
+            if not self._material_atom_type_manager.has_atom_type(atom_type):
+                self._lammps.command("mass {} {}".format(atom_type, 1.0))
 
     def _update_from_lammps(self):
         self._particle_data_cache.retrieve()
@@ -388,14 +463,14 @@ class LammpsInternalDataManager(ABCDataManager):
 
         """
 
-        # TODO this mapping needs to maintained so that changes to SD
-        # are reflected here.
-        self._material_to_atom_type = create_material_to_atom_type_map(
-            self._state_data)
+        # TODO we should improve this as we are calling this although we
+        # don't know if there were any changes to the materials
+        self._update_material_atom_type_manager()
 
         # keep track of how many particles we add per particle type
         number_added_per_material = {}
-        for material_uid in self._material_to_atom_type.iterkeys():
+        for material_uid in \
+                self._material_atom_type_manager.iter_material_uids():
             number_added_per_material[material_uid] = 0
 
         uids = []
@@ -418,8 +493,16 @@ class LammpsInternalDataManager(ABCDataManager):
         # create atoms in lammps
         for material, number in number_added_per_material.iteritems():
             if number > 0:
-                atom_type = self._material_to_atom_type[material]
+                atom_type = \
+                    self._material_atom_type_manager.get_atom_type(material)
                 self._lammps.command(
                     "create_atoms {} random {} 42 NULL".format(atom_type,
                                                                number))
         return uids
+
+    def _update_material_atom_type_manager(self):
+        """ Update materials from state data
+
+        """
+        materials = [m for m in self._state_data.iter_materials()]
+        self._material_atom_type_manager.update_materials(materials)

@@ -33,7 +33,8 @@ class AtomStyleDescription(object):
         else:
             self.attributes = attributes
 
-        self.velocity_attributes = [ValueInfo(cuba_key=CUBA.VELOCITY)]
+        self.velocity_attributes = [ValueInfo(cuba_key=CUBA.VELOCITY,
+                                              lammps_key="v")]
         if velocity_attributes:
             self.velocity_attributes.extend(velocity_attributes)
 
@@ -50,6 +51,8 @@ class ValueInfo(object):
     ----------
     cuba_key : CUBA
         CUBA key
+    lammps_key : str
+        lammps keyword
     convert_to_cuba : function (optional)
         method to convert from LAMMPS value to SimPhoNy-CUBA
     convert_from_cuba : function (optional)
@@ -58,9 +61,11 @@ class ValueInfo(object):
     """
     def __init__(self,
                  cuba_key,
+                 lammps_key,
                  convert_to_cuba=None,
                  convert_from_cuba=None):
         self.cuba_key = cuba_key
+        self.lammps_key = lammps_key
         self.convert_to_cuba = convert_to_cuba
         self.convert_from_cuba = convert_from_cuba
 
@@ -75,24 +80,48 @@ ATOM_STYLE_DESCRIPTIONS = {
         AtomStyleDescription(
             attributes=[
                 ValueInfo(cuba_key=CUBA.RADIUS,  # but diameter in LAMMPS
+                          lammps_key="diameter",  # TODO check!!!!
                           convert_to_cuba=lambda x: x / 2,  # d to radius
                           convert_from_cuba=lambda x: x * 2),  # radius to d
-                ValueInfo(cuba_key=CUBA.MASS)],
-            velocity_attributes=[ValueInfo(cuba_key=CUBA.ANGULAR_VELOCITY)],
+                ValueInfo(cuba_key=CUBA.MASS,
+                          lammps_key="mass")],
+            velocity_attributes=[ValueInfo(cuba_key=CUBA.ANGULAR_VELOCITY,
+                                           lammps_key="omega")],  # TODO check
             has_mass_per_type=False)
 }
 
+MATERIAL_TYPE_VALUE_INFO = ValueInfo(cuba_key=CUBA.MATERIAL_TYPE,
+                                     lammps_key="type")
+
 # all particles will have a material type
-_default_attributes = [ValueInfo(cuba_key=CUBA.MATERIAL_TYPE)]
+_default_attributes = [MATERIAL_TYPE_VALUE_INFO]
 
 
-def get_attributes(atom_style):
-    """ Return list of CUBA-key expected on particle
+def get_all_attributes(atom_style):
+    """ Return list of value info describing attributes expected on particle
+
+    Parameters:
+    -----------
+    atom_style : AtomStyle
+        style of atom
 
     """
     atom_style_description = ATOM_STYLE_DESCRIPTIONS[atom_style]
-    return [attribute.cuba_key for attribute in
+    return [attribute for attribute in
             itertools.chain(
                 atom_style_description.attributes,
                 atom_style_description.velocity_attributes,
                 _default_attributes)]
+
+
+def get_all_cuba_attributes(atom_style):
+    """ Return list of all CUBA-key expected on particle
+
+    Parameters:
+    -----------
+    atom_style : AtomStyle
+        style of atom
+
+
+    """
+    return [attribute.cuba_key for attribute in get_all_attributes(atom_style)]

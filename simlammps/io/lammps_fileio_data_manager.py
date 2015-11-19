@@ -11,7 +11,7 @@ from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
 from simlammps.io.lammps_data_file_writer import LammpsDataFileWriter
 from simlammps.common.utils import create_material_to_atom_type_map
 from simlammps.common.atom_style_description import (ATOM_STYLE_DESCRIPTIONS,
-                                                     get_attributes)
+                                                     get_all_cuba_attributes)
 
 from simlammps.config.domain import get_box
 
@@ -75,7 +75,7 @@ class LammpsFileIoDataManager(ABCDataManager):
         # cache of data container extensions
         self._dc_extension_cache = {}
 
-        self._supported_cuba = get_attributes(self._atom_style)
+        self._supported_cuba = get_all_cuba_attributes(self._atom_style)
 
     def get_data(self, uname):
         """Returns data container associated with particle container

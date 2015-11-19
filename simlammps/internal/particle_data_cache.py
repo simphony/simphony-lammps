@@ -1,15 +1,11 @@
-from collections import namedtuple
-
 import ctypes
+import numpy
 
 from simphony.core.cuba import CUBA
+from simphony.core.keywords import KEYWORDS
 from simphony.core.data_container import DataContainer
 
-# name is lammps'name (e.g. "x")
-# type = 0 = int or 1 = double
-# count = # of per-atom values, 1 or 3, etc
-_LammpsData = namedtuple(
-    '_LammpsData', ['CUBA', 'lammps_name', "type", "count"])
+from simlammps.common.atom_style_description import get_all_attributes
 
 
 class ParticleDataCache(object):
@@ -23,22 +19,19 @@ class ParticleDataCache(object):
     ----------
     lammps :
         lammps python wrapper
+    atom_style : AtomStyle
+        style of atoms
+    material_atom_type_manager : MaterialAtomTypeManager
+        class that manages the relationship between material-uid and atom_type
 
     """
-    def __init__(self, lammps):
+    def __init__(self, lammps, atoms_style, material_atom_type_manager):
         self._lammps = lammps
 
-        # TODO this should be based on what atom-style we are using
-        # and configured by the user of this class (instead of
-        # hard coded here)
-        self._data_entries = [_LammpsData(CUBA=CUBA.VELOCITY,
-                                          lammps_name="v",
-                                          type=1,  # double
-                                          count=3),
-                              _LammpsData(CUBA=CUBA.MATERIAL_TYPE,
-                                          lammps_name="type",
-                                          type=0,  # int
-                                          count=1)]
+        self._material_atom_type_manager = material_atom_type_manager
+
+        self._data_attributes = get_all_attributes(atoms_style)
+
         # map from uid to 'index in lammps arrays'
         self._index_of_uid = {}
 
@@ -48,8 +41,10 @@ class ParticleDataCache(object):
         # cache of coordinates
         self._coordinates = []
 
-        for entry in self._data_entries:
-            self._cache[entry.CUBA] = []
+        self._cache[CUBA.MATERIAL_TYPE] = []
+
+        for attribute in self._data_attributes:
+            self._cache[attribute.cuba_key] = []
 
     def retrieve(self):
         """ Retrieve all data from lammps
@@ -57,11 +52,21 @@ class ParticleDataCache(object):
         """
         self._coordinates = self._lammps.gather_atoms("x", 1, 3)
 
-        for entry in self._data_entries:
-            self._cache[entry.CUBA] = self._lammps.gather_atoms(
-                entry.lammps_name,
-                entry.type,
-                entry.count)
+        for attribute in self._data_attributes:
+            keyword = KEYWORDS[attribute.cuba_key.name]
+
+            # we handle material type seperately
+            if attribute.cuba_key == CUBA.MATERIAL_TYPE:
+                self._cache[attribute.cuba_key] = self._lammps.gather_atoms(
+                    "type",
+                    0,
+                    1)
+                continue
+
+            self._cache[attribute.cuba_key] = self._lammps.gather_atoms(
+                attribute.lammps_key,
+                _get_type(keyword),
+                _get_count(keyword))
 
     def send(self):
         """ Send data to lammps
@@ -71,19 +76,24 @@ class ParticleDataCache(object):
             "x", 1, 3,
             (ctypes.c_double * len(self._coordinates))(*self._coordinates))
 
-        for entry in self._data_entries:
-            if(entry.CUBA == CUBA.MATERIAL_TYPE):
-                # do nothing as MATERIAL_TYPE is used just to deterimine
-                # the index.
+        for attribute in self._data_attributes:
+            keyword = KEYWORDS[attribute.cuba_key.name]
+            values = self._cache[attribute.cuba_key]
+
+            # we handle material type seperately
+            if attribute.cuba_key == CUBA.MATERIAL_TYPE:
+                self._lammps.scatter_atoms("type",
+                                           0,
+                                           1,
+                                           (ctypes.c_int * len(
+                                               values))(*values))
                 continue
 
-            values = self._cache[entry.CUBA]
-
-            self._lammps.scatter_atoms(
-                entry.lammps_name,
-                entry.type,
-                entry.count,
-                (_get_ctype(entry) * len(values))(*values))
+            self._lammps.scatter_atoms(attribute.lammps_key,
+                                       _get_type(keyword),
+                                       _get_count(keyword),
+                                       (_get_ctype(keyword) * len(values))(
+                                           *values))
 
     def get_particle_data(self, uid):
         """ get particle data
@@ -97,23 +107,43 @@ class ParticleDataCache(object):
         -------
         data : DataContainer
             data of the particle
+
         """
         data = DataContainer()
-        for entry in self._data_entries:
 
-            if entry.CUBA == CUBA.MATERIAL_TYPE:
-                data[CUBA.MATERIAL_TYPE] = uid
+        index = self._index_of_uid[uid]
+
+        for attribute in self._data_attributes:
+            # we handle material type seperately
+            if attribute.cuba_key == CUBA.MATERIAL_TYPE:
+                # convert from the integer atom_type to material-uid)
+                data[CUBA.MATERIAL_TYPE] = \
+                    self._material_atom_type_manager.get_material_uid(
+                        self._cache[CUBA.MATERIAL_TYPE][index])
                 continue
 
-            i = self._index_of_uid[uid] * entry.count
-            if entry.count > 1:
+            count = _get_count(KEYWORDS[attribute.cuba_key.name])
+            i = index * count
+            if count > 1:
                 # always assuming that its a tuple
                 # ( see https://github.com/simphony/simphony-common/issues/18 )
-                data[entry.CUBA] = tuple(
-                    self._cache[entry.CUBA][i:i+entry.count])
+                data[attribute.cuba_key] = tuple(
+                    self._cache[attribute.cuba_key][i:i+count])
             else:
-                data[entry.CUBA] = self._cache[entry.CUBA][i]
+                data[attribute.cuba_key] = self._cache[attribute.cuba_key][i]
         return data
+
+    def get_coordinates(self, uid):
+        """ Get coordinates for a particle
+
+        Parameters
+        ----------
+        uid : uid
+            uid of particle
+        """
+        i = self._index_of_uid[uid] * 3
+        coordinates = self._coordinates[i:i+3]
+        return tuple(coordinates)
 
     def set_particle(self, coordinates, data, uid):
         """ set particle coordinates and data
@@ -135,45 +165,97 @@ class ParticleDataCache(object):
         self._coordinates[i:i+3] = coordinates[0:3]
 
         index = self._index_of_uid[uid]
-        for entry in self._data_entries:
-            i = index * entry.count
-            if entry.count > 1:
-                self._cache[entry.CUBA][i:i+entry.count] = \
-                    data[entry.CUBA][0:entry.count]
-            else:
-                if i < len(self._cache[entry.CUBA]):
-                    self._cache[entry.CUBA][i] = data[entry.CUBA]
-                elif i == len(self._cache[entry.CUBA]):
-                    self._cache[entry.CUBA].append(data[entry.CUBA])
-                else:
-                    msg = "Problem with index {}".format(uid)
-                    raise IndexError(msg)
 
-    def get_coordinates(self, uid):
-        """ Get coordinates for a particle
+        # add each attribute
+        for attribute in self._data_attributes:
+            value = data[attribute.cuba_key]
+
+            if attribute.cuba_key == CUBA.MATERIAL_TYPE:
+                # convert to atom_type (int)
+                value = self._material_atom_type_manager.get_atom_type(value)
+            self._add_to_cache(attribute.cuba_key,
+                               index,
+                               value)
+
+    def _add_to_cache(self, cuba_key, index, value):
+        """ Add value to cache
 
         Parameters
         ----------
-        uid : uid
-            uid of particle
+        cuba_key : CUBA
+            cuba key
+        index : int
+            index in cache
+        value : float or int or float[3] or int[3]
+            value added to cache
+
         """
-        i = self._index_of_uid[uid] * 3
-        coords = self._coordinates[i:i+3]
-        return tuple(coords)
+        keyword = KEYWORDS[cuba_key.name]
+        shape = keyword.shape
+
+        if shape == [1]:
+            if index < len(self._cache[cuba_key]):
+                self._cache[cuba_key][index] = value
+            elif index == len(self._cache[cuba_key]):
+                self._cache[cuba_key].append(value)
+            else:
+                msg = "Problem with index {}".format(index)
+                raise IndexError(msg)
+        elif shape == [3]:
+            index = index * 3
+            self._cache[cuba_key][index:index+3] = value[0:3]
+        else:
+            raise RuntimeError("Unsupported shape: ".format(shape))
 
 
-def _get_ctype(entry):
-    """ get ctype's type for entry
+def _get_ctype(keyword):
+    """ get ctype
 
     Parameters
     ----------
-    entry : LammpsData
-        info about the atom parameter
+    keyword : Keyword
+
     """
-    if entry.type == 0:
+    if keyword.dtype == numpy.int32:
         return ctypes.c_int
-    elif entry.type == 1:
+    elif keyword.dtype == numpy.float64:
         return ctypes.c_double
     else:
         raise RuntimeError(
-            "Unsupported type {}".format(entry.type))
+            "Unsupported type {}".format(keyword.dtype))
+
+
+def _get_type(keyword):
+    """ get type
+
+    Get type which is a 1 or 0 to signify if its a
+    int or float for lammps gather/scatter methods
+
+    Parameters
+    ----------
+    keyword : Keyword
+
+    """
+    if keyword.dtype == numpy.int32:
+        return 0
+    elif keyword.dtype == numpy.float64:
+        return 1
+    else:
+        raise RuntimeError(
+            "Unsupported type {}".format(keyword.dtype))
+
+
+def _get_count(keyword):
+    """ get count type
+
+    Parameters
+    ----------
+    keyword : Keyword
+
+    """
+    if keyword.shape == [1]:
+        return 1
+    elif keyword.shape == [3]:
+        return 3
+    else:
+        raise RuntimeError("Unsupported shape: ".format(keyword.shape))

@@ -14,7 +14,7 @@ from simlammps.io.file_utility import (read_data_file,
                                        write_data_file)
 from simlammps.cuba_extension import CUBAExtension
 from simlammps.common.atom_style import AtomStyle
-from simlammps.common.atom_style_description import get_attributes
+from simlammps.common.atom_style_description import get_all_cuba_attributes
 
 
 class TestFileUtility(unittest.TestCase):
@@ -93,7 +93,7 @@ class TestFileUtility(unittest.TestCase):
 
         _compare_particles_averages(read_particles,
                                     original_particles,
-                                    get_attributes(
+                                    get_all_cuba_attributes(
                                         AtomStyle.SPHERE),
                                     self)
 
@@ -113,7 +113,7 @@ class TestFileUtility(unittest.TestCase):
         read_particles, SD = read_data_file(output_filename)
         _compare_particles_averages(read_particles,
                                     original_particles,
-                                    get_attributes(AtomStyle.ATOMIC),
+                                    get_all_cuba_attributes(AtomStyle.ATOMIC),
                                     self)
 
 
