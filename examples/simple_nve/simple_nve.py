@@ -169,7 +169,7 @@ super_cell = [
 pc.data_extension = {lammps.CUBAExtension.BOX_VECTORS: super_cell}
 
 # define the wrapper to use.
-wrapper = lammps.LammpsWrapper()
+wrapper = lammps.LammpsWrapper(use_internal_interface=False)
 
 # Add material
 wrapper.SD.add_material(material)
