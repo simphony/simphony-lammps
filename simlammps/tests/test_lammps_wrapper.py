@@ -27,9 +27,14 @@ class TestLammpsMDEngineFILEIO(ABCLammpsMDEngineCheck, unittest.TestCase):
 
 
 class FixedParticlesEngineCheck(ParticlesEngineCheck):
-    """ Class addresses issues with ABCEngineCheck
+    """ Class addresses issues with ABCEngineCheck  (See simphony-common #219)
 
     """
+
+    def setUp(self):
+        self._md_configurator = MDExampleConfigurator()
+        ParticlesEngineCheck.setUp(self)
+
     def check_instance_of_dataset(self, ds):
         # TODO add to ParticlesEngineCheck
         self.assertTrue(isinstance(ds, ABCParticles))
@@ -88,7 +93,8 @@ class FixedParticlesEngineCheck(ParticlesEngineCheck):
         for i in xrange(5):
             name = "test_{}".format(i)
             ds_names.append(name)
-            engine.add_dataset(self.create_dataset(name=name))
+            engine.add_dataset(
+                self._md_configurator.get_empty_particles(name=name))
 
         # test that we are getting all the names
         # TODO  #218
@@ -106,7 +112,7 @@ class TestINTERNALEngineCheck(FixedParticlesEngineCheck, unittest.TestCase):
         """ Create and return a cuds object
 
         """
-        return MDExampleConfigurator.create_particles(name)
+        return self._md_configurator.get_empty_particles(name)
 
 
 class TestFILEIOEngineCheck(FixedParticlesEngineCheck, unittest.TestCase):

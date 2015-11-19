@@ -7,25 +7,12 @@ from simphony.testing.utils import (
     compare_data_containers, compare_particles)
 from simphony.core.data_container import DataContainer
 from simphony.core.cuba import CUBA
-from simphony.cuds.particles import Particles, Particle
+from simphony.cuds.particles import Particle
 
 from simlammps.testing.md_example_configurator import MDExampleConfigurator
 
 
-def _create_pc(name):
-    """ create particle container with a few particles """
-    pc = Particles(name)
-
-    data = DataContainer()
-    data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
-
-    pc.add_particles([Particle(coordinates=(1.01, 1.01, 1.01), data=data),
-                      Particle(coordinates=(1.02, 1.02, 1.02), data=data)])
-
-    return pc
-
-
-def _get_particle(wrapper):
+def _get_particle_and_dataset(wrapper):
     """
     get particle and particle container
 
@@ -42,6 +29,7 @@ class ABCLammpsMDEngineCheck(object):
     __metaclass__ = abc.ABCMeta
 
     def setUp(self):
+        self._md_configurator = MDExampleConfigurator()
         self.addTypeEqualityFunc(
             DataContainer, partial(compare_data_containers, testcase=self))
         self.addTypeEqualityFunc(
@@ -54,13 +42,13 @@ class ABCLammpsMDEngineCheck(object):
         """
 
     def test_run(self):
-        MDExampleConfigurator.configure_wrapper(self.wrapper)
+        self._md_configurator.configure_wrapper(self.wrapper)
         self.wrapper.run()
 
     def test_run_remove_particle(self):
-        MDExampleConfigurator.configure_wrapper(self.wrapper)
+        self._md_configurator.configure_wrapper(self.wrapper)
 
-        removed_particle, particles = _get_particle(self.wrapper)
+        removed_particle, particles = _get_particle_and_dataset(self.wrapper)
         particles.remove_particles([removed_particle.uid])
 
         # check that it was removed
@@ -74,18 +62,21 @@ class ABCLammpsMDEngineCheck(object):
             particles.get_particle(removed_particle.uid)
 
     def test_0_step_run(self):
-        MDExampleConfigurator.configure_wrapper(self.wrapper)
-        foo = Particles(name="foo")
+        self._md_configurator.configure_wrapper(self.wrapper)
         particles_uids = []
+        foo = self._md_configurator.get_empty_particles("foo")
+        material_uid = self._md_configurator._materials[0].uid
         for i in range(0, 5):
-            p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 0+0.1*i))
-            p.data[CUBA.VELOCITY] = (0+0.001*i, 0+0.0001*i, 0+0.0001*i)
+            p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 0+0.1*i),
+                         data= {
+                             CUBA.VELOCITY: (0.001*i, 0.0001*i, 0.0001*i),
+                             CUBA.MATERIAL_TYPE: material_uid})
             uids = foo.add_particles([p])
             particles_uids.extend(uids)
 
         # add to wrapper
-        foo_w = MDExampleConfigurator.add_configure_particles(self.wrapper,
-                                                              foo)
+        self.wrapper.add_dataset(foo)
+        foo_w = self.wrapper.get_dataset(foo.name)
 
         # remove one particle and update another
         uid_to_remove = particles_uids[len(particles_uids)/2]
@@ -136,7 +127,7 @@ class ABCLammpsMDEngineCheck(object):
             assert_almost_equal(p_w.coordinates, p.coordinates)
 
     def test_run_incomplete_cm(self):
-        MDExampleConfigurator.configure_wrapper(self.wrapper)
+        self._md_configurator.configure_wrapper(self.wrapper)
 
         # remove CM configuration
         self.wrapper.CM.clear()
