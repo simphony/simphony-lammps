@@ -1,12 +1,14 @@
 import unittest
 from functools import partial
+import uuid
 
 from simphony.core.cuba import CUBA
 from simphony.cuds.particles import Particle
 from simphony.testing.abc_check_particles import (
     CheckAddingParticles, CheckManipulatingParticles)
 from simphony.testing.utils import (
-    compare_particles, create_particles, create_particles_with_id)
+    compare_particles, create_particles, create_particles_with_id,
+    create_data_container)
 
 from simlammps.lammps_wrapper import LammpsWrapper
 from simlammps.testing.md_example_configurator import MDExampleConfigurator
@@ -77,6 +79,27 @@ class TestInternalParticlesAddParticles(
         self.container = self.container_factory('foo')
         self.ids = self.container.add_particles(self.particle_list)
 
+    def test_add_particles_with_id(self):
+        # given
+        container = self.container
+        uid = uuid.uuid4()
+        particle = Particle(
+            uid=uid,
+            coordinates=(1, 2, -3),
+            data=create_data_container(restrict=self.supported_cuba()))
+        # TODO. This ia fix so that this particle has the right attributes
+        # for lammps (MD)
+        particle.data[CUBA.MATERIAL_TYPE] = self.configurator.materials[0].uid
+
+        # when
+        uids = container.add_particles([particle])
+        particle_uid = uids[0]
+
+        # then
+        self.assertEqual(particle_uid, uid)
+        self.assertTrue(container.has_particle(uid))
+        self.assertEqual(container.get_particle(uid), particle)
+
     # TODO workaround for simphony issue #202 ( simphony/simphony-common#202 )
     def test_add_multiple_particles_with_id(self):
 
@@ -84,10 +107,10 @@ class TestInternalParticlesAddParticles(
         container = self.container
         particles = create_particles_with_id(restrict=self.supported_cuba())
 
-        # fix particles so that they have the right attributes
+        # TODO. This ia fix so particles have the right attributes
         # for lammps (MD)
         material = self.configurator.materials[0]
-        for p in self.particles:
+        for p in particles:
             p.data[CUBA.MATERIAL_TYPE] = material.uid
 
         # when
@@ -97,6 +120,58 @@ class TestInternalParticlesAddParticles(
         for particle in particles:
             uid = particle.uid
             self.assertIn(uid, uids)
+            self.assertTrue(container.has_particle(uid))
+            self.assertEqual(container.get_particle(uid), particle)
+
+    def test_add_particles_with_unsupported_cuba(self):
+        # given
+        container = self.container
+        particle = Particle(
+            coordinates=(1, 2, -3),
+            data=create_data_container())
+
+        # TODO. This ia fix so that this particle has the right attributes
+        # for lammps (MD)
+        particle.data[CUBA.MATERIAL_TYPE] = self.configurator.materials[0].uid
+
+        # when
+        uids = container.add_particles([particle])
+        uid = uids[0]
+
+        # then
+        particle.data = create_data_container(restrict=self.supported_cuba())
+        particle.data[CUBA.MATERIAL_TYPE] = self.configurator.materials[0].uid
+        self.assertTrue(container.has_particle(uid))
+        self.assertEqual(container.get_particle(uid), particle)
+
+    def test_add_multiple_particles_with_unsupported_cuba(self):
+        # given
+        container = self.container
+        particles = []
+        for i in xrange(10):
+            data = create_data_container()
+            particles.append(
+                Particle([i, i*10, i*100], data=data))
+
+        # TODO. This is a fix so particles have the right attributes
+        # for lammps (MD)
+        material = self.configurator.materials[0]
+        for p in particles:
+            p.data[CUBA.MATERIAL_TYPE] = material.uid
+
+        # when
+        container.add_particles(particles)
+
+        # then
+        for particle in particles:
+            particle.data = create_data_container(
+                restrict=self.supported_cuba())
+
+            # TODO. This is a fix so particles have the right attributes
+            # for lammps (MD)
+            particle.data[CUBA.MATERIAL_TYPE] = material.uid
+
+            uid = particle.uid
             self.assertTrue(container.has_particle(uid))
             self.assertEqual(container.get_particle(uid), particle)
 
