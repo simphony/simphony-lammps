@@ -11,10 +11,13 @@ from simphony.core.cuba import CUBA
 @click.command()
 @click.option('--show/--no-show', default=False)
 def billiards_example(show):
-    particles_list = lammps.read_data_file("billiards_init.data")
+    particles, state_data = lammps.read_data_file("billiards_init.data")
 
     # configure dem-wrapper
     dem = lammps.LammpsWrapper(engine_type=EngineType.DEM)
+
+    for material in state_data.iter_materials():
+        dem.SD.add_material(material)
 
     dem.CM_extension[lammps.CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
     dem.CM[CUBA.NUMBER_OF_TIME_STEPS] = 1000
@@ -25,8 +28,8 @@ def billiards_example(show):
     dem.BC_extension[lammps.CUBAExtension.BOX_FACES] = ["fixed",
                                                         "fixed",
                                                         "fixed"]
-    dem.add_dataset(particles_list[0])
-    particles_in_wrapper = dem.get_dataset(particles_list[0].name)
+    dem.add_dataset(particles)
+    particles_in_wrapper = dem.get_dataset(particles.name)
 
     if show:
         from simphony.visualisation import aviz
