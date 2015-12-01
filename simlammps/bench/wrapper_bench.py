@@ -5,33 +5,34 @@ _Tests = namedtuple(
 
 from simphony.engine import lammps
 from simphony.bench.util import bench
-from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 
 from simlammps.bench.util import get_particles
 from simlammps.testing.md_example_configurator import MDExampleConfigurator
 
 
-def configure_wrapper(wrapper, particles, number_time_steps):
+def configure_wrapper(wrapper, state_data, particles, number_time_steps):
     """  Configure wrapper
 
     Parameters:
     -----------
     wrapper : ABCModelingEngine
         wrapper to be configured
-    particles : iterable of ABCParticles
+    state_data : StateData
+        state data (materials)
+    particles :  ABCParticles
         particles to use
     number_time_steps : int
         number of time steps to run
-    """
-    material_types = []
-    for dataset in particles:
-        material_types.append(dataset.data[CUBA.MATERIAL_TYPE])
-        wrapper.add_dataset(dataset)
 
-    MDExampleConfigurator.set_configuration(wrapper,
-                                            material_types,
-                                            number_time_steps)
+    """
+    materials = [material for material in state_data.iter_materials()]
+
+    configurator = MDExampleConfigurator(materials=materials,
+                                         number_time_steps=number_time_steps)
+    configurator.set_configuration(wrapper)
+
+    wrapper.add_dataset(particles)
 
 
 def run(wrapper):
@@ -41,7 +42,7 @@ def run(wrapper):
 def run_iterate(wrapper):
     wrapper.run()
     for particles_dataset in wrapper.iter_datasets():
-        for particle in particles_dataset.iter_particles():
+        for _ in particles_dataset.iter_particles():
             pass
 
 
@@ -78,15 +79,16 @@ if __name__ == '__main__':
         for y_range in [3000, 8000]:
 
             # test different run scenarios
-            particles = get_particles(y_range)
-            number_particles = sum(p.count_of(
-                CUDSItem.PARTICLE) for p in particles)
+            particles, state_data = get_particles(y_range)
+            number_particles = particles.count_of(CUDSItem.PARTICLE)
             number_time_steps = 10
 
+            SD = "DUMMY - TODO"
             for test in run_wrapper_tests:
                 lammps_wrapper = lammps.LammpsWrapper(
                     use_internal_interface=is_internal)
                 configure_wrapper(lammps_wrapper,
+                                  state_data,
                                   particles,
                                   number_time_steps=number_time_steps)
 
@@ -104,6 +106,7 @@ if __name__ == '__main__':
                 use_internal_interface=is_internal)
 
             results = bench(lambda: configure_wrapper(lammps_wrapper,
+                                                      state_data,
                                                       particles,
                                                       number_time_steps),
                             repeat=1,

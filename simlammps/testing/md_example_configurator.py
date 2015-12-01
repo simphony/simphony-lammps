@@ -21,7 +21,7 @@ class MDExampleConfigurator:
     """
 
     def __init__(self,
-                 number_materials=3,
+                 materials=None,
                  box_origin=None,
                  box_vectors=None,
                  number_time_steps=10):
@@ -31,8 +31,8 @@ class MDExampleConfigurator:
         ----------
         wrapper : ABCModelingEngine
             wrapper to be configured
-        number_materials : int
-            number of materials
+        materials : Material, list
+            list of materials (if None, then 3 materials will be created)
         number_time_steps : int
             number of time steps to run
 
@@ -49,11 +49,14 @@ class MDExampleConfigurator:
         else:
             self._box_vectors = box_vectors
 
-        self._materials = []
-        random.seed(42)
-        for _ in xrange(1, number_materials+1):
-            material = Material(data={CUBA.MASS: random.uniform(1.0, 2.0)})
-            self._materials.append(material)
+        if materials is None:
+            self._materials = []
+            random.seed(42)
+            for _ in xrange(3):
+                material = Material(data={CUBA.MASS: random.uniform(1.0, 2.0)})
+                self._materials.append(material)
+        else:
+            self._materials = materials
 
         self._number_time_steps = number_time_steps
 
