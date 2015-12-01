@@ -17,6 +17,8 @@ def billiards_example(show):
     dem = lammps.LammpsWrapper(engine_type=EngineType.DEM)
 
     for material in state_data.iter_materials():
+        material.data[CUBA.YOUNG_MODULUS] = 3e3
+        material.data[CUBA.POISSON_RATIO] = 0.45
         dem.SD.add_material(material)
 
     dem.CM_extension[lammps.CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"

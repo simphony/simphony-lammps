@@ -245,7 +245,9 @@ class LammpsWrapper(ABCModelingEngine):
                     output_data_file=output_data_filename,
                     BC=_combine(self.BC, self.BC_extension),
                     CM=_combine(self.CM, self.CM_extension),
-                    SP=_combine(self.SP, self.SP_extension))
+                    SP=_combine(self.SP, self.SP_extension),
+                    materials=[
+                        material for material in self.SD.iter_materials()])
                 process = LammpsProcess(lammps_name=self._executable_name,
                                         log_directory=temp_dir)
                 process.run(commands)
