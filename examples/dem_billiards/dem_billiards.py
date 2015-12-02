@@ -11,7 +11,13 @@ from simphony.core.cuba import CUBA
 @click.command()
 @click.option('--show/--no-show', default=False)
 def billiards_example(show):
-    particles, state_data = lammps.read_data_file("billiards_init.data")
+    input_file = "billiards_init.data"
+    try:
+        particles, state_data = lammps.read_data_file(input_file)
+    except:
+        msg = ("'{}' could not be read. Ensure that this file "
+               "is located in the current directory").format(input_file)
+        raise RuntimeError(msg)
 
     # configure dem-wrapper
     dem = lammps.LammpsWrapper(engine_type=EngineType.DEM)
