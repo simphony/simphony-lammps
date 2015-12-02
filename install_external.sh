@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 # checkout a recent stable version (from 10 Aug 2015)
-git clone --branch r13864 --depth 1 git://git.lammps.org/lammps-ro.git mylammps
+git clone --branch r13864 --depth 1 git://github.com/lammps/lammps mylammps
 
 # build lammps executable
 pushd mylammps/src
