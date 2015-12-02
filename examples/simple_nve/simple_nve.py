@@ -183,7 +183,7 @@ wrapper.CM[CUBA.TIME_STEP] = 0.0025
 wrapper.BC_extension[lammps.CUBAExtension.BOX_FACES] = ["periodic",
                                                         "periodic",
                                                         "periodic"]
-pc_w = wrapper.add_dataset(pc)
+wrapper.add_dataset(pc)
 
 # define the SP component of the SimPhoNy application model.  The
 # following are the LJ parameters for this test. Normalized reduced
@@ -204,7 +204,7 @@ T0 = 1.0
 
 # The simulation is performed on the particle container with the
 # wrapper, not on pc.  pc_MD is the particle container in the wrapper.
-pc_MD = wrapper.get_dataset("Test")
+pc_MD = wrapper.get_dataset(pc.name)
 
 # Create an extended special xyz file for atomistics.
 write_file(particles=pc_MD, file_format="EXYZ",
