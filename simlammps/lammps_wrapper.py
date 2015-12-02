@@ -74,7 +74,8 @@ class LammpsWrapper(ABCModelingEngine):
                     "DEM using the INTERNAL interface is not yet supported")
 
             import lammps
-            self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
+            self._lammps = lammps.lammps(cmdargs=["-screen", "none",
+                                                  "-log", "none"])
             self._data_manager = LammpsInternalDataManager(self._lammps,
                                                            atom_style)
         else:
