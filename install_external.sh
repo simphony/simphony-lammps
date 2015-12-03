@@ -16,7 +16,7 @@ make -j 2 ubuntu_simple mode=shlib
 popd
 # install LAMMPS python wrapper
 pushd mylammps/python
-sudo python install.py /usr/lib/ $VIRTUAL_ENV/lib/python2.7/site-packages/
+sudo python install.py $VIRTUAL_ENV/lib/python2.7/site-packages/
 popd
 python check_lammps_python.py
 
