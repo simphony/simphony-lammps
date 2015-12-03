@@ -1,6 +1,15 @@
 Simphony-Lammps CHANGELOG
 ======================
 
+Release 0.1.5
+-------------
+* Use simphony-common version 0.2.0 (#82)
+* Use latest stable version of lammps (from 10 Aug 2015) (#107)
+* Add benchmarking for INTERNAL and FILE-IO interface (#56)
+* Use simphony-common testing framework to test engine (#103)
+* Various bug fixes (#77, #98)
+* Add experimental DEM wrapper which uses LIGGGHTS (#101)
+
 Release 0.1.4
 -------------
 * Ensure wrapper only returns low-level state that it uses (#13)
