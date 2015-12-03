@@ -40,7 +40,7 @@ Installation of LAMMPS
 ----------------------
 
 This engine-wrapper uses LAMMPS Molecular Dynamics Simulator. A recent stable
-version (9 Dec 2014, tagged r12824) of LAMMPS is supported and has been
+version (10 Aug 2015, tagged r13864) of LAMMPS is supported and has been
 tested. See ``install_lammps.sh`` for an example installation instructions.
 For general LAMMPS install information, see http://lammps.sandia.gov/index.html
 
@@ -58,8 +58,8 @@ Limitations of the INTERNAL interface
 The following are known limitations when using the INTERNAL interface to LAMMPS:
  - Currently an upper limit of particle types (CUBA.MATERIAL_TYPE) is set due to
    the fact that LAMMPS only allows the number of types be configured at start
-   (and not changed later)
+   (and not changed later) (https://github.com/simphony/simphony-lammps-md/issues/66)
  - No notification is provided to the user when an internal error occurs in the
    LAMMPS shared library as the library calls `exit(1)` and the process
    immediately exists (without an exception or writing to standard
-   output/error).
+   output/error).  (https://github.com/simphony/simphony-lammps-md/issues/63)

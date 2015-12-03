@@ -1,9 +1,17 @@
 #!/bin/bash
 set -e
-# checkout a recent stable version (from 9 Dec 2014)
-git clone --branch r12824 --depth 1 git://git.lammps.org/lammps-ro.git mylammps
 
-# build lammps executable
+if [ -z "$PYTHON_LIB_DIR" ]; then echo "Set PYTHON_LIB_DIR variable to location of where lammps shared library and lammps.py should be installed (currently using default)"; fi
+
+PYTHON_LIB_DIR=${PYTHON_LIB_DIR:-$VIRTUAL_ENV/lib/python2.7/site-packages/}
+
+echo "Installing python LAMMPS wrapper to '$PYTHON_LIB_DIR'"
+
+
+echo "Checking out a recent stable version (from 10 Aug 2015)"
+git clone --branch r13864 --depth 1 git://github.com/lammps/lammps mylammps
+
+echo "Building LAMMPS executable"
 pushd mylammps/src
 make -j 2 ubuntu_simple
 ln -s lmp_ubuntu_simple lammps
@@ -11,16 +19,17 @@ popd
 
 
 pushd mylammps/src
-# make shared library for python
-make -j 2 makeshlib && make -j 2 -f Makefile.shlib ubuntu_simple
+echo "Making shared library for LAMMPS python wrapper"
+make -j 2 ubuntu_simple mode=shlib
 popd
-# install LAMMPS python wrapper
+echo "Installing LAMMPS python wrapper"
 pushd mylammps/python
-sudo python install.py /usr/lib/ $VIRTUAL_ENV/lib/python2.7/site-packages/
+python install.py $PYTHON_LIB_DIR 
 popd
 python check_lammps_python.py
 
 # build liggghts
+echo "Building ligghts"
 git clone --branch 3.3.0 --depth 1 git://github.com/CFDEMproject/LIGGGHTS-PUBLIC.git myliggghts
 pushd myliggghts/src
 make -j 2 fedora
