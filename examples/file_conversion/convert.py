@@ -2,7 +2,7 @@ from __future__ import print_function
 
 import subprocess
 
-from simlammps import read_data_file
+from simphony.engine import lammps
 from simlammps.cuba_extension import CUBAExtension
 
 lammps_script = """# example of creating lammps data file (to be then used by SimPhoNy"
@@ -47,7 +47,7 @@ with open("lammps_example_script", "w") as script_file:
 
 subprocess.check_call("lammps < lammps_example_script", shell=True)
 
-particles_list = read_data_file("example.data")
+particles_list = lammps.read_data_file("example.data")
 print("\n\nFinished converting files")
 print("\n{} Particles data-sets were read from the file:".format(
     len(particles_list)))

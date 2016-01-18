@@ -1,8 +1,5 @@
 from collections import namedtuple
 
-_Tests = namedtuple(
-    '_Tests', ['method', 'name'])
-
 from simphony.engine import lammps
 from simphony.bench.util import bench
 from simphony.core.cuba import CUBA
@@ -10,6 +7,9 @@ from simphony.core.cuds_item import CUDSItem
 
 from simlammps.bench.util import get_particles
 from simlammps.testing.md_example_configurator import MDExampleConfigurator
+
+_Tests = namedtuple(
+    '_Tests', ['method', 'name'])
 
 
 def configure_wrapper(wrapper, particles, number_time_steps):
