@@ -61,11 +61,11 @@ class SimlammpsExtension(ABCEngineExtension):
             use_internal_interface = True
 
         if engine_name == 'LAMMPS':
-            return LammpsWrapper(cuds,
+            return LammpsWrapper(cuds=cuds,
                                  engine_type=EngineType.MD,
                                  use_internal_interface=use_internal_interface)
         elif engine_name == 'LIGGGHTS':
-            return LammpsWrapper(cuds,
+            return LammpsWrapper(cuds=cuds,
                                  engine_type=EngineType.DEM,
                                  use_internal_interface=use_internal_interface)
         else:

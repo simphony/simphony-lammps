@@ -45,7 +45,8 @@ class LammpsWrapper(ABCModelingEngine):
     """
     def __init__(self,
                  engine_type=EngineType.MD,
-                 use_internal_interface=False):
+                 use_internal_interface=False,
+                 **kwargs):
         """ Constructor.
 
         Parameters
