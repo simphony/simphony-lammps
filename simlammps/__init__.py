@@ -37,7 +37,7 @@ class SimlammpsExtension(ABCEngineExtension):
 
         liggghts = self.create_engine_metadata('LIGGGHTS',
                                                liggghts_features,
-                                               [EngineInterface.Internal])
+                                               [EngineInterface.FileIO])
         return [lammps, liggghts]
 
     def create_wrapper(self, cuds, engine_name, engine_interface):
