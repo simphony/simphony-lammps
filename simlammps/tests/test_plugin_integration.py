@@ -5,7 +5,6 @@ from simphony import CUDS
 from simlammps.lammps_wrapper import LammpsWrapper
 
 
-
 # TODO: Use an enum instead, defined in a proper place
 _LAMMPS = 'LAMMPS'
 _LIGGGHTS = 'LIGGGHTS'
