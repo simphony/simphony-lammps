@@ -45,7 +45,8 @@ class LammpsWrapper(ABCModelingEngine):
     """
     def __init__(self,
                  engine_type=EngineType.MD,
-                 use_internal_interface=False):
+                 use_internal_interface=False,
+                 **kwargs):
         """ Constructor.
 
         Parameters
@@ -59,7 +60,6 @@ class LammpsWrapper(ABCModelingEngine):
             used where input/output files are used to communicate with LAMMPS
 
         """
-
         self._use_internal_interface = use_internal_interface
 
         atom_style = AtomStyle.GRANULAR \
@@ -87,6 +87,18 @@ class LammpsWrapper(ABCModelingEngine):
         self.CM_extension = {}
         self.SP_extension = {}
         self.BC_extension = {}
+
+        # Call the base class in order to load CUDS
+        super(LammpsWrapper, self).__init__(**kwargs)
+
+    def _load_cuds(self):
+        """Load CUDS data into lammps engine."""
+        cuds = self.get_cuds()
+        if not cuds:
+            return
+
+        for component in cuds.iter(ABCParticles):
+            self.add_dataset(component)
 
     def add_dataset(self, container):
         """Add a CUDS container
