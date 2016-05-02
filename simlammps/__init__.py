@@ -1,5 +1,5 @@
-from simphony.engine import ABCEngineExtension
-from simphony.engine import EngineInterface
+from simphony.extension import ABCEngineExtension
+from simphony.extension import EngineInterface
 
 from .lammps_wrapper import LammpsWrapper, EngineType
 from .cuba_extension import CUBAExtension

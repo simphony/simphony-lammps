@@ -1,5 +1,6 @@
 import unittest
 import simphony.engine as engine_api
+from simphony.extension import EngineInterface, create_wrapper
 
 from simphony import CUDS
 from simlammps.lammps_wrapper import LammpsWrapper
@@ -22,23 +23,23 @@ class TestPluginIntegration(unittest.TestCase):
 
     def test_lammps_creation(self):
         cuds = CUDS()
-        lammps = engine_api.create_wrapper(cuds, _LAMMPS,
-                                           engine_api.EngineInterface.Internal)
+        lammps = create_wrapper(cuds, _LAMMPS,
+                                EngineInterface.Internal)
         self.assertIsInstance(lammps, LammpsWrapper)
 
-        lammps = engine_api.create_wrapper(cuds, _LAMMPS,
-                                           engine_api.EngineInterface.FileIO)
+        lammps = create_wrapper(cuds, _LAMMPS,
+                                EngineInterface.FileIO)
         self.assertIsInstance(lammps, LammpsWrapper)
 
     def test_liggghts_creation(self):
         cuds = CUDS()
-        lights = engine_api.create_wrapper(cuds, _LIGGGHTS,
-                                           engine_api.EngineInterface.FileIO)
+        lights = create_wrapper(cuds, _LIGGGHTS,
+                                EngineInterface.FileIO)
         self.assertIsInstance(lights, LammpsWrapper)
 
-        self.assertRaises(RuntimeError, engine_api.create_wrapper, cuds,
+        self.assertRaises(RuntimeError, create_wrapper, cuds,
                           _LIGGGHTS,
-                          engine_api.EngineInterface.Internal)
+                          EngineInterface.Internal)
 
 
 if __name__ == '__main__':
