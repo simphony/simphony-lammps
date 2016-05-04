@@ -1,5 +1,6 @@
-from simphony.extension import ABCEngineExtension
-from simphony.extension import EngineInterface
+from simphony.engine import ABCEngineExtension
+from simphony.engine import EngineInterface
+from simphony.engine.decorators import register
 
 from .lammps_wrapper import LammpsWrapper, EngineType
 from .cuba_extension import CUBAExtension
@@ -8,6 +9,7 @@ from .io.file_utility import read_data_file
 __all__ = ["LammpsWrapper", "EngineType", "CUBAExtension", 'read_data_file']
 
 
+@register
 class SimlammpsExtension(ABCEngineExtension):
     """Simphony-lammps-md extension.
 
