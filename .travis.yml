@@ -16,6 +16,7 @@ matrix:
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install mpi-default-bin mpi-default-dev ccache
+  - export PATH=/usr/lib/ccache:${PATH}
   - sudo ln -s ccache /usr/local/bin/mpic++
   - ccache -s
   
