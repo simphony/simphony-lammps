@@ -17,7 +17,6 @@ before_install:
   - sudo apt-get install mpi-default-bin mpi-default-dev ccache
   - sudo ln -s ccache /usr/local/bin/mpic++
   - ccache -s
-  - export PATH=/usr/lib/ccache:${PATH}
   
 install:
   # build and install lammps
