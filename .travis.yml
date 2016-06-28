@@ -34,6 +34,7 @@ script:
   - coverage run -m unittest discover
   - python setup.py build_sphinx
   - cd examples/dem_billiards/; python dem_billiards.py
+  - cd ..
 
 after_success:
   - pip install codecov
