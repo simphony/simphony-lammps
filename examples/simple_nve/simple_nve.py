@@ -108,7 +108,7 @@ mat.data[CUBA.MASS]=1.0
 
 # mark all particles in pc to belong to mat: 
 for p in pc.iter_particles():
-    p.data[CUBA.MATERIAL] = mat.uuid
+    p.data[CUBA.MATERIAL] = mat.uid
 
 # define a cuds to hold the computational model:
 cuds = CUDS (name= 'fluid') 
@@ -142,7 +142,7 @@ thermo.description = 'a simple temperature rescaling test'
 thermo.temperature = [0.0, 1.0] # scale the temperature from 0  to 1
 thermo.coupling_time = 0.000025 # this is in time units, not steps.
 # add the thermostat to the CUDS computational model. 
-thermo.materials = [mat.uuid]
+thermo.materials = [mat.uid]
 cuds.add(thermo) 
 
 # create a new solver component:
@@ -165,7 +165,9 @@ pbc = api.Periodic(name= 'pbc')
 cuds.add(pbc)
 
 # attache this to the boundaries of the box: 
-cuds.get(box.condition = [cuds.get('pbc').uuid,  pbc.uuid, pbc.uudi]
+box= cuds.get('simulation_box')
+box.condition = [cuds.get('pbc').uid,  pbc.uid, pbc.udi]
+cuds.update(box) 
 
 
 # define the interatomic force as material relation  
@@ -173,7 +175,7 @@ lj = Lennard_Jones_6_12 (name = 'LennardJones')
 lj.cutoff_distance = 2.5
 lj.energy_well_depth = 1.0
 lj.van_der_waals_radius = 1.0 
-lj.materials = [cuds.get('mat').uuid, cuds.get('mat').uuid] 
+lj.materials = [cuds.get('mat').uid, cuds.get('mat').uid] 
 # sim = Simulation(cuds = cuds, engine = LAMMPS() ) 
 
 # initialisation of the simulation
@@ -185,7 +187,7 @@ newcuds.remove('thermo')
 thermo = NoseHoover(name='thermo')
 thermo.temperature= [ 1.0, 1.2]
 thermo.coupling_time=0.00000025
-thermo.materials=[newcuds.get('mat').uuid,]
+thermo.materials=[newcuds.get('mat').uid,]
 newcuds.add(thermo)
 pc=newcuds.get('Test') 
 # pc is now a proxy to the pc in the "wrapper" managed by the sim. 
