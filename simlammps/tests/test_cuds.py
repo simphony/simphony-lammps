@@ -2,7 +2,7 @@
 import unittest
 
 from simphony.core.cuba import CUBA
-from simphony import CUDS, Simulation
+from simphony.api import CUDS, Simulation
 from simphony.engine import EngineInterface
 from simphony.testing.utils import create_particles_with_id
 from simphony.cuds.particles import Particles
@@ -38,17 +38,4 @@ class LAMMPSCUDSTestCase(unittest.TestCase):
 
     def test_create_lammps_fileio_simulation(self):
         sim = Simulation(self.cuds, 'LAMMPS', EngineInterface.FileIO)
-        self.assertEqual(self.cuds, sim.get_cuds())
-
-    def test_create_liggghts_internal_simulation(self):
-        self.assertRaisesRegexp(RuntimeError,
-                                'DEM using the INTERNAL interface is not yet'
-                                ' supported',
-                                Simulation,
-                                self.cuds,
-                                'LIGGGHTS',
-                                EngineInterface.Internal)
-
-    def test_create_liggghts_fileio_simulation(self):
-        sim = Simulation(self.cuds, 'LIGGGHTS', EngineInterface.FileIO)
         self.assertEqual(self.cuds, sim.get_cuds())
