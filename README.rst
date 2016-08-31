@@ -4,16 +4,16 @@ simphony-lammps
 The LAMMPS engine-wrapper for the SimPhoNy framework (www.simphony-project.eu).
 
 .. image:: https://travis-ci.org/simphony/simphony-lammps-md.svg?branch=master
-    :target: https://travis-ci.org/simphony/simphony-lammps-md
-      :alt: Build status
+   :target: https://travis-ci.org/simphony/simphony-lammps-md
+   :alt: Build status
 
 .. image:: http://codecov.io/github/simphony/simphony-lammps-md/coverage.svg?branch=master
    :target: http://codecov.io/github/simphony/simphony-lammps-md?branch=master
-      :alt: Test coverage
+   :alt: Test coverage
 
 .. image:: https://readthedocs.org/projects/simphony-lammps-md/badge/?version=master
    :target: https://readthedocs.org/projects/simphony-lammps-md/?badge=master
-      :alt: Documentation Status
+   :alt: Documentation Status
 
 
 Repository
