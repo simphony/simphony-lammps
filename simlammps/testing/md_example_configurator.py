@@ -4,7 +4,7 @@ from simphony.cuds.particles import Particle, Particles
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 
-from simlammps.cuba_extension import CUBAExtension
+from ..cuba_extension import CUBAExtension
 
 
 class MDExampleConfigurator:

@@ -1,7 +1,7 @@
 import uuid
 import abc
 
-from simlammps.lammps_particles import LammpsParticles
+from .lammps_particles import LammpsParticles
 
 
 class ABCDataManager(object):

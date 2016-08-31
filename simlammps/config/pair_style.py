@@ -1,6 +1,6 @@
 import yaml
 
-from simlammps.cuba_extension import CUBAExtension
+from ..cuba_extension import CUBAExtension
 
 
 # here is the info to create the different pair info handlers
