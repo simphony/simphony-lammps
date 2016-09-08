@@ -6,18 +6,17 @@ import contextlib
 import os
 import tempfile
 import shutil
-from enum import (IntEnum, unique)
 
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_particles import ABCParticles
 from simphony.core.data_container import DataContainer
 
-from simlammps.io.lammps_fileio_data_manager import LammpsFileIoDataManager
-from simlammps.io.lammps_process import LammpsProcess
-from simlammps.internal.lammps_internal_data_manager import (
+from .io.lammps_fileio_data_manager import LammpsFileIoDataManager
+from .io.lammps_process import LammpsProcess
+from .internal.lammps_internal_data_manager import (
     LammpsInternalDataManager)
-from simlammps.config.script_writer import ScriptWriter
-from simlammps.common.atom_style import AtomStyle
+from .config.script_writer import ScriptWriter
+from .common.atom_style import AtomStyle
 
 
 @contextlib.contextmanager
@@ -32,19 +31,12 @@ def _temp_directory():
     shutil.rmtree(temp_dir)
 
 
-@unique
-class EngineType(IntEnum):
-    MD = 0
-    DEM = 1
-
-
 class LammpsWrapper(ABCModelingEngine):
     """ Wrapper to LAMMPS-md
 
 
     """
     def __init__(self,
-                 engine_type=EngineType.MD,
                  use_internal_interface=False,
                  **kwargs):
         """ Constructor.
@@ -62,17 +54,11 @@ class LammpsWrapper(ABCModelingEngine):
         """
         self._use_internal_interface = use_internal_interface
 
-        atom_style = AtomStyle.GRANULAR \
-            if engine_type == EngineType.DEM else AtomStyle.ATOMIC
-        self._executable_name = "liggghts" \
-            if engine_type == EngineType.DEM else "lammps"
+        atom_style = AtomStyle.ATOMIC
+        self._executable_name = "lammps"
         self._script_writer = ScriptWriter(atom_style)
 
         if self._use_internal_interface:
-            if engine_type == EngineType.DEM:
-                raise RuntimeError(
-                    "DEM using the INTERNAL interface is not yet supported")
-
             import lammps
             self._lammps = lammps.lammps(cmdargs=["-screen", "none",
                                                   "-log", "none"])

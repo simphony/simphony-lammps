@@ -1,4 +1,4 @@
-from simlammps.cuba_extension import CUBAExtension
+from ..cuba_extension import CUBAExtension
 
 
 def get_box(particle_data_containers,

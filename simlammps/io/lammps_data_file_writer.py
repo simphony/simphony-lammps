@@ -5,8 +5,8 @@ import numpy
 from simphony.core.cuba import CUBA
 from simphony.core.keywords import KEYWORDS
 
-from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
-from simlammps.common.atom_style import get_lammps_string
+from ..common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
+from ..common.atom_style import get_lammps_string
 
 
 class LammpsDataFileWriter(object):
