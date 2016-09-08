@@ -5,17 +5,15 @@ from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particles, Particle
 
-from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
-from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
-from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
-from simlammps.io.lammps_data_file_writer import LammpsDataFileWriter
+from .lammps_data_file_parser import LammpsDataFileParser
+from .lammps_simple_data_handler import LammpsSimpleDataHandler
+from .lammps_data_line_interpreter import LammpsDataLineInterpreter
+from .lammps_data_file_writer import LammpsDataFileWriter
 
-from simlammps.common.atom_style_description import (ATOM_STYLE_DESCRIPTIONS,
-                                                     get_attributes)
-
-from simlammps.config.domain import get_box
-
-from simlammps.abc_data_manager import ABCDataManager
+from ..common.atom_style_description import (ATOM_STYLE_DESCRIPTIONS,
+                                             get_attributes)
+from ..config.domain import get_box
+from ..abc_data_manager import ABCDataManager
 
 
 def _filter_unsupported_data(iterable, supported_cuba):

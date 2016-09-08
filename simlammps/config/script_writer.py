@@ -1,8 +1,8 @@
 from simphony.core.cuba import CUBA
 
-from simlammps.config.pair_style import PairStyle
-from simlammps.cuba_extension import CUBAExtension
-from simlammps.common.atom_style import (get_lammps_string, AtomStyle)
+from .pair_style import PairStyle
+from ..cuba_extension import CUBAExtension
+from ..common.atom_style import (get_lammps_string, AtomStyle)
 
 
 class ConfigurationError(RuntimeError):

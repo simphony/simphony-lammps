@@ -2,7 +2,7 @@ from simphony.engine import ABCEngineExtension
 from simphony.engine import EngineInterface
 from simphony.engine.decorators import register
 
-from .lammps_wrapper import LammpsWrapper, EngineType
+from .lammps_wrapper import LammpsWrapper
 from .cuba_extension import CUBAExtension
 from .io.file_utility import read_data_file
 
@@ -27,20 +27,13 @@ class SimlammpsExtension(ABCEngineExtension):
         # lammps_features =\
         #     self.create_engine_metadata_feature(MolecularDynamics(),
         #                                         [Verlet()])
-        # liggghts_features =\
-        #     self.create_engine_metadata_feature(GranularDynamics(),
-        #                                         [DEM()])
         lammps_features = None
-        liggghts_features = None
         lammps = self.create_engine_metadata('LAMMPS',
                                              lammps_features,
                                              [EngineInterface.Internal,
                                               EngineInterface.FileIO])
 
-        liggghts = self.create_engine_metadata('LIGGGHTS',
-                                               liggghts_features,
-                                               [EngineInterface.FileIO])
-        return [lammps, liggghts]
+        return [lammps]
 
     def create_wrapper(self, cuds, engine_name, engine_interface):
         """Creates a wrapper to the requested engine.
@@ -62,14 +55,9 @@ class SimlammpsExtension(ABCEngineExtension):
         if engine_interface == EngineInterface.Internal:
             use_internal_interface = True
 
-        if engine_name == 'LAMMPS':
-            return LammpsWrapper(cuds=cuds,
-                                 engine_type=EngineType.MD,
-                                 use_internal_interface=use_internal_interface)
-        elif engine_name == 'LIGGGHTS':
-            return LammpsWrapper(cuds=cuds,
-                                 engine_type=EngineType.DEM,
-                                 use_internal_interface=use_internal_interface)
-        else:
-            raise Exception('Only LAMMPS and LIGGGHTS engines are supported. '
+        if engine_name != 'LAMMPS':
+            raise Exception('Only LAMMPS engine is supported. '
                             'Unsupported eninge: %s', engine_name)
+
+        return LammpsWrapper(cuds=cuds,
+                             use_internal_interface=use_internal_interface)

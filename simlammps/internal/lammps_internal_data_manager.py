@@ -4,12 +4,12 @@ from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
 
-import simlammps.common.globals as globals
-from simlammps.config.domain import get_box
-from simlammps.internal.particle_data_cache import ParticleDataCache
-from simlammps.abc_data_manager import ABCDataManager
-from simlammps.cuba_extension import CUBAExtension
-from simlammps.config.script_writer import ScriptWriter
+from ..common import globals
+from ..config.domain import get_box
+from .particle_data_cache import ParticleDataCache
+from ..abc_data_manager import ABCDataManager
+from ..cuba_extension import CUBAExtension
+from ..config.script_writer import ScriptWriter
 
 
 class LammpsInternalDataManager(ABCDataManager):

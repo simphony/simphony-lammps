@@ -1,7 +1,7 @@
 from simphony.core.cuba import CUBA
 from simphony.core.keywords import KEYWORDS
 
-from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
+from ..common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 
 
 class LammpsDataLineInterpreter(object):
