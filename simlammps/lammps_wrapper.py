@@ -6,7 +6,6 @@ import contextlib
 import os
 import tempfile
 import shutil
-from enum import (IntEnum, unique)
 
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_particles import ABCParticles
