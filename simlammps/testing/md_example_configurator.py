@@ -1,10 +1,10 @@
 import random
 
-from simphony.cuds.particles import Particle, Particles
 from simphony.core.cuba import CUBA
+from simphony.cuds.particles import Particle, Particles
 
-from simlammps.material import Material
-from simlammps.cuba_extension import CUBAExtension
+from ..cuba_extension import CUBAExtension
+from ..material import Material
 
 
 class MDExampleConfigurator:

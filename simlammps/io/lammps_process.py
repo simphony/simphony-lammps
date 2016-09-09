@@ -37,7 +37,7 @@ class LammpsProcess(object):
         try:
             self.run(" ")
         except Exception:
-            msg = "LAMMPS/LIGGGHTS could not be started."
+            msg = "LAMMPS could not be started."
             if self._returncode == 127:
                 msg += " executable '{}' was not found.".format(lammps_name)
             else:
@@ -65,7 +65,7 @@ class LammpsProcess(object):
         self._returncode = proc.returncode
 
         if self._returncode != 0 or self._stderr:
-            msg = "LAMMPS/LIGGGHTS ('{}') did not run correctly. ".format(
+            msg = "LAMMPS ('{}') did not run correctly. ".format(
                 self._lammps_name)
             msg += "Error code: {} ".format(proc.returncode)
             if self._stderr:

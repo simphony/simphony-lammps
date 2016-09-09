@@ -1,5 +1,4 @@
 from __future__ import print_function
-
 import subprocess
 
 from simphony.core.cuds_item import CUDSItem
@@ -47,6 +46,7 @@ with open("lammps_example_script", "w") as script_file:
     script_file.write(lammps_script)
 
 subprocess.check_call("lammps < lammps_example_script", shell=True)
+
 
 particles, state_data = read_data_file("example.data")
 print("\n\nFinished converting files")

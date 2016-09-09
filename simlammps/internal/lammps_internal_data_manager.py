@@ -4,14 +4,13 @@ from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
 
-import simlammps.common.globals as globals
-
-from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
-from simlammps.config.domain import get_box
-from simlammps.internal.particle_data_cache import ParticleDataCache
-from simlammps.abc_data_manager import ABCDataManager
-from simlammps.cuba_extension import CUBAExtension
-from simlammps.config.script_writer import ScriptWriter
+from .particle_data_cache import ParticleDataCache
+from ..abc_data_manager import ABCDataManager
+from ..common import globals
+from ..common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
+from ..config.domain import get_box
+from ..config.script_writer import ScriptWriter
+from ..cuba_extension import CUBAExtension
 
 
 class MaterialAtomTypeManager(object):

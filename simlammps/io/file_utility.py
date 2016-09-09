@@ -2,17 +2,17 @@ from simphony.cuds.particles import Particle, Particles
 from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 
-from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
-from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
-from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
-from simlammps.config.domain import get_box
-from simlammps.cuba_extension import CUBAExtension
-from simlammps.common.atom_style import (AtomStyle, get_atom_style)
-from simlammps.common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
-from simlammps.common.utils import create_material_to_atom_type_map
-from simlammps.io.lammps_data_file_writer import LammpsDataFileWriter
-from simlammps.state_data import StateData
-from simlammps.material import Material
+from .lammps_data_file_parser import LammpsDataFileParser
+from .lammps_data_file_writer import LammpsDataFileWriter
+from .lammps_data_line_interpreter import LammpsDataLineInterpreter
+from .lammps_simple_data_handler import LammpsSimpleDataHandler
+from ..common.atom_style import (AtomStyle, get_atom_style)
+from ..common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
+from ..common.utils import create_material_to_atom_type_map
+from ..config.domain import get_box
+from ..cuba_extension import CUBAExtension
+from ..material import Material
+from ..state_data import StateData
 
 
 def read_data_file(filename, atom_style=None, name=None):

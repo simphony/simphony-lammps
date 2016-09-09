@@ -6,20 +6,18 @@ import contextlib
 import os
 import tempfile
 import shutil
-from enum import (IntEnum, unique)
 
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_particles import ABCParticles
 from simphony.core.data_container import DataContainer
 
-from simlammps.io.lammps_fileio_data_manager import LammpsFileIoDataManager
-from simlammps.io.lammps_process import LammpsProcess
-from simlammps.internal.lammps_internal_data_manager import (
+from .common.atom_style import AtomStyle
+from .config.script_writer import ScriptWriter
+from .internal.lammps_internal_data_manager import (
     LammpsInternalDataManager)
-from simlammps.config.script_writer import ScriptWriter
-from simlammps.common.atom_style import AtomStyle
-from simlammps.state_data import StateData
-
+from .io.lammps_fileio_data_manager import LammpsFileIoDataManager
+from .io.lammps_process import LammpsProcess
+from .state_data import StateData
 
 @contextlib.contextmanager
 def _temp_directory():
@@ -33,20 +31,14 @@ def _temp_directory():
     shutil.rmtree(temp_dir)
 
 
-@unique
-class EngineType(IntEnum):
-    MD = 0
-    DEM = 1
-
-
 class LammpsWrapper(ABCModelingEngine):
     """ Wrapper to LAMMPS-md
 
 
     """
     def __init__(self,
-                 engine_type=EngineType.MD,
-                 use_internal_interface=False):
+                 use_internal_interface=False,
+                 **kwargs):
         """ Constructor.
 
         Parameters
@@ -71,24 +63,31 @@ class LammpsWrapper(ABCModelingEngine):
 
         self._use_internal_interface = use_internal_interface
 
-        atom_style = AtomStyle.GRANULAR \
-            if engine_type == EngineType.DEM else AtomStyle.ATOMIC
-        self._executable_name = "liggghts" \
-            if engine_type == EngineType.DEM else "lammps"
+        atom_style = AtomStyle.ATOMIC
+        self._executable_name = "lammps"
         self._script_writer = ScriptWriter(atom_style)
 
         if self._use_internal_interface:
-            if engine_type == EngineType.DEM:
-                raise RuntimeError(
-                    "DEM using the INTERNAL interface is not yet supported")
-
             import lammps
-            self._lammps = lammps.lammps(cmdargs=["-screen", "none"])
+            self._lammps = lammps.lammps(cmdargs=["-screen", "none",
+                                                  "-log", "none"])
             self._data_manager = LammpsInternalDataManager(self._lammps,
                                                            self.SD,
                                                            atom_style)
         else:
             self._data_manager = LammpsFileIoDataManager(self.SD, atom_style)
+
+        # Call the base class in order to load CUDS
+        super(LammpsWrapper, self).__init__(**kwargs)
+
+    def _load_cuds(self):
+        """Load CUDS data into lammps engine."""
+        cuds = self.get_cuds()
+        if not cuds:
+            return
+
+        for component in cuds.iter(ABCParticles):
+            self.add_dataset(component)
 
     def add_dataset(self, container):
         """Add a CUDS container
