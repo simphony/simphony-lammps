@@ -13,7 +13,7 @@ from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 from simphony.cuds.particles import Particle, Particles
 
-from simphony import CUDS, Simulation
+from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
 
 ##############################################################
