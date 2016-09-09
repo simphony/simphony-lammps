@@ -1,7 +1,5 @@
-# Demonstration of the SimPhoNy Lammps-md File-IO Wrapper using the
-# final CUDS in D1.6 perform a simple molecular dynamics with several
-# ensembles using SimPhoNy CUDS
-
+# Demonstration of the SimPhoNy Lammps-md Wrapper using the
+# final CUDS specifications 
 
 from __future__ import print_function
 
@@ -123,8 +121,8 @@ box = api.Box(name='simulation_box')
 super_cell = [
     tuple(N_dup[i]*x*a_latt for x in v) for i, v in enumerate(unit_cell)]
 
-box.vector = [super_cell(:,1), super_cell(:,2), super_cell(:,3)] 
-# need to check the order. 
+box.vector = super_cell
+
 
 cuds.add(box)
 
@@ -142,7 +140,7 @@ thermo.description = 'a simple temperature rescaling test'
 thermo.temperature = [0.0, 1.0] # scale the temperature from 0  to 1
 thermo.coupling_time = 0.000025 # this is in time units, not steps.
 # add the thermostat to the CUDS computational model. 
-thermo.materials = [mat.uuid]
+thermo.material = [mat.uuid]
 cuds.add(thermo) 
 
 # create a new solver component:
@@ -173,7 +171,7 @@ lj = Lennard_Jones_6_12 (name = 'LennardJones')
 lj.cutoff_distance = 2.5
 lj.energy_well_depth = 1.0
 lj.van_der_waals_radius = 1.0 
-lj.materials = [cuds.get('mat').uuid, cuds.get('mat').uuid] 
+lj.material = [cuds.get('mat').uuid, cuds.get('mat').uuid] 
 # sim = Simulation(cuds = cuds, engine = LAMMPS() ) 
 
 # initialisation of the simulation
@@ -185,7 +183,7 @@ newcuds.remove('thermo')
 thermo = NoseHoover(name='thermo')
 thermo.temperature= [ 1.0, 1.2]
 thermo.coupling_time=0.00000025
-thermo.materials=[newcuds.get('mat').uuid,]
+thermo.material=[newcuds.get('mat').uuid,]
 newcuds.add(thermo)
 pc=newcuds.get('Test') 
 # pc is now a proxy to the pc in the "wrapper" managed by the sim. 
