@@ -9,7 +9,7 @@ from simphony.core.data_container import DataContainer
 from simphony.core.cuba import CUBA
 from simphony.cuds.particles import Particles, Particle
 
-from simlammps.testing.md_example_configurator import MDExampleConfigurator
+from .md_example_configurator import MDExampleConfigurator
 
 
 def _create_pc(name):

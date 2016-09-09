@@ -2,7 +2,7 @@ import itertools
 
 from simphony.core.cuba import CUBA
 
-from simlammps.common.atom_style import AtomStyle
+from .atom_style import AtomStyle
 
 
 class AtomStyleDescription(object):

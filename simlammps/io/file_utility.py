@@ -3,13 +3,13 @@ from simphony.core.data_container import DataContainer
 from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 
-from simlammps.io.lammps_data_file_parser import LammpsDataFileParser
-from simlammps.io.lammps_simple_data_handler import LammpsSimpleDataHandler
-from simlammps.io.lammps_data_line_interpreter import LammpsDataLineInterpreter
-from simlammps.config.domain import get_box
-from simlammps.cuba_extension import CUBAExtension
-from simlammps.common.atom_style import (AtomStyle, get_atom_style)
-from simlammps.io.lammps_data_file_writer import LammpsDataFileWriter
+from .lammps_data_file_parser import LammpsDataFileParser
+from .lammps_simple_data_handler import LammpsSimpleDataHandler
+from .lammps_data_line_interpreter import LammpsDataLineInterpreter
+from .lammps_data_file_writer import LammpsDataFileWriter
+from ..config.domain import get_box
+from ..cuba_extension import CUBAExtension
+from ..common.atom_style import (AtomStyle, get_atom_style)
 
 
 def read_data_file(filename, atom_style=None):

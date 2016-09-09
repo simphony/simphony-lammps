@@ -3,23 +3,23 @@ simphony-lammps
 
 The LAMMPS engine-wrapper for the SimPhoNy framework (www.simphony-project.eu).
 
-.. image:: https://travis-ci.org/simphony/simphony-lammps-md.svg?branch=master
-    :target: https://travis-ci.org/simphony/simphony-lammps-md
-      :alt: Build status
+.. image:: https://travis-ci.org/simphony/simphony-lammps.svg?branch=master
+   :target: https://travis-ci.org/simphony/simphony-lammps
+   :alt: Build status
 
-.. image:: http://codecov.io/github/simphony/simphony-lammps-md/coverage.svg?branch=master
-   :target: http://codecov.io/github/simphony/simphony-lammps-md?branch=master
-      :alt: Test coverage
+.. image:: http://codecov.io/github/simphony/simphony-lammps/coverage.svg?branch=master
+   :target: http://codecov.io/github/simphony/simphony-lammps?branch=master
+   :alt: Test coverage
 
-.. image:: https://readthedocs.org/projects/simphony-lammps-md/badge/?version=master
-   :target: https://readthedocs.org/projects/simphony-lammps-md/?badge=master
-      :alt: Documentation Status
+.. image:: https://readthedocs.org/projects/simphony-lammps/badge/?version=master
+   :target: https://readthedocs.org/projects/simphony-lammps/?badge=master
+   :alt: Documentation Status
 
 
 Repository
 ----------
 
-simphony-lammps is hosted on github: https://github.com/simphony/simphony-lammps-md
+simphony-lammps is hosted on github: https://github.com/simphony/simphony-lammps
 
 Requirements
 ------------
@@ -93,7 +93,7 @@ To build the documentation in the doc/build directory run::
 Directory structure
 -------------------
 
-- simlammps -- hold the lammps-md wrapper implementation
+- simlammps -- hold the lammps wrapper implementation
     
     - bench - benchmarking
     - common - contains general global files

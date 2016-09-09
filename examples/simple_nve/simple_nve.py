@@ -11,7 +11,7 @@ from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 from simphony.cuds.particles import Particle, Particles
 
-from simphony import CUDS, Simulation
+from simphony.api import CUDS, Simulation
 from simphony.cuds.meta import api
 
 ##############################################################
@@ -106,7 +106,7 @@ mat.data[CUBA.MASS]=1.0
 
 # mark all particles in pc to belong to mat: 
 for p in pc.iter_particles():
-    p.data[CUBA.MATERIAL] = mat.uuid
+    p.data[CUBA.MATERIAL] = mat.uid
 
 # define a cuds to hold the computational model:
 cuds = CUDS (name= 'fluid') 
@@ -163,7 +163,9 @@ pbc = api.Periodic(name= 'pbc')
 cuds.add(pbc)
 
 # attache this to the boundaries of the box: 
-cuds.get(box.condition = [cuds.get('pbc').uuid,  pbc.uuid, pbc.uudi]
+box= cuds.get('simulation_box')
+box.condition = [cuds.get('pbc').uid,  pbc.uid, pbc.udi]
+cuds.update(box) 
 
 
 # define the interatomic force as material relation  
@@ -172,9 +174,8 @@ lj.cutoff_distance = 2.5
 lj.energy_well_depth = 1.0
 lj.van_der_waals_radius = 1.0 
 lj.material = [cuds.get('mat').uuid, cuds.get('mat').uuid] 
-# sim = Simulation(cuds = cuds, engine = LAMMPS() ) 
 
-# initialisation of the simulation
+# initialization of the simulation
 sim = Simulation(cuds, "LAMMPS", use_internal_interface = true) 
 sim.run()
 
