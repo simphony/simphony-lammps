@@ -17,7 +17,6 @@ from ..common.utils import create_material_to_atom_type_map
 from ..config.domain import get_box
 
 
-
 def _filter_unsupported_data(iterable, supported_cuba):
     """Ensure iterators only provide particles with only supported data
 

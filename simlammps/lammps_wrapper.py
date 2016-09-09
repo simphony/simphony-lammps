@@ -20,6 +20,7 @@ from .internal.lammps_internal_data_manager import (
 from .io.lammps_fileio_data_manager import LammpsFileIoDataManager
 from .io.lammps_process import LammpsProcess
 
+
 @contextlib.contextmanager
 def _temp_directory():
     """ context manager that provides temp directory

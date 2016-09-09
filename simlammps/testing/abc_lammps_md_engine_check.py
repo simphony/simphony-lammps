@@ -68,7 +68,7 @@ class ABCLammpsMDEngineCheck(object):
         material_uid = self._md_configurator._materials[0].uid
         for i in range(0, 5):
             p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 0+0.1*i),
-                         data= {
+                         data={
                              CUBA.VELOCITY: (0.001*i, 0.0001*i, 0.0001*i),
                              CUBA.MATERIAL_TYPE: material_uid})
             uids = foo.add_particles([p])
