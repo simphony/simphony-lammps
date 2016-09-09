@@ -7,9 +7,11 @@ import os
 import tempfile
 import shutil
 
+from simphony.api import CUDS as StateData
+from simphony.core.data_container import DataContainer
+from simphony.cuds.meta.api import Material
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_particles import ABCParticles
-from simphony.core.data_container import DataContainer
 
 from .common.atom_style import AtomStyle
 from .config.script_writer import ScriptWriter
@@ -17,7 +19,6 @@ from .internal.lammps_internal_data_manager import (
     LammpsInternalDataManager)
 from .io.lammps_fileio_data_manager import LammpsFileIoDataManager
 from .io.lammps_process import LammpsProcess
-from .state_data import StateData
 
 @contextlib.contextmanager
 def _temp_directory():
@@ -227,7 +228,6 @@ class LammpsWrapper(ABCModelingEngine):
                 self._lammps.command(command)
 
             # after running, we read any changes from lammps
-            # TODO rework
             self._data_manager.read()
         else:
             with _temp_directory() as temp_dir:
@@ -246,7 +246,7 @@ class LammpsWrapper(ABCModelingEngine):
                     CM=_combine(self.CM, self.CM_extension),
                     SP=_combine(self.SP, self.SP_extension),
                     materials=[
-                        material for material in self.SD.iter_materials()])
+                        material for material in self.SD.iter(type(Material))])
                 process = LammpsProcess(lammps_name=self._executable_name,
                                         log_directory=temp_dir)
                 process.run(commands)

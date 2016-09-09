@@ -1,10 +1,10 @@
 import random
 
 from simphony.core.cuba import CUBA
+from simphony.cuds.meta.api import Material
 from simphony.cuds.particles import Particle, Particles
 
 from ..cuba_extension import CUBAExtension
-from ..material import Material
 
 
 class MDExampleConfigurator:
@@ -105,7 +105,7 @@ class MDExampleConfigurator:
 
         # SD
         for material in self._materials:
-            wrapper.SD.add_material(material)
+            wrapper.SD.add(material)
 
     def configure_wrapper(self, wrapper):
         """ Configure example wrapper with example settings and particles

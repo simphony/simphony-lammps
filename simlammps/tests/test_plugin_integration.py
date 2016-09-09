@@ -1,8 +1,9 @@
 import unittest
-import simphony.engine as engine_api
+
+from simphony import engine as engine_api
+from simphony.api import CUDS
 from simphony.engine import EngineInterface, create_wrapper
 
-from simphony.api import CUDS
 from simlammps.lammps_wrapper import LammpsWrapper
 
 

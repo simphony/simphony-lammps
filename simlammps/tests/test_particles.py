@@ -208,7 +208,6 @@ class TestInternalParticlesManipulatingParticles(
         self.addTypeEqualityFunc(
             Particle, partial(compare_particles, testcase=self))
         self.particle_list = create_particles(restrict=self.supported_cuba())
-
         material = self.configurator.materials[0]
         for p in self.particle_list:
             p.data[CUBA.MATERIAL_TYPE] = material.uid

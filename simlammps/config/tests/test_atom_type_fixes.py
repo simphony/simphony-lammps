@@ -1,10 +1,10 @@
 import unittest
 
 from simphony.core.cuba import CUBA
+from simphony.cuds.meta.api import Material
 
 from simlammps.config.atom_type_fixes import get_per_atom_type_fixes
 from simlammps.common.atom_style import AtomStyle
-from simlammps.material import Material
 
 
 class TestAtomTypeFixes(unittest.TestCase):

@@ -1,6 +1,8 @@
-from simphony.cuds.particles import Particle, Particles
+from simphony.api import CUDS as StateData
 from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
+from simphony.cuds.meta.api import Material
+from simphony.cuds.particles import Particle, Particles
 
 from .lammps_data_file_parser import LammpsDataFileParser
 from .lammps_data_file_writer import LammpsDataFileWriter
@@ -11,8 +13,6 @@ from ..common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 from ..common.utils import create_material_to_atom_type_map
 from ..config.domain import get_box
 from ..cuba_extension import CUBAExtension
-from ..material import Material
-from ..state_data import StateData
 
 
 def read_data_file(filename, atom_style=None, name=None):
@@ -76,13 +76,13 @@ def read_data_file(filename, atom_style=None, name=None):
         )
         material.description = description
         type_to_material_map[atom_type] = material.uid
-        SD.add_material(material)
+        SD.add(material)
 
     # add masses to materials
     for atom_type, mass in masses.iteritems():
-        material = SD.get_material(type_to_material_map[atom_type])
+        material = SD.get_by_uid(type_to_material_map[atom_type])
         material.data[CUBA.MASS] = mass
-        SD.update_material(material)
+        SD.update(material)
 
     def convert_atom_type_to_material(atom_type):
         return type_to_material_map[atom_type]
@@ -178,7 +178,7 @@ def _get_mass(state_data):
 
     """
     material_type_to_mass = {}
-    for material in state_data.iter_materials():
+    for material in state_data.iter(Material):
         try:
             material_type_to_mass[material.uid] = material.data[CUBA.MASS]
         except KeyError:

@@ -9,6 +9,7 @@ from numpy.testing import assert_almost_equal
 from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 from simphony.core.keywords import KEYWORDS
+from simphony.cuds.meta.api import Material
 
 from simlammps.io.file_utility import (read_data_file,
                                        write_data_file)
@@ -34,7 +35,8 @@ class TestFileUtility(unittest.TestCase):
         particles, SD = read_data_file(self._write_example_file(
             _explicit_atomic_style_file_contents))
 
-        masses = [material.data[CUBA.MASS] for material in SD.iter_materials()]
+        masses =\
+            [material.data[CUBA.MASS] for material in SD.iter(Material)]
         self.assertItemsEqual(masses, [3, 42, 1])
 
         self.assertEqual(4, particles.count_of(CUDSItem.PARTICLE))

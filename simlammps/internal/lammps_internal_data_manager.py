@@ -1,5 +1,6 @@
 import uuid
 
+from simphony.cuds.meta.api import Material
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
@@ -106,7 +107,7 @@ class LammpsInternalDataManager(ABCDataManager):
         self._state_data = state_data
         self._atom_style = atom_style
 
-        materials = [m for m in state_data.iter_materials()]
+        materials = [m for m in state_data.iter(Material)]
         self._material_atom_type_manager = MaterialAtomTypeManager(materials)
 
         dummy_bc = {CUBAExtension.BOX_FACES: ("periodic",
@@ -400,7 +401,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
     def _update_mass(self):
         mass = {}
-        for material in self._state_data.iter_materials():
+        for material in self._state_data.iter(Material):
             atom_type = self._material_atom_type_manager.get_atom_type(
                 material.uid)
             if CUBA.MASS not in material.data:
@@ -503,5 +504,5 @@ class LammpsInternalDataManager(ABCDataManager):
         """ Update materials from state data
 
         """
-        materials = [m for m in self._state_data.iter_materials()]
+        materials = [m for m in self._state_data.iter(Material)]
         self._material_atom_type_manager.update_materials(materials)

@@ -4,8 +4,7 @@ from simphony.core.cuba import CUBA
 from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particles, Particle
-
-
+from simphony.cuds.meta.api import Material
 
 from .lammps_data_file_parser import LammpsDataFileParser
 from .lammps_data_file_writer import LammpsDataFileWriter
@@ -355,7 +354,7 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         """
         mass = {}
-        for material in self._state_data.iter_materials():
+        for material in self._state_data.iter(Material):
             if CUBA.MASS not in material.data:
                 raise RuntimeError(
                     "Material does not have the required mass")
