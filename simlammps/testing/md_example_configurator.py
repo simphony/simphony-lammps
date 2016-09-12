@@ -53,7 +53,8 @@ class MDExampleConfigurator:
             self._materials = []
             random.seed(42)
             for _ in xrange(3):
-                material = Material(data={CUBA.MASS: random.uniform(1.0, 2.0)})
+                material = Material()
+                material.data.update({CUBA.MASS: random.uniform(1.0, 2.0)})
                 self._materials.append(material)
         else:
             self._materials = materials
