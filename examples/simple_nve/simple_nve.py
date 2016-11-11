@@ -1,5 +1,4 @@
-# Demonstration of the SimPhoNy Lammps-md Wrapper using the
-# final CUDS specifications 
+# Demonstration of the SimPhoNy Lammps-md Wrapper using CUDS
 
 from __future__ import print_function
 
