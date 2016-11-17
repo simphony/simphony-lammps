@@ -1,8 +1,8 @@
-from simphony.cuds.abc_particles import ABCParticles
-from simphony.core.cuds_item import CUDSItem
+from simphony.cuds import Particles
+from simphony.core import CUBA
 
 
-class LammpsParticles(ABCParticles):
+class LammpsParticles(Particles):
     """ Responsible class to synchronize operations on particles
 
     Attributes
@@ -167,9 +167,9 @@ class LammpsParticles(ABCParticles):
             container.
 
         """
-        if item_type == CUDSItem.PARTICLE:
+        if item_type == CUBA.PARTICLE:
             return self._manager.number_of_particles(self._uname)
-        elif item_type == CUDSItem.BOND:
+        elif item_type == CUBA.BOND:
             return 0
         else:
             error_str = "Trying to obtain count a of non-supported item: {}"
