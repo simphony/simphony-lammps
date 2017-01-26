@@ -7,6 +7,7 @@ import os
 import tempfile
 import shutil
 
+from simphony.core import CUBA
 from simphony.api import CUDS as StateData
 from simphony.core.data_container import DataContainer
 from simphony.cuds.meta.api import Material
@@ -88,7 +89,7 @@ class LammpsWrapper(ABCModelingEngine):
         if not cuds:
             return
 
-        for component in cuds.iter(ABCParticles):
+        for component in cuds.iter(item_type=CUBA.PARTICLES):
             self.add_dataset(component)
 
     def add_dataset(self, container):
@@ -247,7 +248,7 @@ class LammpsWrapper(ABCModelingEngine):
                     CM=_combine(self.CM, self.CM_extension),
                     SP=_combine(self.SP, self.SP_extension),
                     materials=[
-                        material for material in self.SD.iter(type(Material))])
+                        material for material in self.SD.iter(item_type=CUBA.MATERIAL)])
                 process = LammpsProcess(lammps_name=self._executable_name,
                                         log_directory=temp_dir)
                 process.run(commands)

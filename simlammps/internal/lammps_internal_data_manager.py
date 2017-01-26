@@ -107,7 +107,7 @@ class LammpsInternalDataManager(ABCDataManager):
         self._state_data = state_data
         self._atom_style = atom_style
 
-        materials = [m for m in state_data.iter(Material)]
+        materials = [m for m in state_data.iter(item_type=CUBA.MATERIAL)]
         self._material_atom_type_manager = MaterialAtomTypeManager(materials)
 
         dummy_bc = {CUBAExtension.BOX_FACES: ("periodic",
@@ -234,7 +234,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
         self._update_simulation_box()
 
-        self._add_atoms(iterable=particles.iter_particles(),
+        self._add_atoms(iterable=particles.iter(item_type=CUBA.PARTICLE),
                         uname=uname,
                         safe=True)
 
@@ -401,7 +401,7 @@ class LammpsInternalDataManager(ABCDataManager):
 
     def _update_mass(self):
         mass = {}
-        for material in self._state_data.iter(Material):
+        for material in self._state_data.iter(item_type=CUBA.MATERIAL):
             atom_type = self._material_atom_type_manager.get_atom_type(
                 material.uid)
             if CUBA.MASS not in material.data:
@@ -504,5 +504,5 @@ class LammpsInternalDataManager(ABCDataManager):
         """ Update materials from state data
 
         """
-        materials = [m for m in self._state_data.iter(Material)]
+        materials = [m for m in self._state_data.iter(item_type=CUBA.MATERIAL)]
         self._material_atom_type_manager.update_materials(materials)

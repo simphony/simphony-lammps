@@ -104,9 +104,7 @@ class MDExampleConfigurator:
         wrapper.BC_extension[CUBAExtension.BOX_FACES] = (
             "periodic", "periodic", "periodic")
 
-        # SD
-        for material in self._materials:
-            wrapper.SD.add(material)
+        wrapper.SD.add(self._materials)
 
     def configure_wrapper(self, wrapper):
         """ Configure example wrapper with example settings and particles
@@ -156,7 +154,7 @@ class MDExampleConfigurator:
                 p = Particle(coordinates=coord)
                 p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
                 p.data[CUBA.MATERIAL_TYPE] = self._materials[material_i].uid
-                pc.add_particles([p])
+                pc.add([p])
 
             wrapper.add_dataset(pc)
 

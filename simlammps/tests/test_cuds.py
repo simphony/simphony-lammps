@@ -19,12 +19,12 @@ class LAMMPSCUDSTestCase(unittest.TestCase):
         ps1 = Particles('ps1')
         ps2 = Particles('ps2')
 
-        ps1.add_particles(pset1)
-        ps2.add_particles(pset2)
+        ps1.add(pset1)
+        ps2.add(pset2)
 
         c = CUDS()
-        c.add(ps1)
-        c.add(ps2)
+        c.add([ps1])
+        c.add([ps2])
 
         return c
 

@@ -1,6 +1,5 @@
 from simphony.api import CUDS as StateData
-from simphony.core.cuba import CUBA
-from simphony.core.cuds_item import CUDSItem
+from simphony.core import CUBA
 from simphony.cuds.meta.api import Material
 from simphony.cuds.particles import Particle, Particles
 
@@ -76,13 +75,13 @@ def read_data_file(filename, atom_style=None, name=None):
         )
         material.description = description
         type_to_material_map[atom_type] = material.uid
-        SD.add(material)
+        SD.add([material])
 
     # add masses to materials
     for atom_type, mass in masses.iteritems():
-        material = SD.get_by_uid(type_to_material_map[atom_type])
+        material = SD.get(type_to_material_map[atom_type])
         material.data[CUBA.MASS] = mass
-        SD.update(material)
+        SD.update([material])
 
     def convert_atom_type_to_material(atom_type):
         return type_to_material_map[atom_type]
@@ -101,7 +100,7 @@ def read_data_file(filename, atom_style=None, name=None):
         data.update(interpreter.convert_velocity_values(velocities[lammps_id]))
 
         p = Particle(coordinates=coordinates, data=data)
-        particles.add_particles([p])
+        particles.add([p])
 
     return particles, SD
 
@@ -140,7 +139,7 @@ def write_data_file(filename,
         particles = [particles]
 
     num_particles = sum(
-        pc.count_of(CUDSItem.PARTICLE) for pc in particles)
+        pc.count_of(CUBA.PARTICLE) for pc in particles)
 
     # get a mapping from material_type to atom_type
     material_to_atom_type = create_material_to_atom_type_map(state_data)
@@ -155,8 +154,9 @@ def write_data_file(filename,
                                   material_to_atom_type=material_to_atom_type,
                                   simulation_box=box,
                                   material_type_to_mass=material_type_to_mass)
+
     for pc in particles:
-        for p in pc.iter_particles():
+        for p in pc.iter(item_type=CUBA.PARTICLE):
             writer.write_atom(p)
     writer.close()
 
@@ -178,7 +178,7 @@ def _get_mass(state_data):
 
     """
     material_type_to_mass = {}
-    for material in state_data.iter(Material):
+    for material in state_data.iter(item_type=CUBA.PARTICLE):
         try:
             material_type_to_mass[material.uid] = material.data[CUBA.MASS]
         except KeyError:

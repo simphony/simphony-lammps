@@ -1,7 +1,6 @@
 import os
 
 from simphony.core.cuba import CUBA
-from simphony.core.cuds_item import CUDSItem
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particles, Particle
 from simphony.cuds.meta.api import Material
@@ -149,11 +148,11 @@ class LammpsFileIoDataManager(ABCDataManager):
         pc = Particles(name="_")
         pc.data = DataContainer(particles.data)
 
-        for p in particles.iter_particles():
-            pc.add_particles([p])
+        for p in particles.iter(item_type=CUBA.PARTICLE):
+            pc.add([p])
 
-        for b in particles.iter_bonds():
-            pc.add_bonds([b])
+        for b in particles.iter(item_type=CUBA.BOND):
+            pc.add([b])
 
         self._pc_cache[uname] = pc
 
@@ -174,24 +173,24 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        return self._pc_cache[uname].get_particle(uid)
+        return self._pc_cache[uname].get(uid)
 
     def update_particles(self, iterable, uname):
         """Update particles
 
         """
-        self._pc_cache[uname].update_particles(
+        self._pc_cache[uname].update(
             _filter_unsupported_data(iterable, self._supported_cuba))
 
     def add_particles(self, iterable, uname):
         """Add particles
 
         """
-        uids = self._pc_cache[uname].add_particles(iterable)
+        uids = self._pc_cache[uname].add(iterable)
 
         # filter the cached particles of unsupported CUBA
-        self._pc_cache[uname].update_particles(_filter_unsupported_data(
-            self._pc_cache[uname].iter_particles(uids), self._supported_cuba))
+        self._pc_cache[uname].update(_filter_unsupported_data(
+            self._pc_cache[uname].iter(uids=uids), self._supported_cuba))
 
         return uids
 
@@ -206,7 +205,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        self._pc_cache[uname].remove_particles([uid])
+        self._pc_cache[uname].remove([uid])
 
     def has_particle(self, uid, uname):
         """Has particle
@@ -219,7 +218,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             name of particle container
 
         """
-        return self._pc_cache[uname].has_particle(uid)
+        return self._pc_cache[uname].has(uid)
 
     def iter_particles(self, uname, uids=None):
         """Iterate over the particles of a certain type
@@ -231,7 +230,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             uids is None then all particles will be iterated over.
 
         """
-        return self._pc_cache[uname].iter_particles(uids)
+        return self._pc_cache[uname].iter(uids=uids)
 
     def number_of_particles(self, uname):
         """Get number of particles in a container
@@ -242,7 +241,7 @@ class LammpsFileIoDataManager(ABCDataManager):
             non-changing unique name of particles
 
         """
-        return self._pc_cache[uname].count_of(CUDSItem.PARTICLE)
+        return self._pc_cache[uname].count_of(CUBA.PARTICLE)
 
     def flush(self, input_data_filename):
         """flush to file
@@ -299,12 +298,12 @@ class LammpsFileIoDataManager(ABCDataManager):
         for lammps_id, values in atoms.iteritems():
             uname, uid = self._lammpsid_to_uid[lammps_id]
             cache_pc = self._pc_cache[uname]
-            p = cache_pc.get_particle(uid)
+            p = cache_pc.get(uid)
             p.coordinates, p.data = interpreter.convert_atom_values(values)
             p.data.update(
                 interpreter.convert_velocity_values(velocities[lammps_id]))
 
-            cache_pc.update_particles([p])
+            cache_pc.update([p])
 
     def _write_data_file(self, filename):
         """ Write data file containing current state of simulation
@@ -316,11 +315,12 @@ class LammpsFileIoDataManager(ABCDataManager):
         # determine the number of particles
         num_particles = sum(
             pc.count_of(
-                CUDSItem.PARTICLE) for pc in self._pc_cache.itervalues())
+                CUBA.PARTICLE) for pc in self._pc_cache.itervalues())
 
         # create the mapping from material to atom-type
         self._material_to_atom = create_material_to_atom_type_map(
             self._state_data)
+
 
         box = get_box([de for _, de in self._dc_extension_cache.iteritems()])
 
@@ -335,7 +335,7 @@ class LammpsFileIoDataManager(ABCDataManager):
                                       simulation_box=box,
                                       material_type_to_mass=mass)
         for uname, pc in self._pc_cache.iteritems():
-            for p in pc.iter_particles():
+            for p in pc.iter(item_type=CUBA.PARTICLE):
                 lammps_id = writer.write_atom(p)
                 self._lammpsid_to_uid[lammps_id] = (uname, p.uid)
         writer.close()
@@ -353,7 +353,7 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         """
         mass = {}
-        for material in self._state_data.iter(Material):
+        for material in self._state_data.iter(item_type=CUBA.MATERIAL):
             if CUBA.MASS not in material.data:
                 raise RuntimeError(
                     "Material does not have the required mass")

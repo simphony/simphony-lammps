@@ -69,6 +69,7 @@ class ValueInfo(object):
         self.convert_to_cuba = convert_to_cuba
         self.convert_from_cuba = convert_from_cuba
 
+
 # description of each atom-style
 ATOM_STYLE_DESCRIPTIONS = {
     AtomStyle.ATOMIC:

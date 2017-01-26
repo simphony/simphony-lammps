@@ -39,14 +39,14 @@ class TestFileIoParticlesAddParticles(
         particles = create_particles_with_id(restrict=self.supported_cuba())
 
         # when
-        uids = container.add_particles(particles)
+        uids = container.add(particles)
 
         # then
         for particle in particles:
             uid = particle.uid
             self.assertIn(uid, uids)
-            self.assertTrue(container.has_particle(uid))
-            self.assertEqual(container.get_particle(uid), particle)
+            self.assertTrue(container.has(uid))
+            self.assertEqual(container.get(uid), particle)
 
 
 class TestInternalParticlesAddParticles(
@@ -77,7 +77,7 @@ class TestInternalParticlesAddParticles(
             p.data[CUBA.MATERIAL_TYPE] = material.uid
 
         self.container = self.container_factory('foo')
-        self.ids = self.container.add_particles(self.particle_list)
+        self.ids = self.container.add(self.particle_list)
 
     def test_add_particles_with_id(self):
         # given
@@ -92,13 +92,13 @@ class TestInternalParticlesAddParticles(
         particle.data[CUBA.MATERIAL_TYPE] = self.configurator.materials[0].uid
 
         # when
-        uids = container.add_particles([particle])
+        uids = container.add([particle])
         particle_uid = uids[0]
 
         # then
         self.assertEqual(particle_uid, uid)
-        self.assertTrue(container.has_particle(uid))
-        self.assertEqual(container.get_particle(uid), particle)
+        self.assertTrue(container.has(uid))
+        self.assertEqual(container.get(uid), particle)
 
     # TODO workaround for simphony issue #202 ( simphony/simphony-common#202 )
     def test_add_multiple_particles_with_id(self):
@@ -114,14 +114,14 @@ class TestInternalParticlesAddParticles(
             p.data[CUBA.MATERIAL_TYPE] = material.uid
 
         # when
-        uids = self.container.add_particles(particles)
+        uids = container.add(particles)
 
         # then
         for particle in particles:
             uid = particle.uid
             self.assertIn(uid, uids)
-            self.assertTrue(container.has_particle(uid))
-            self.assertEqual(container.get_particle(uid), particle)
+            self.assertTrue(container.has(uid))
+            self.assertEqual(container.get(uid), particle)
 
     def test_add_particles_with_unsupported_cuba(self):
         # given
@@ -135,14 +135,14 @@ class TestInternalParticlesAddParticles(
         particle.data[CUBA.MATERIAL_TYPE] = self.configurator.materials[0].uid
 
         # when
-        uids = container.add_particles([particle])
+        uids = container.add([particle])
         uid = uids[0]
 
         # then
         particle.data = create_data_container(restrict=self.supported_cuba())
         particle.data[CUBA.MATERIAL_TYPE] = self.configurator.materials[0].uid
-        self.assertTrue(container.has_particle(uid))
-        self.assertEqual(container.get_particle(uid), particle)
+        self.assertTrue(container.has(uid))
+        self.assertEqual(container.get(uid), particle)
 
     def test_add_multiple_particles_with_unsupported_cuba(self):
         # given
@@ -160,7 +160,7 @@ class TestInternalParticlesAddParticles(
             p.data[CUBA.MATERIAL_TYPE] = material.uid
 
         # when
-        container.add_particles(particles)
+        container.add(particles)
 
         # then
         for particle in particles:
@@ -172,8 +172,8 @@ class TestInternalParticlesAddParticles(
             particle.data[CUBA.MATERIAL_TYPE] = material.uid
 
             uid = particle.uid
-            self.assertTrue(container.has_particle(uid))
-            self.assertEqual(container.get_particle(uid), particle)
+            self.assertTrue(container.has(uid))
+            self.assertEqual(container.get(uid), particle)
 
 
 class TestFileIoParticlesManipulatingParticles(
@@ -213,7 +213,7 @@ class TestInternalParticlesManipulatingParticles(
             p.data[CUBA.MATERIAL_TYPE] = material.uid
 
         self.container = self.container_factory('foo')
-        self.ids = self.container.add_particles(self.particle_list)
+        self.ids = self.container.add(self.particle_list)
 
     def supported_cuba(self):
         return get_all_cuba_attributes(AtomStyle.ATOMIC)

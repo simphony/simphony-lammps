@@ -1,8 +1,13 @@
 from __future__ import print_function
 import subprocess
 
+<<<<<<< HEAD
 from simphony.core.cuds_item import CUDSItem
 from simlammps import read_data_file
+=======
+from simphony.engine import lammps
+from simphony.core.cuba import CUBA
+>>>>>>> common-version
 from simlammps.cuba_extension import CUBAExtension
 
 lammps_script = """# example of creating lammps data file (to be then used by SimPhoNy"
@@ -48,12 +53,17 @@ with open("lammps_example_script", "w") as script_file:
 subprocess.check_call("lammps < lammps_example_script", shell=True)
 
 
+<<<<<<< HEAD
 particles, state_data = read_data_file("example.data")
 print("\n\nFinished converting files")
 print("\nA Particles data-set was read from the file:")
 print("    '{}' has {} particles".format(
     particles.name,
     particles.count_of(CUDSItem.PARTICLE)))
+=======
+for particles in particles_list:
+    number_particles = sum(1 for _ in particles.iter(item_type=CUBA.PARTICLE))
+>>>>>>> common-version
 
 number_materials = sum(1 for _ in state_data.iter_materials())
 print("\n{} materials were read from the file.\n".format(number_materials))

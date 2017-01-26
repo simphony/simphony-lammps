@@ -7,7 +7,6 @@ import numpy
 from numpy.testing import assert_almost_equal
 
 from simphony.core.cuba import CUBA
-from simphony.core.cuds_item import CUDSItem
 from simphony.core.keywords import KEYWORDS
 from simphony.cuds.meta.api import Material
 
@@ -36,10 +35,11 @@ class TestFileUtility(unittest.TestCase):
             _explicit_atomic_style_file_contents))
 
         masses =\
-            [material.data[CUBA.MASS] for material in SD.iter(Material)]
+            [material.data[CUBA.MASS] for material 
+             in SD.iter(item_type=CUBA.MATERIAL)]
         self.assertItemsEqual(masses, [3, 42, 1])
 
-        self.assertEqual(4, particles.count_of(CUDSItem.PARTICLE))
+        self.assertEqual(4, particles.count_of(CUBA.PARTICLE))
         assert_almost_equal(
             particles.data_extension[CUBAExtension.BOX_ORIGIN],
             (0.0000000000000000e+00,
@@ -52,7 +52,7 @@ class TestFileUtility(unittest.TestCase):
             particles.data_extension[CUBAExtension.BOX_VECTORS],
             box)
 
-        for p in particles.iter_particles():
+        for p in particles.iter(item_type=CUBA.PARTICLE):
             assert_almost_equal(p.data[CUBA.VELOCITY], [1.0, 1.0, 1.0])
 
     def test_read_sphere_style_data_file(self):
@@ -61,7 +61,8 @@ class TestFileUtility(unittest.TestCase):
             _explicit_sphere_style_file_contents))
 
         # then
-        self.assertEqual(3, particles.count_of(CUDSItem.PARTICLE))
+        self.assertEqual(3, particles.count_of(CUBA.PARTICLE))
+
         assert_almost_equal(
             particles.data_extension[CUBAExtension.BOX_ORIGIN],
             (-10.0, -7.500, -0.500))
@@ -72,7 +73,7 @@ class TestFileUtility(unittest.TestCase):
             particles.data_extension[CUBAExtension.BOX_VECTORS],
             box)
 
-        for p in particles.iter_particles():
+        for p in particles.iter(item_type=CUBA.PARTICLE):
             assert_almost_equal(p.data[CUBA.ANGULAR_VELOCITY], [0.0, 0.0, 1.0])
             assert_almost_equal(p.data[CUBA.VELOCITY], [5.0, 0.0, 0.0])
             assert_almost_equal(p.data[CUBA.RADIUS], 0.5/2)
@@ -132,8 +133,8 @@ def _compare_particles_averages(particles,
     """
     self = testcase
 
-    len_particles = particles.count_of(CUDSItem.PARTICLE)
-    len_reference = reference.count_of(CUDSItem.PARTICLE)
+    len_particles = particles.count_of(CUBA.PARTICLE)
+    len_reference = reference.count_of(CUBA.PARTICLE)
     self.assertEqual(len_particles, len_reference)
     for key in attributes_keys:
         keyword = KEYWORDS[CUBA(key).name]
@@ -160,13 +161,14 @@ def _get_average(particles, key, shape):
         shape of value
 
     """
-    length = particles.count_of(CUDSItem.PARTICLE)
+    length = particles.count_of(CUBA.PARTICLE)
 
     if shape == [1]:
-        return sum(p.data[key] for p in particles.iter_particles())/length
+        return sum(p.data[key] for p in
+                   particles.iter(item_type=CUBA.PARTICLE))/length
     else:
         return tuple(map(lambda y: sum(y) / float(len(y)), zip(
-            *[p.data[key] for p in particles.iter_particles()])))
+            *[p.data[key] for p in particles.iter(item_type=CUBA.PARTICLE)])))
 
 
 _explicit_atomic_style_file_contents = """LAMMPS data file via write_data, version 28 Jun 2014, timestep = 0

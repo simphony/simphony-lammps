@@ -230,6 +230,7 @@ def _get_boundary(BC, change_existing_boundary):
     boundary_command += "\n"
     return boundary_command
 
+
 READ_DATA = """
 # read from SimPhoNy-generated file
 read_data {INPUT_DATAFILE}

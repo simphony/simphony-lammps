@@ -1,3 +1,4 @@
+from simphony.core import CUBA
 from simphony.cuds.meta.api import Material
 
 
@@ -15,7 +16,7 @@ def create_material_to_atom_type_map(state_data):
     """
     material_to_atom = {}
     number_atom_types = 1
-    for material in state_data.iter(Material):
+    for material in state_data.iter(item_type=CUBA.MATERIAL):
         material_to_atom[material.uid] = number_atom_types
         number_atom_types += 1
     return material_to_atom

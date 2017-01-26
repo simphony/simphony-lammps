@@ -11,9 +11,12 @@ class TestAtomTypeFixes(unittest.TestCase):
 
     def test_granular_style(self):
         # when
-        materials = [Material(
-            data={CUBA.YOUNG_MODULUS: float(i),
-                  CUBA.POISSON_RATIO: float(i)}) for i in xrange(1, 3)]
+        materials = []
+        for i in xrange(1, 3):
+            m = Material()
+            m.data = {CUBA.YOUNG_MODULUS: float(i),
+                      CUBA.POISSON_RATIO: float(i)}
+            materials.append(m)
         commands = get_per_atom_type_fixes(AtomStyle.GRANULAR, materials)
         lines = commands.rstrip("\n").split("\n")
         self.assertEqual(len(lines), 2)
