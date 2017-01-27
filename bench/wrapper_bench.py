@@ -1,15 +1,12 @@
 from collections import namedtuple
 
-from simphony.engine import lammps
-from simphony.bench.util import bench
-<<<<<<< HEAD
-from simphony.core.cuds_item import CUDSItem
-=======
-from simphony.core.cuba import CUBA
->>>>>>> common-version
-
 from simlammps.bench.util import get_particles
 from simlammps.testing.md_example_configurator import MDExampleConfigurator
+
+from simphony.bench.util import bench
+from simphony.core.cuba import CUBA
+from simphony.engine import lammps
+
 
 _Tests = namedtuple(
     '_Tests', ['method', 'name'])
@@ -46,11 +43,7 @@ def run(wrapper):
 def run_iterate(wrapper):
     wrapper.run()
     for particles_dataset in wrapper.iter_datasets():
-<<<<<<< HEAD
-        for _ in particles_dataset.iter_particles():
-=======
         for particle in particles_dataset.iter(item_type=CUBA.PARTICLE):
->>>>>>> common-version
             pass
 
 
@@ -88,14 +81,9 @@ if __name__ == '__main__':
         for y_range in [3000, 8000]:
 
             # test different run scenarios
-<<<<<<< HEAD
             particles, state_data = get_particles(y_range)
-            number_particles = particles.count_of(CUDSItem.PARTICLE)
-=======
-            particles = get_particles(y_range)
             number_particles = sum(p.count_of(
                 CUBA.PARTICLE) for p in particles)
->>>>>>> common-version
             number_time_steps = 10
 
             SD = "DUMMY - TODO"
