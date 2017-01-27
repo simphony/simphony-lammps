@@ -166,7 +166,7 @@ def _check_configuration(CM):
     """
     cm_requirements = [CUBA.NUMBER_OF_TIME_STEPS,
                        CUBA.TIME_STEP,
-                       CUBAExtension.THERMODYNAMIC_ENSEMBLE]
+                       CUBA.THERMODYNAMIC_ENSEMBLE]
 
     missing = [str(req) for req in cm_requirements
                if req not in CM.keys()]
@@ -186,7 +186,7 @@ def _check_configuration(CM):
 
 
 def _get_thermodynamic_ensemble(CM):
-    esemble = CM[CUBAExtension.THERMODYNAMIC_ENSEMBLE]
+    esemble = CM[CUBA.THERMODYNAMIC_ENSEMBLE]
     if esemble == "NVE":
         return "fix 1 all nve\n"
     else:

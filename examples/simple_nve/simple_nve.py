@@ -112,10 +112,10 @@ for p in pc.iter(item_type=CUBA.PARTICLE):
 # define a cuds to hold the computational model:
 cuds = CUDS(name='fluid')
 
-cuds.add(mat)
+cuds.add([mat])
 
 # add pc to it.
-cuds.add(pc)
+cuds.add([pc])
 
 # create a simulation box CUDS component, and add it as a CUDS
 # component:
@@ -127,18 +127,18 @@ super_cell = [
 box.vector = super_cell
 
 
-cuds.add(box)
+cuds.add([box])
 
 # create a molecular dynamics model (NVE with temperature rescaling)
 
 md_nve = api.MolecularDynamics(name='md_test')
 # add the physics equation to the CUDS computational model.
-cuds.add(md_nve)
+cuds.add([md_nve])
 # or in one statement: cuds.add(MD(name='mdnve'))
 
 
 # create a empty thermostat as a general material relation
-thermo = api.TemperatureRescaling([mat], name='tempscale')
+thermo = api.TemperatureRescaling(material=[mat], name='tempscale')
 thermo.description = 'a simple temperature rescaling test'
 # scale the temperature from 0  to 1
 thermo.temperature = [0.0, 1.0]
@@ -146,7 +146,7 @@ thermo.temperature = [0.0, 1.0]
 thermo.coupling_time = 0.000025
 # add the thermostat to the CUDS computational model.
 thermo.material = [mat]
-cuds.add(thermo)
+cuds.add([thermo])
 
 # create a new solver component:
 sp = api.SolverParameter(name='solverParameters')
@@ -159,20 +159,20 @@ itime = api.IntegrationTime(name="md_nve_integration_time")
 itime.time = 0.0
 itime.step = 0.0025
 itime.final = 0.25
-cuds.add(itime)
+cuds.add([itime])
 
 verlet = api.Verlet(name="Verlet")
 
-cuds.add(verlet)
+cuds.add([verlet])
 
 # define periodic boundary condition
 pbc = api.Periodic(name='pbc')
-cuds.add(pbc)
+cuds.add([pbc])
 
 # attache this to the boundaries of the box:
 box = cuds.get_by_name('simulation_box')
 box.condition = [cuds.get_by_name('pbc'), pbc, pbc]
-cuds.update(box)
+cuds.update([box])
 
 
 # define the interatomic force as material relation
@@ -182,7 +182,7 @@ lj.energy_well_depth = 1.0
 lj.van_der_waals_radius = 1.0
 # lj.material = [cuds.get('mat'), cuds.get('mat')]
 
-cuds.add(lj)
+cuds.add([lj])
 
 w = simlammps.LammpsWrapper(cuds=cuds, use_internal_interface=True)
 
