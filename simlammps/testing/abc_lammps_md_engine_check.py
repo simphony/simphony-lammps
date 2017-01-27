@@ -3,11 +3,11 @@ from functools import partial
 
 from numpy.testing import assert_almost_equal
 
+from simphony.core.cuba import CUBA
+from simphony.core.data_container import DataContainer
+from simphony.cuds.particles import Particle, Particles
 from simphony.testing.utils import (
     compare_data_containers, compare_particles)
-from simphony.core.data_container import DataContainer
-from simphony.core.cuba import CUBA
-from simphony.cuds.particles import Particle
 
 from .md_example_configurator import MDExampleConfigurator
 
@@ -81,8 +81,9 @@ class ABCLammpsMDEngineCheck(object):
         material_uid = self._md_configurator._materials[0].uid
 
         for i in range(0, 5):
-            p = Particle(coordinates=(1+0.1*i, 1+0.1*i, 0+0.1*i))
-            p.data[CUBA.VELOCITY] = (0+0.001*i, 0+0.0001*i, 0+0.0001*i)
+            p = Particle(coordinates=(1 + 0.1 * i, 1 + 0.1 * i, 0 + 0.1 * i))
+            p.data[CUBA.VELOCITY] =\
+                (0 + 0.001 * i, 0 + 0.0001 * i, 0 + 0.0001 * i)
             p.data[CUBA.MATERIAL_TYPE] = material_uid
             uids = foo.add([p])
             particles_uids.extend(uids)
@@ -92,8 +93,8 @@ class ABCLammpsMDEngineCheck(object):
         foo_w = self.wrapper.get_dataset(foo.name)
 
         # remove one particle and update another
-        uid_to_remove = particles_uids[len(particles_uids)/2]
-        uid_to_update = particles_uids[len(particles_uids)/2-1]
+        uid_to_remove = particles_uids[len(particles_uids) / 2]
+        uid_to_update = particles_uids[len(particles_uids) / 2 - 1]
 
         foo_w.remove([uid_to_remove])
         foo.remove([uid_to_remove])

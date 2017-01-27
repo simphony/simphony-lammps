@@ -1,6 +1,5 @@
 import uuid
 
-from simphony.cuds.meta.api import Material
 from simphony.core.cuba import CUBA
 from simphony.core.data_container import DataContainer
 from simphony.cuds.particles import Particle
@@ -414,7 +413,7 @@ class LammpsInternalDataManager(ABCDataManager):
                                                          mass))
 
         # set the mass of all unused types (see issue #66)
-        for atom_type in range(1, globals.MAX_NUMBER_TYPES+1):
+        for atom_type in range(1, globals.MAX_NUMBER_TYPES + 1):
             if not self._material_atom_type_manager.has_atom_type(atom_type):
                 self._lammps.command("mass {} {}".format(atom_type, 1.0))
 

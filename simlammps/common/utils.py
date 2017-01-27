@@ -1,5 +1,4 @@
 from simphony.core import CUBA
-from simphony.cuds.meta.api import Material
 
 
 def create_material_to_atom_type_map(state_data):

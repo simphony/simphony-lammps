@@ -1,4 +1,4 @@
-from simphony.api import CUDS as StateData
+from simphony.api import CUDS
 from simphony.core import CUBA
 from simphony.cuds.meta.api import Material
 from simphony.cuds.particles import Particle, Particles
@@ -17,7 +17,7 @@ from ..cuba_extension import CUBAExtension
 def read_data_file(filename, atom_style=None, name=None):
     """ Reads LAMMPS data file and create CUDS objects
 
-    Reads LAMMPS data file and create a Particles and StateData. The StateData
+    Reads LAMMPS data file and create a Particles and CUDS. The CUDS
     will contain a material for each atom type (e.g. CUBA.MATERIAL_TYPE).
 
     The attributes for each particle are based upon what atom-style
@@ -40,7 +40,7 @@ def read_data_file(filename, atom_style=None, name=None):
     -------
     particles : Particles
         particles
-    SD : StateData
+    SD : CUDS
         SD containing materials
 
     """
@@ -55,7 +55,8 @@ def read_data_file(filename, atom_style=None, name=None):
             if handler.get_atom_type()
             else AtomStyle.ATOMIC)
 
-    types = (atom_t for atom_t in range(1, handler.get_number_atom_types()+1))
+    types = (atom_t for atom_t in
+             range(1, handler.get_number_atom_types() + 1))
     atoms = handler.get_atoms()
     velocities = handler.get_velocities()
     masses = handler.get_masses()
@@ -65,7 +66,7 @@ def read_data_file(filename, atom_style=None, name=None):
 
     type_to_material_map = {}
 
-    SD = StateData()
+    statedata = CUDS()
 
     # set up a Material for each different type
     for atom_type in types:
@@ -75,13 +76,13 @@ def read_data_file(filename, atom_style=None, name=None):
         )
         material.description = description
         type_to_material_map[atom_type] = material.uid
-        SD.add([material])
+        statedata.add([material])
 
     # add masses to materials
     for atom_type, mass in masses.iteritems():
-        material = SD.get(type_to_material_map[atom_type])
+        material = statedata.get(type_to_material_map[atom_type])
         material.data[CUBA.MASS] = mass
-        SD.update([material])
+        statedata.update([material])
 
     def convert_atom_type_to_material(atom_type):
         return type_to_material_map[atom_type]
@@ -102,7 +103,7 @@ def read_data_file(filename, atom_style=None, name=None):
         p = Particle(coordinates=coordinates, data=data)
         particles.add([p])
 
-    return particles, SD
+    return particles, statedata
 
 
 def write_data_file(filename,
@@ -126,7 +127,7 @@ def write_data_file(filename,
     particles : Particles or iterable of Particles
         particles
 
-    state_data : StateData
+    state_data : CUDS
         SD containing materials
 
     atom_style : AtomStyle, optional
@@ -173,7 +174,7 @@ def _get_mass(state_data):
 
     Parameters:
     -----------
-    state_data : StateData
+    state_data : CUDS
         SD containing material with mass
 
     """

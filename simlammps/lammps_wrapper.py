@@ -4,13 +4,12 @@ This module provides a wrapper for  LAMMPS-md
 """
 import contextlib
 import os
-import tempfile
 import shutil
+import tempfile
 
+from simphony.api import CUDS
 from simphony.core import CUBA
-from simphony.api import CUDS as StateData
 from simphony.core.data_container import DataContainer
-from simphony.cuds.meta.api import Material
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_particles import ABCParticles
 
@@ -62,7 +61,7 @@ class LammpsWrapper(ABCModelingEngine):
         self.CM_extension = {}
         self.SP_extension = {}
         self.BC_extension = {}
-        self.SD = StateData()
+        self.SD = CUDS()
 
         self._use_internal_interface = use_internal_interface
 
@@ -248,7 +247,8 @@ class LammpsWrapper(ABCModelingEngine):
                     CM=_combine(self.CM, self.CM_extension),
                     SP=_combine(self.SP, self.SP_extension),
                     materials=[
-                        material for material in self.SD.iter(item_type=CUBA.MATERIAL)])
+                        material for material in
+                        self.SD.iter(item_type=CUBA.MATERIAL)])
                 process = LammpsProcess(lammps_name=self._executable_name,
                                         log_directory=temp_dir)
                 process.run(commands)
