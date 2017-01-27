@@ -2,8 +2,10 @@ from __future__ import print_function
 
 import subprocess
 
-from simphony.engine import lammps
+from simlammps import read_data_file
 from simlammps.cuba_extension import CUBAExtension
+
+from simphony.core.cuba import CUBA
 
 lammps_script = """# example of creating lammps data file (to be then used by SimPhoNy"
 dimension	2
@@ -47,22 +49,26 @@ with open("lammps_example_script", "w") as script_file:
 
 subprocess.check_call("lammps < lammps_example_script", shell=True)
 
-particles_list = lammps.read_data_file("example.data")
+
+particles, state_data = read_data_file("example.data")
 print("\n\nFinished converting files")
-print("\n{} Particles data-sets were read from the file:".format(
-    len(particles_list)))
+print("\nA Particles data-set was read from the file:")
+print("    '{}' has {} particles".format(
+    particles.name,
+    particles.count_of(CUBA.PARTICLE)))
 
-for particles in particles_list:
-    number_particles = sum(1 for _ in particles.iter_particles())
+for particles in particles:
+    number_particles = sum(1 for _ in particles.iter(item_type=CUBA.PARTICLE))
 
-    print("    '{}' has {} particles".format(particles.name,
-                                             number_particles))
+number_materials = sum(1 for _ in state_data.iter_materials())
+print("\n{} materials were read from the file.\n".format(number_materials))
 
-box_description = ""\
-                  "Each has the following simulation box description:\n"\
-                  "CUBAExtension.BOX_ORIGIN: {}\n" \
-                  "CUBAExtension.BOX_VECTORS: {}"
+box_description = \
+    ""\
+    "The data-set has the following simulation box description:\n"\
+    "    CUBAExtension.BOX_ORIGIN: {}\n" \
+    "    CUBAExtension.BOX_VECTORS: {}"
 
 print(box_description.format(
-    particles_list[0].data_extension[CUBAExtension.BOX_ORIGIN],
-    particles_list[0].data_extension[CUBAExtension.BOX_VECTORS]))
+    particles.data_extension[CUBAExtension.BOX_ORIGIN],
+    particles.data_extension[CUBAExtension.BOX_VECTORS]))

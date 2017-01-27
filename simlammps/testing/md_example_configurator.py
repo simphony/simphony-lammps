@@ -1,59 +1,95 @@
 import random
 
-from simphony.cuds.particles import Particle, Particles
 from simphony.core.cuba import CUBA
-from simphony.core.data_container import DataContainer
+from simphony.cuds.meta.api import Material
+from simphony.cuds.particles import Particle, Particles
 
 from ..cuba_extension import CUBAExtension
 
 
 class MDExampleConfigurator:
-    """  MD Example configuration
+    """  Class which handles configuration of MD examples
 
     Class provides an example configuration for a
     lammps molecular dynamic engine
 
+    Attributes:
+    -----------
+    materials : list of Material
+        materials
+
     """
 
-    # box origin and box vectors
-    box_origin = (0.0, 0.0, 0.0)
-    box_vectors = [(101.0, 0.0, 0.0),
-                   (0.0, 101.0, 0.0),
-                   (0.0, 0.0, 1001.0)]
-
-    @staticmethod
-    def set_configuration(wrapper, material_types=None, number_time_steps=10):
-        """ Configure example engine with example settings
-
-        The wrapper is configured with required CM, SP, BC parameters
+    def __init__(self,
+                 materials=None,
+                 box_origin=None,
+                 box_vectors=None,
+                 number_time_steps=10):
+        """ Initialize the configurator
 
         Parameters
         ----------
         wrapper : ABCModelingEngine
             wrapper to be configured
-        material_types : iterable of int
-            material type that needs to be configured (used for pair
-            potentials). If None, then 3 (i.e. 1,2,3) material types
-            are assumed.
+        materials : Material, list
+            list of materials (if None, then 3 materials will be created)
         number_time_steps : int
             number of time steps to run
 
         """
+        # box origin and box vectors
+        if box_origin is None:
+            self._box_origin = (0.0, 0.0, 0.0)
+        else:
+            self._box_origin = box_origin
+        if box_vectors is None:
+            self._box_vectors = [(101.0, 0.0, 0.0),
+                                 (0.0, 101.0, 0.0),
+                                 (0.0, 0.0, 1001.0)]
+        else:
+            self._box_vectors = box_vectors
+
+        if materials is None:
+            self._materials = []
+            random.seed(42)
+            for _ in xrange(3):
+                material = Material()
+                material.data.update({CUBA.MASS: random.uniform(1.0, 2.0)})
+                self._materials.append(material)
+        else:
+            self._materials = materials
+
+        self._number_time_steps = number_time_steps
+
+    @property
+    def materials(self):
+        return self._materials
+
+    def set_configuration(self, wrapper):
+        """ Configure example engine with example settings
+
+        The wrapper is configured with required CM, SP, BC and SD parameters
+
+        Parameters
+        ----------
+        wrapper : ABCModelingEngine
+            wrapper to be configured
+
+        """
 
         # CM
-        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = number_time_steps
+        wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = self._number_time_steps
         wrapper.CM[CUBA.TIME_STEP] = 0.003
         wrapper.CM_extension[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
-
-        if material_types is None:
-            material_types = set([1, 2, 3])
-        else:
-            material_types = set(material_types)
 
         # SP
         pair_potential = ("lj:\n"
                           "  global_cutoff: 1.12246\n"
                           "  parameters:\n")
+
+        # TODO currently pair potentials are using 1-n integers
+        material_types = set(
+            mat_int for mat_int in xrange(1, len(self._materials)+1))
         while material_types:
             m_type = material_types.pop()
             for other in ([t for t in material_types] + [m_type]):
@@ -68,8 +104,9 @@ class MDExampleConfigurator:
         wrapper.BC_extension[CUBAExtension.BOX_FACES] = (
             "periodic", "periodic", "periodic")
 
-    @staticmethod
-    def configure_wrapper(wrapper):
+        wrapper.SD.add(self._materials)
+
+    def configure_wrapper(self, wrapper):
         """ Configure example wrapper with example settings and particles
 
         The wrapper is configured with required CM, SP, BC parameters
@@ -81,13 +118,12 @@ class MDExampleConfigurator:
 
         """
         # configure
-        MDExampleConfigurator.set_configuration(wrapper)
+        self.set_configuration(wrapper)
 
         # add particle containers
-        MDExampleConfigurator.add_particles(wrapper)
+        self.add_particles(wrapper)
 
-    @staticmethod
-    def add_particles(wrapper):
+    def add_particles(self, wrapper):
         """ Add containers of particles to wrapper
 
         The wrapper is configured with containers of particles that contain
@@ -99,75 +135,46 @@ class MDExampleConfigurator:
         wrapper : ABCModelingEngine
 
         """
+        random.seed(42)
         for i in range(1, 4):
-            pc = Particles(name="foo{}".format(i))
+            pc = self.get_empty_particles(name="foo{}".format(i))
 
-            random.seed(42)
             for _ in range(10):
                 # determine valid coordinates from simulation box
-                xrange = (MDExampleConfigurator.box_origin[0],
-                          MDExampleConfigurator.box_vectors[0][0])
-                yrange = (MDExampleConfigurator.box_origin[1],
-                          MDExampleConfigurator.box_vectors[1][1])
-                zrange = (MDExampleConfigurator.box_origin[2],
-                          MDExampleConfigurator.box_vectors[2][2])
+                xrange = (self._box_origin[0], self._box_vectors[0][0])
+                yrange = (self._box_origin[1], self._box_vectors[1][1])
+                zrange = (self._box_origin[2], self._box_vectors[2][2])
 
                 coord = (random.uniform(xrange[0], xrange[1]),
                          random.uniform(yrange[0], yrange[1]),
                          random.uniform(zrange[0], zrange[1]))
+
+                material_i = random.randint(0, len(self._materials)-1)
+
                 p = Particle(coordinates=coord)
                 p.data[CUBA.VELOCITY] = (0.0, 0.0, 0.0)
-                pc.add_particles([p])
+                p.data[CUBA.MATERIAL_TYPE] = self._materials[material_i].uid
+                pc.add([p])
 
-            MDExampleConfigurator.add_configure_particles(wrapper,
-                                                          pc,
-                                                          mass=i,
-                                                          material_type=i)
+            wrapper.add_dataset(pc)
 
-    @staticmethod
-    def add_configure_particles(wrapper, pc, mass=1, material_type=1):
-        """ Add containers of particles to wrapper and  configure it properly.
+    def get_empty_particles(self, name):
+        """ Get an empty particle container
 
-        The wrapper is configured with containers of particles that contain
-        mass, type/materialtype, and velocity.  They correspond to
-        the configuration performed in configure_wrapper method
+        The returned data set is configured accordingly.
 
         Parameters
         ----------
-        wrapper : ABCModelingEngine
-            wrapper
+        name : str
+            name of particle container
+
+        Returns
+        -------
         pc : Particles
-            particle container to be added and configured
-        mass : int
-            mass of particles
-        material : int, optional
-            material type of particles
+            dataset with no particles but properly configured
+
         """
-        data = DataContainer()
-        data[CUBA.MASS] = mass
-        data[CUBA.MATERIAL_TYPE] = material_type
-
-        pc.data = data
-
-        pc.data_extension = {CUBAExtension.BOX_VECTORS:
-                             MDExampleConfigurator.box_vectors,
-                             CUBAExtension.BOX_ORIGIN:
-                             MDExampleConfigurator.box_origin}
-
-        wrapper.add_dataset(pc)
-        return wrapper.get_dataset(pc.name)
-
-    @staticmethod
-    def create_particles(name, mass=1, material_type=1):
-        data = DataContainer()
-        data[CUBA.MASS] = mass
-        data[CUBA.MATERIAL_TYPE] = material_type
-
-        pc = Particles(name)
-        pc.data = data
-
-        pc.data_extension = {CUBAExtension.BOX_VECTORS:
-                             MDExampleConfigurator.box_vectors,
-                             CUBAExtension.BOX_ORIGIN:
-                             MDExampleConfigurator.box_origin}
+        pc = Particles(name=name)
+        pc.data_extension = {CUBAExtension.BOX_VECTORS: self._box_vectors,
+                             CUBAExtension.BOX_ORIGIN: self._box_origin}
         return pc

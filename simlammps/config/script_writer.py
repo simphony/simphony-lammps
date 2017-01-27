@@ -1,6 +1,8 @@
 from simphony.core.cuba import CUBA
 
+
 from .pair_style import PairStyle
+from .atom_type_fixes import get_per_atom_type_fixes
 from ..cuba_extension import CUBAExtension
 from ..common.atom_style import (get_lammps_string, AtomStyle)
 
@@ -32,11 +34,14 @@ class ScriptWriter(object):
     def __init__(self, atom_style):
         self._atom_style = atom_style
 
-    def get_configuration(self, BC, CM, SP, input_data_file, output_data_file):
+    def get_configuration(self, materials, BC, CM, SP,
+                          input_data_file, output_data_file):
         """ Return configuration command-script
 
         Parameters
         ----------
+        materials : list of Material
+            materials
         BC : DataContainer
             container of attributes related to the boundary conditions
         CM : DataContainer
@@ -71,6 +76,8 @@ class ScriptWriter(object):
 
         if input_data_file:
             result += READ_DATA.format(INPUT_DATAFILE=input_data_file)
+
+        result += get_per_atom_type_fixes(self._atom_style, materials)
 
         if self._atom_style == AtomStyle.GRANULAR:
             # TODO hard-coding certain values for DEM example
@@ -223,6 +230,7 @@ def _get_boundary(BC, change_existing_boundary):
     boundary_command += "\n"
     return boundary_command
 
+
 READ_DATA = """
 # read from SimPhoNy-generated file
 read_data {INPUT_DATAFILE}
@@ -258,8 +266,6 @@ communicate     single vel yes
 DEM_DUMMY_FIXES = """ 
 #Material properties required for new pair styles
 
-fix m1 all property/global youngsModulus peratomtype 3.e3
-fix m2 all property/global poissonsRatio peratomtype 0.45
 fix m3 all property/global coefficientRestitution peratomtypepair 1 0.95
 fix m4 all property/global coefficientFriction peratomtypepair 1 0.0
 

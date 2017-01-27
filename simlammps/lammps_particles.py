@@ -20,6 +20,8 @@ class LammpsParticles(Particles):
         self._manager = manager
         self._uname = uname
 
+        super(LammpsParticles, self).__init__(name=uname)
+
     @property
     def name(self):
         return self._manager.get_name(self._uname)
@@ -46,7 +48,7 @@ class LammpsParticles(Particles):
 
     # Particle methods ######################################################
 
-    def add_particles(self, iterable):
+    def _add_particles(self, iterable):
         """Adds a set of particles from the provided iterable
         to the container.
 
@@ -75,71 +77,39 @@ class LammpsParticles(Particles):
         """
         return self._manager.add_particles(iterable, self._uname)
 
-    def update_particles(self, iterable):
+    def _update_particles(self, iterable):
         """Update particles
 
         """
         self._manager.update_particles(iterable, self._uname)
 
-    def get_particle(self, uid):
+    def _get_particle(self, uid):
         """Get particle
 
         """
         return self._manager.get_particle(uid, self._uname)
 
-    def remove_particles(self, uids):
+    def _remove_particles(self, uids):
         """Remove particles
 
         """
         for uid in uids:
             self._manager.remove_particle(uid, self._uname)
 
-    def has_particle(self, uid):
+    def _has_particle(self, uid):
         """Has particle
 
         """
         return self._manager.has_particle(uid, self._uname)
 
-    def iter_particles(self, uids=None):
+    def _iter_particles(self, uids=None):
         """Get iterator over particles
 
         """
         for p in self._manager.iter_particles(self._uname, uids):
             yield p
 
-    # Bond methods #######################################################
-
-    def add_bonds(self, bonds):
-        """Add bonds
-
-        """
-        raise NotImplementedError
-
-    def update_bonds(self, bonds):
-        """Update particle
-
-        """
-        raise NotImplementedError
-
-    def get_bond(self, uid):
-        """Get bond
-
-        """
-        raise NotImplementedError
-
-    def remove_bonds(self, uid):
-        """Remove bond
-
-        """
-        raise NotImplementedError
-
-    def has_bond(self, uid):
-        """Has bond
-
-        """
-        raise NotImplementedError
-
-    def iter_bonds(self, uids=None):
+    def _iter_bonds(self, uids=None):
         """Get iterator over bonds
 
         """
@@ -152,8 +122,8 @@ class LammpsParticles(Particles):
 
         Parameters
         ----------
-        item_type : CUDSItem
-            The CUDSItem enum of the type of the items to return the count of.
+        item_type : CUBA type
+            The CUBA enum of the type of the items to return the count of.
 
         Returns
         -------

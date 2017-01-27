@@ -4,19 +4,21 @@ This module provides a wrapper for  LAMMPS-md
 """
 import contextlib
 import os
-import tempfile
 import shutil
+import tempfile
 
+from simphony.api import CUDS
+from simphony.core import CUBA
+from simphony.core.data_container import DataContainer
 from simphony.cuds.abc_modeling_engine import ABCModelingEngine
 from simphony.cuds.abc_particles import ABCParticles
-from simphony.core.data_container import DataContainer
 
-from .io.lammps_fileio_data_manager import LammpsFileIoDataManager
-from .io.lammps_process import LammpsProcess
+from .common.atom_style import AtomStyle
+from .config.script_writer import ScriptWriter
 from .internal.lammps_internal_data_manager import (
     LammpsInternalDataManager)
-from .config.script_writer import ScriptWriter
-from .common.atom_style import AtomStyle
+from .io.lammps_fileio_data_manager import LammpsFileIoDataManager
+from .io.lammps_process import LammpsProcess
 
 
 @contextlib.contextmanager
@@ -52,6 +54,15 @@ class LammpsWrapper(ABCModelingEngine):
             used where input/output files are used to communicate with LAMMPS
 
         """
+
+        self.BC = DataContainer()
+        self.CM = DataContainer()
+        self.SP = DataContainer()
+        self.CM_extension = {}
+        self.SP_extension = {}
+        self.BC_extension = {}
+        self.SD = CUDS()
+
         self._use_internal_interface = use_internal_interface
 
         atom_style = AtomStyle.ATOMIC
@@ -63,16 +74,10 @@ class LammpsWrapper(ABCModelingEngine):
             self._lammps = lammps.lammps(cmdargs=["-screen", "none",
                                                   "-log", "none"])
             self._data_manager = LammpsInternalDataManager(self._lammps,
+                                                           self.SD,
                                                            atom_style)
         else:
-            self._data_manager = LammpsFileIoDataManager(atom_style)
-
-        self.BC = DataContainer()
-        self.CM = DataContainer()
-        self.SP = DataContainer()
-        self.CM_extension = {}
-        self.SP_extension = {}
-        self.BC_extension = {}
+            self._data_manager = LammpsFileIoDataManager(self.SD, atom_style)
 
         # Call the base class in order to load CUDS
         super(LammpsWrapper, self).__init__(**kwargs)
@@ -83,7 +88,7 @@ class LammpsWrapper(ABCModelingEngine):
         if not cuds:
             return
 
-        for component in cuds.iter(ABCParticles):
+        for component in cuds.iter(item_type=CUBA.PARTICLES):
             self.add_dataset(component)
 
     def add_dataset(self, container):
@@ -224,7 +229,6 @@ class LammpsWrapper(ABCModelingEngine):
                 self._lammps.command(command)
 
             # after running, we read any changes from lammps
-            # TODO rework
             self._data_manager.read()
         else:
             with _temp_directory() as temp_dir:
@@ -241,7 +245,10 @@ class LammpsWrapper(ABCModelingEngine):
                     output_data_file=output_data_filename,
                     BC=_combine(self.BC, self.BC_extension),
                     CM=_combine(self.CM, self.CM_extension),
-                    SP=_combine(self.SP, self.SP_extension))
+                    SP=_combine(self.SP, self.SP_extension),
+                    materials=[
+                        material for material in
+                        self.SD.iter(item_type=CUBA.MATERIAL)])
                 process = LammpsProcess(lammps_name=self._executable_name,
                                         log_directory=temp_dir)
                 process.run(commands)

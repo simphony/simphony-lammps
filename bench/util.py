@@ -18,11 +18,11 @@ def get_particles(y_range):
 
     Returns
     -------
-    particle_list : iterable of ABCParticles
-
+    particles : Particles
+        particles
+    SD : StateData
+        SD containing materials
     """
-    particles_list = None
-
     temp_dir = tempfile.mkdtemp()
     script_name = os.path.join(temp_dir, "script")
     data_name = os.path.join(temp_dir, "output")
@@ -34,10 +34,10 @@ def get_particles(y_range):
                " -log none -echo none"
                " < {}").format(script_name)
         subprocess.check_call(cmd, shell=True)
-        particles_list = read_data_file(data_name)
+        particles, state_data = read_data_file(data_name)
     finally:
         shutil.rmtree(temp_dir)
-    return particles_list
+    return particles, state_data
 
 
 lammps_script = """# create particles"
