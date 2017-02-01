@@ -2,10 +2,8 @@
 # final CUDS specifications
 
 from __future__ import print_function
-
+import sys
 import numpy
-
-import simlammps
 
 from simphony.api import CUDS, Simulation
 from simphony.core.cuba import CUBA
@@ -114,7 +112,7 @@ cuds = CUDS(name='fluid')
 
 cuds.add([mat])
 
-# add pc to it.
+# add pc and mat to it.
 cuds.add([pc])
 
 # create a simulation box CUDS component, and add it as a CUDS
@@ -158,7 +156,7 @@ sp = api.SolverParameter(name='solverParameters')
 itime = api.IntegrationTime(name="md_nve_integration_time")
 itime.time = 0.0
 itime.step = 0.0025
-itime.final = 0.25
+itime.final = 10.25
 cuds.add([itime])
 
 verlet = api.Verlet(name="Verlet")
@@ -184,13 +182,10 @@ lj.van_der_waals_radius = 1.0
 
 cuds.add([lj])
 
-w = simlammps.LammpsWrapper(cuds=cuds, use_internal_interface=True)
-
-w.run()
-
 # initialization of the simulation
 sim = Simulation(cuds, "LAMMPS", engine_interface=EngineInterface.Internal)
 sim.run()
+sys.exit()
 
 
 # newcuds= sim.get_cuds()

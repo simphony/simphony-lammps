@@ -111,9 +111,13 @@ class LammpsWrapper(ABCModelingEngine):
                             ' only one material not %s' %
                             cuds.count_of(CUBA.MATERIAL))
 
+        material_to_atom = {}
+        number_atom_types = 0
         for mat in cuds.iter(item_type=CUBA.MATERIAL):
             if CUBA.MASS not in mat.data:
                 raise Exception('Material needs mass property!')
+            number_atom_types += 1
+            material_to_atom[mat.uid] = number_atom_types
 
         for particles in cuds.iter(item_type=CUBA.PARTICLES):
             update_list = []
@@ -180,8 +184,8 @@ class LammpsWrapper(ABCModelingEngine):
             '    sigma: {vanderwaals_radious}\n'\
             '    cutoff: {cutoff}\n'\
             .format(global_cutoff=1.12246,
-                    mat1=mat.uid,
-                    mat2=mat.uid,
+                    mat1=material_to_atom[ip.material[0].uid],
+                    mat2=material_to_atom[ip.material[1].uid],
                     energy_well_depth=ip.energy_well_depth,
                     vanderwaals_radious=ip.van_der_waals_radius,
                     cutoff=ip.cutoff_distance)
@@ -303,7 +307,6 @@ class LammpsWrapper(ABCModelingEngine):
                 self.CM, self.CM_extension))
             for command in commands.splitlines():
                 self._lammps.command(command)
-
             # after running, we read any changes from lammps
             self._data_manager.read()
         else:
