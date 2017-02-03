@@ -8,6 +8,7 @@ cache:
   - $HOME/.ccache
   
 env:
+  - SIMPHONY_VERSION=0.6.0
   - SIMPHONY_VERSION=master
 matrix:
   allow_failures:
