@@ -1,11 +1,10 @@
 """Tests for running lammps using CUDS and Simulation classes."""
 import unittest
 
-from simphony.api import CUDS, Simulation
+from simphony.api import CUDS
 from simphony.core.cuba import CUBA
 from simphony.cuds.meta import api
 from simphony.cuds.particles import Particles
-from simphony.engine import EngineInterface
 from simphony.testing.utils import create_particles_with_id
 
 

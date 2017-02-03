@@ -40,6 +40,7 @@ def _temp_directory():
     yield temp_dir
     shutil.rmtree(temp_dir)
 
+
 _temp_directory = contextlib.contextmanager(_temp_directory)
 
 
