@@ -1,10 +1,7 @@
-# Source Generated with Decompyle++
-# File: lammps_wrapper.pyc (Python 2.7)
+"""LAMMPS SimPhoNy Wrapper.
 
-''' LAMMPS SimPhoNy Wrapper
-
-This module provides a wrapper for  LAMMPS-md
-'''
+This module provides a wrapper for LAMMPS-md
+"""
 import contextlib
 import os
 import shutil
@@ -31,11 +28,11 @@ import simphony.cuds.particles as scp
 
 
 def _temp_directory():
-    ''' context manager that provides temp directory
+    """Provide a temp directory.
 
     The name of the created temp directory is returned when context is entered
     and this directory is deleted when context is exited
-    '''
+    """
     temp_dir = tempfile.mkdtemp()
     yield temp_dir
     shutil.rmtree(temp_dir)
@@ -44,9 +41,10 @@ _temp_directory = contextlib.contextmanager(_temp_directory)
 
 
 class LammpsWrapper(ABCModelingEngine):
-    ''' Wrapper to LAMMPS-md'''
+    """Wrapper to LAMMPS-md."""
+
     def __init__(self, use_internal_interface=False, **kwargs):
-        ''' Constructor.
+        """Constructor.
 
         Parameters
         ----------
@@ -57,8 +55,7 @@ class LammpsWrapper(ABCModelingEngine):
             If true, then the internal interface (library) is used when
             communicating with LAMMPS, if false, then file-io interface is
             used where input/output files are used to communicate with LAMMPS
-        '''
-
+        """
         self.BC = DataContainer()
         self.CM = DataContainer()
         self.SP = DataContainer()
@@ -191,7 +188,7 @@ class LammpsWrapper(ABCModelingEngine):
                     cutoff=ip.cutoff_distance)
 
     def add_dataset(self, container):
-        '''Add a CUDS container
+        """Add a CUDS container.
 
         Parameters
         ----------
@@ -205,7 +202,7 @@ class LammpsWrapper(ABCModelingEngine):
         ValueError:
             If there is already a dataset with the given name.
 
-        '''
+        """
         if not isinstance(container, ABCParticles):
             raise TypeError(
                 'The type of the dataset container is not supported')
@@ -215,7 +212,7 @@ class LammpsWrapper(ABCModelingEngine):
         self._data_manager.new_particles(container)
 
     def get_dataset(self, name):
-        ''' Get the dataset
+        """Get the dataset.
 
         The returned particle container can be used to query
         and change the related data inside LAMMPS.
@@ -236,7 +233,7 @@ class LammpsWrapper(ABCModelingEngine):
         ValueError:
             If there is no dataset with the given name
 
-        '''
+        """
         if name in self._data_manager:
             return self._data_manager[name]
 
@@ -244,12 +241,11 @@ class LammpsWrapper(ABCModelingEngine):
                          .format(name))
 
     def get_dataset_names(self):
-        ''' Returns the names of all the datasets
-        '''
+        """Return the names of all the datasets."""
         return [name for name in self._data_manager]
 
     def remove_dataset(self, name):
-        ''' Remove a dataset
+        """Remove a dataset.
 
         Parameters
         ----------
@@ -261,14 +257,14 @@ class LammpsWrapper(ABCModelingEngine):
         ValueError:
             If there is no dataset with the given name
 
-        '''
+        """
         if name in self._data_manager:
             del self._data_manager[name]
         else:
             raise ValueError("Particles '{}\\' does not exist".format(name))
 
     def iter_datasets(self, names=None):
-        ''' Returns an iterator over a subset or all of the containers.
+        """Return an iterator over a subset or all of the containers.
 
         Parameters
         ----------
@@ -276,7 +272,7 @@ class LammpsWrapper(ABCModelingEngine):
             names of specific containers to be iterated over. If names is not
             given, then all containers will be iterated over.
 
-        '''
+        """
         if not names:
             for name in self._data_manager:
                 yield self._data_manager[name]
@@ -349,7 +345,7 @@ def _combine(data_container, data_container_extension):
         dictionary containing the approved adn non-approved
         CUBA key-values
 
-    '''
+    """
     result = dict(data_container_extension)
     result.update(data_container)
     return result
