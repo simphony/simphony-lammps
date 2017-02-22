@@ -79,6 +79,12 @@ class LammpsWrapper(ABCModelingEngine):
         else:
             self._data_manager = LammpsFileIoDataManager(self.SD, atom_style)
 
+        # Number of runs
+        self._run_count = 0
+
+        # Dataset uids which are added.
+        self._dataset_uids = []
+
         # Call the base class in order to load CUDS
         super(LammpsWrapper, self).__init__(**kwargs)
 
@@ -285,9 +291,10 @@ class LammpsWrapper(ABCModelingEngine):
                                  .format(name))
 
     def run(self):
-        ''' Run lammps-engine based on configuration and data
+        """Run lammps-engine based on configuration and data."""
+        if self._run_count > 0:
+            self._load_cuds()
 
-        '''
         if self._use_internal_interface:
             self._data_manager.flush()
             commands = ''
