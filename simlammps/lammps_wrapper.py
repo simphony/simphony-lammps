@@ -96,12 +96,8 @@ class LammpsWrapper(ABCModelingEngine):
                 count += 1
         return count
 
-    def _load_cuds(self):
-        '''Load CUDS data into lammps engine.'''
-        cuds = self.get_cuds()
-        if not cuds:
-            return
-
+    def _check_cuds(self, cuds):
+        """Check the given cuds for consistency."""
         # FIXME: `count_of` is broken for non-meta classes,
         # e.g. Particles, Particle, Mesh, etc.
         # if cuds.count_of(CUBA.PARTICLES) != 1:
@@ -114,6 +110,31 @@ class LammpsWrapper(ABCModelingEngine):
                             ' only one material not %s' %
                             cuds.count_of(CUBA.MATERIAL))
 
+        if cuds.count_of(CUBA.MOLECULAR_DYNAMICS) != 1:
+            raise Exception('simlammps supports only MD')
+
+        if cuds.count_of(CUBA.BOX) != 1:
+            raise Exception('simlammps needs one box')
+
+        if cuds.count_of(CUBA.INTERATOMIC_POTENTIAL) != 1:
+            raise Exception('Lammps needs one interatomic potention')
+
+        if cuds.count_of(CUBA.CONDITION) != 1:
+            raise Exception('Sorry only one condition is accepted, not %s' %
+                            cuds.count_of(CUBA.CONDITION))
+
+        if not cuds.count_of(CUBA.INTEGRATION_TIME):
+            raise Exception('Only one integration time setup is accepted')
+
+    def _load_cuds(self):
+        """Load CUDS data into lammps engine."""
+        cuds = self.get_cuds()
+        if not cuds:
+            return
+
+        # Move checks to a separate method
+        self._check_cuds(cuds)
+
         material_to_atom = {}
         number_atom_types = 0
         for mat in cuds.iter(item_type=CUBA.MATERIAL):
@@ -122,15 +143,16 @@ class LammpsWrapper(ABCModelingEngine):
             number_atom_types += 1
             material_to_atom[mat.uid] = number_atom_types
 
-        for particles in cuds.iter(item_type=CUBA.PARTICLES):
+        for particle_container in cuds.iter(item_type=CUBA.PARTICLES):
             update_list = []
-            for single_particle in particles.iter():
+            for single_particle in particle_container.iter():
                 single_particle.data[CUBA.MATERIAL_TYPE] = mat.uid
                 update_list.append(single_particle)
-            particles.update(update_list)
+            particle_container.update(update_list)
 
         for b in cuds.iter(item_type=CUBA.BOX):
             pass
+        #b = cuds.get_one(CUBA.BOX)
 
         particle_sum = 0
         for ds in cuds.iter(item_type=CUBA.PARTICLES):
@@ -138,32 +160,27 @@ class LammpsWrapper(ABCModelingEngine):
             ds.data = mat.data
             ds.data_extension = {
                 CUBAExtension.BOX_VECTORS: b.vector}
-            self.add_dataset(ds)
+            # Add dataset when it is not already there. Rely on uid.
+            if ds.uid not in self._dataset_uids:
+                self.add_dataset(ds)
+                self._dataset_uids.append(ds.uid)
+                # Replace dataset in CUDS with proxy one.
+                # proxy_dataset = self.get_dataset(ds.name)
+                # proxy_dataset._uid = ds.uid
+                # cuds.update([self.get_dataset(ds.name)])
 
         if particle_sum == 0:
             raise Exception('simlammps needs some particles')
 
-        if cuds.count_of(CUBA.MOLECULAR_DYNAMICS) != 1:
-            raise Exception('simlammps supports only MD')
-
-        if cuds.count_of(CUBA.BOX) != 1:
-            raise Exception('simlammps needs one box')
-
-        for termo in cuds.iter(item_type=CUBA.THERMOSTAT):
-            if isinstance(termo, api.TemperatureRescaling):
+        # TODO: add thermo check.
+        # TODO: else?
+        for thermo in cuds.iter(item_type=CUBA.THERMOSTAT):
+            if isinstance(thermo, api.TemperatureRescaling):
                 self.CM_extension[CUBA.THERMODYNAMIC_ENSEMBLE] = 'NVE'
-                continue
-
-        if not cuds.count_of(CUBA.INTEGRATION_TIME):
-            raise Exception('Only one integration time setup is accepted')
 
         for i in cuds.iter(item_type=CUBA.INTEGRATION_TIME):
             self.CM[CUBA.TIME_STEP] = i.step
             self.CM[CUBA.NUMBER_OF_TIME_STEPS] = int(i.final / i.step)
-
-        if cuds.count_of(CUBA.CONDITION) != 1:
-            raise Exception('Sorry only one condition is accepted, not %s' %
-                            cuds.count_of(CUBA.CONDITION))
 
         for c in cuds.iter(item_type=CUBA.CONDITION):
             if isinstance(c, api.Periodic):
@@ -173,9 +190,6 @@ class LammpsWrapper(ABCModelingEngine):
                     'periodic']
                 continue
             raise Exception('Sorry, I am confused!')
-
-        if cuds.count_of(CUBA.INTERATOMIC_POTENTIAL) != 1:
-            raise Exception('Lammps needs one interatomic potention')
 
         for ip in cuds.iter(item_type=CUBA.INTERATOMIC_POTENTIAL):
             pass
