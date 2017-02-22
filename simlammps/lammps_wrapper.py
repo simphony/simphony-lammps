@@ -334,10 +334,19 @@ class LammpsWrapper(ABCModelingEngine):
 
                 process.run(commands)
                 self._data_manager.read(output_data_filename)
+        # A naive flag for the next run.
+        self._run_count += 1
+
+        # Replace datasets in CUDS with proxy ones.
+        for ds_name in self._data_manager:
+            proxy_dataset = self.get_dataset(ds_name)
+            cuds_dataset = self._cuds.get_by_name(ds_name)
+            proxy_dataset._uid = cuds_dataset.uid
+            self._cuds.update([self.get_dataset(ds_name)])
 
 
 def _combine(data_container, data_container_extension):
-    ''' Combine a the approved CUBA with non-approved CUBA key-values
+    """Combine a the approved CUBA with non-approved CUBA key-values.
 
     Parameters
     ----------
