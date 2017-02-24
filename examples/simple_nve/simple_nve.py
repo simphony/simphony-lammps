@@ -108,6 +108,7 @@ mat.data[CUBA.MASS] = 1.0
 # mark all particles in pc to belong to mat:
 for p in pc.iter(item_type=CUBA.PARTICLE):
     p.data[CUBA.MATERIAL] = mat
+    pc.update([p])
 
 # define a cuds to hold the computational model:
 cuds = CUDS(name='fluid')
@@ -188,19 +189,19 @@ cuds.add([lj])
 sim = Simulation(cuds, "LAMMPS", engine_interface=EngineInterface.Internal)
 sim.run()
 
-thermo = api.NoseHoover(name='thermo')
-thermo.temperature = [1.0, 1.2]
-thermo.coupling_time = 0.00000025
-thermo.material = [cuds.get(mat.uid)]
-cuds.add([thermo])
-pc = cuds.get_by_name('Test')
-# pc is now a proxy to the pc in the "wrapper" managed by the sim.
-particle = pc.get(input_particles[0].uid)
-
-particle.data[CUBA.VELOCITY] = [
-    numpy.random.uniform(-0.5, 0.5),
-    numpy.random.uniform(-0.5, 0.5),
-    numpy.random.uniform(-0.5, 0.5)
-]
-pc.update([particle])
-sim.run()
+#thermo = api.NoseHoover(name='thermo')
+#thermo.temperature = [1.0, 1.2]
+#thermo.coupling_time = 0.00000025
+#thermo.material = [cuds.get(mat.uid)]
+#cuds.add([thermo])
+#pc = cuds.get_by_name('Test')
+## pc is now a proxy to the pc in the "wrapper" managed by the sim.
+#particle = pc.get(input_particles[0].uid)
+#
+#particle.data[CUBA.VELOCITY] = [
+#    numpy.random.uniform(-0.5, 0.5),
+#    numpy.random.uniform(-0.5, 0.5),
+#    numpy.random.uniform(-0.5, 0.5)
+#]
+#pc.update([particle])
+##sim.run()
