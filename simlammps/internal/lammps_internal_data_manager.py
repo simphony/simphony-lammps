@@ -85,7 +85,7 @@ class MaterialAtomTypeManager(object):
 
 
 class LammpsInternalDataManager(ABCDataManager):
-    """  Class managing LAMMPS data information using file-io
+    """  Class managing LAMMPS data information using internal
 
     The class performs communicating the data to and from LAMMPS using the
     internal interface (i.e. LAMMPS shared library).
