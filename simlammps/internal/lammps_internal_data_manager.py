@@ -94,7 +94,7 @@ class LammpsInternalDataManager(ABCDataManager):
     ----------
     lammps :
         lammps python wrapper
-    state_data : StateData
+    state_data : StateData, which is a whole CUDS
         state data
     atom_style : AtomStyle
            atom_style
