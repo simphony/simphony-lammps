@@ -148,7 +148,45 @@ class ScriptWriter(object):
     def get_initial_setup(self):
         return INITIAL.format(get_lammps_string(self._atom_style))
 
+# check http://lammps.sandia.gov/doc/Section_commands.html#input-script-structure
+# for defining the structure of the input scripts.
 
+# 1. Initialistion:
+# The relevant commands are units, dimension, newton, processors,
+# boundary, atom_style, atom_modify.
+
+# 2. Atom definitions: There are 3 ways to define atoms in
+# LAMMPS. Read them in from a data or restart file via the read_data
+# or read_restart commands. These files can contain molecular topology
+# information. Or create atoms on a lattice (with no molecular
+# topology), using these commands: lattice, region, create_box,
+# create_atoms. The entire set of atoms can be duplicated to make a
+# larger simulation using the replicate command.
+
+# 3. Settings: Once atoms and molecular topology are defined, a
+# variety of settings can be specified: force field coefficients,
+# simulation parameters, output options, etc.  Force field
+# coefficients are set by these commands (they can also be set in the
+# read-in files): pair_coeff, bond_coeff, angle_coeff, dihedral_coeff,
+# improper_coeff, kspace_style, dielectric, special_bonds.
+
+# Various simulation parameters are set by these commands: neighbor,
+# neigh_modify, group, timestep, reset_timestep, run_style, min_style,
+# min_modify.
+
+#Fixes impose a variety of boundary conditions, time integration, and
+#diagnostic options. The fix command comes in many flavors.
+
+#Various computations can be specified for execution during a
+#simulation using the compute, compute_modify, and variable commands.
+
+#Output options are set by the thermo, dump, and restart commands.
+
+#4.  Run a simulation: A molecular dynamics simulation is run using
+#the run command. Energy minimization (molecular statics) is performed
+#using the minimize command. A parallel tempering (replica-exchange)
+#simulation can be run using the temper command.
+    
 INITIAL = """atom_style  {}
 atom_modify     map array
 neighbor    0.3 bin
