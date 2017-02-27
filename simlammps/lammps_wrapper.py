@@ -6,6 +6,7 @@ import contextlib
 import os
 import shutil
 import tempfile
+import sys
 
 from io.lammps_fileio_data_manager import LammpsFileIoDataManager
 from io.lammps_process import LammpsProcess
@@ -62,9 +63,16 @@ class LammpsWrapper(ABCModelingEngine):
         self.CM_extension = {}
         self.SP_extension = {}
         self.BC_extension = {}
+        # to do: rename self.SD to self.CUDS
         self.SD = kwargs.get('cuds', CUDS())
+        # we already have the CUDS here! why do we need to reload it later too..
+        for i in self.SD.iter():
+            print i 
+
 
         self._use_internal_interface = use_internal_interface
+        # todo: atomic style can be deduced from the properties of the particles 
+        # in the datasets in cuds. 
         atom_style = AtomStyle.ATOMIC
         self._executable_name = 'lammps'
         self._script_writer = ScriptWriter(atom_style)
@@ -86,10 +94,15 @@ class LammpsWrapper(ABCModelingEngine):
         self._dataset_uids = []
 
         # Call the base class in order to load CUDS
+        # currently this is essenially getting cuds from super._cuds
         super(LammpsWrapper, self).__init__(**kwargs)
+        # why do we use self.get_cuds below then? and why 
+        # do we have already cuds in self.SD above at line 66?  
+
 
     def _count_of(self, cuds, item_type):
-        """Workaround for broken CUDS counter."""
+        """Workaround for broken CUDS counter.
+        for the non metadata generated classes """
         count = 0
         for c in cuds.iter():
             if isinstance(c, item_type):
@@ -128,6 +141,7 @@ class LammpsWrapper(ABCModelingEngine):
 
     def _load_cuds(self):
         """Load CUDS data into lammps engine."""
+
         cuds = self.get_cuds()
         if not cuds:
             return
@@ -143,10 +157,17 @@ class LammpsWrapper(ABCModelingEngine):
             number_atom_types += 1
             material_to_atom[mat.uid] = number_atom_types
 
+        # temporary hack:
+        # add depreciated material_id to each atom based on the MATERIAL 
+        # of each particle mapped to a material_id.
+        # to do, map material class directly to element number in lammps
+        # and git rid of cuba.material_it
         for particle_container in cuds.iter(item_type=CUBA.PARTICLES):
             update_list = []
             for single_particle in particle_container.iter():
+                print '1. DBG', single_particle.data.keys()
                 single_particle.data[CUBA.MATERIAL_TYPE] = mat.uid
+                print '2. DBG', single_particle.data.keys()
                 update_list.append(single_particle)
             particle_container.update(update_list)
 
@@ -157,7 +178,18 @@ class LammpsWrapper(ABCModelingEngine):
         particle_sum = 0
         for ds in cuds.iter(item_type=CUBA.PARTICLES):
             particle_sum += len(ds)
-            ds.data = mat.data
+            # copy the mass to the data set, this is the old hack. 
+            # in the new cuds, the mass of the ds is the total mass of the 
+            # dataset, not of each particle inside of it. 
+            ds.data=DataContainer(MASS=mat.data[CUBA.MASS])
+            # ds.data.update(MASS=mat.data[CUBA.MASS])
+            # there should be a better way to do this, the update method
+            # of the data container does not seems to work properly
+
+            # add the box from the metadata to the hack in simphony 
+            # lammps wrapper
+            # to do: map the metadata class Box directly to the box in 
+            # lammps
             ds.data_extension = {
                 CUBAExtension.BOX_VECTORS: b.vector}
             # Add dataset when it is not already there. Rely on uid.
@@ -182,6 +214,7 @@ class LammpsWrapper(ABCModelingEngine):
             self.CM[CUBA.TIME_STEP] = i.step
             self.CM[CUBA.NUMBER_OF_TIME_STEPS] = int(i.final / i.step)
 
+        
         for c in cuds.iter(item_type=CUBA.CONDITION):
             if isinstance(c, api.Periodic):
                 self.BC_extension[CUBAExtension.BOX_FACES] = [
@@ -306,6 +339,7 @@ class LammpsWrapper(ABCModelingEngine):
 
     def run(self):
         """Run lammps-engine based on configuration and data."""
+        print 'run_count=', self._run_count
         if self._run_count > 0:
             self._load_cuds()
 
