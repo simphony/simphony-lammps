@@ -1,10 +1,7 @@
-# Source Generated with Decompyle++
-# File: lammps_wrapper.pyc (Python 2.7)
+"""LAMMPS SimPhoNy Wrapper.
 
-''' LAMMPS SimPhoNy Wrapper
-
-This module provides a wrapper for  LAMMPS-md
-'''
+This module provides a wrapper for LAMMPS-md
+"""
 import contextlib
 import os
 import shutil
@@ -31,11 +28,11 @@ import simphony.cuds.particles as scp
 
 
 def _temp_directory():
-    ''' context manager that provides temp directory
+    """Provide a temp directory.
 
     The name of the created temp directory is returned when context is entered
     and this directory is deleted when context is exited
-    '''
+    """
     temp_dir = tempfile.mkdtemp()
     yield temp_dir
     shutil.rmtree(temp_dir)
@@ -45,9 +42,10 @@ _temp_directory = contextlib.contextmanager(_temp_directory)
 
 
 class LammpsWrapper(ABCModelingEngine):
-    ''' Wrapper to LAMMPS-md'''
+    """Wrapper to LAMMPS-md."""
+
     def __init__(self, use_internal_interface=False, **kwargs):
-        ''' Constructor.
+        """Constructor.
 
         Parameters
         ----------
@@ -58,8 +56,7 @@ class LammpsWrapper(ABCModelingEngine):
             If true, then the internal interface (library) is used when
             communicating with LAMMPS, if false, then file-io interface is
             used where input/output files are used to communicate with LAMMPS
-        '''
-
+        """
         self.BC = DataContainer()
         self.CM = DataContainer()
         self.SP = DataContainer()
@@ -83,6 +80,12 @@ class LammpsWrapper(ABCModelingEngine):
         else:
             self._data_manager = LammpsFileIoDataManager(self.SD, atom_style)
 
+        # Number of runs
+        self._run_count = 0
+
+        # Dataset uids which are added.
+        self._dataset_uids = []
+
         # Call the base class in order to load CUDS
         super(LammpsWrapper, self).__init__(**kwargs)
 
@@ -94,12 +97,8 @@ class LammpsWrapper(ABCModelingEngine):
                 count += 1
         return count
 
-    def _load_cuds(self):
-        '''Load CUDS data into lammps engine.'''
-        cuds = self.get_cuds()
-        if not cuds:
-            return
-
+    def _check_cuds(self, cuds):
+        """Check the given cuds for consistency."""
         # FIXME: `count_of` is broken for non-meta classes,
         # e.g. Particles, Particle, Mesh, etc.
         # if cuds.count_of(CUBA.PARTICLES) != 1:
@@ -112,6 +111,31 @@ class LammpsWrapper(ABCModelingEngine):
                             ' only one material not %s' %
                             cuds.count_of(CUBA.MATERIAL))
 
+        if cuds.count_of(CUBA.MOLECULAR_DYNAMICS) != 1:
+            raise Exception('simlammps supports only MD')
+
+        if cuds.count_of(CUBA.BOX) != 1:
+            raise Exception('simlammps needs one box')
+
+        if cuds.count_of(CUBA.INTERATOMIC_POTENTIAL) != 1:
+            raise Exception('Lammps needs one interatomic potention')
+
+        if cuds.count_of(CUBA.CONDITION) != 1:
+            raise Exception('Sorry only one condition is accepted, not %s' %
+                            cuds.count_of(CUBA.CONDITION))
+
+        if not cuds.count_of(CUBA.INTEGRATION_TIME):
+            raise Exception('Only one integration time setup is accepted')
+
+    def _load_cuds(self):
+        """Load CUDS data into lammps engine."""
+        cuds = self.get_cuds()
+        if not cuds:
+            return
+
+        # Move checks to a separate method
+        self._check_cuds(cuds)
+
         material_to_atom = {}
         number_atom_types = 0
         for mat in cuds.iter(item_type=CUBA.MATERIAL):
@@ -120,15 +144,16 @@ class LammpsWrapper(ABCModelingEngine):
             number_atom_types += 1
             material_to_atom[mat.uid] = number_atom_types
 
-        for particles in cuds.iter(item_type=CUBA.PARTICLES):
+        for particle_container in cuds.iter(item_type=CUBA.PARTICLES):
             update_list = []
-            for single_particle in particles.iter():
+            for single_particle in particle_container.iter():
                 single_particle.data[CUBA.MATERIAL_TYPE] = mat.uid
                 update_list.append(single_particle)
-            particles.update(update_list)
+            particle_container.update(update_list)
 
         for b in cuds.iter(item_type=CUBA.BOX):
             pass
+        #b = cuds.get_one(CUBA.BOX)
 
         particle_sum = 0
         for ds in cuds.iter(item_type=CUBA.PARTICLES):
@@ -136,32 +161,27 @@ class LammpsWrapper(ABCModelingEngine):
             ds.data = mat.data
             ds.data_extension = {
                 CUBAExtension.BOX_VECTORS: b.vector}
-            self.add_dataset(ds)
+            # Add dataset when it is not already there. Rely on uid.
+            if ds.uid not in self._dataset_uids:
+                self.add_dataset(ds)
+                self._dataset_uids.append(ds.uid)
+                # Replace dataset in CUDS with proxy one.
+                # proxy_dataset = self.get_dataset(ds.name)
+                # proxy_dataset._uid = ds.uid
+                # cuds.update([self.get_dataset(ds.name)])
 
         if particle_sum == 0:
             raise Exception('simlammps needs some particles')
 
-        if cuds.count_of(CUBA.MOLECULAR_DYNAMICS) != 1:
-            raise Exception('simlammps supports only MD')
-
-        if cuds.count_of(CUBA.BOX) != 1:
-            raise Exception('simlammps needs one box')
-
-        for termo in cuds.iter(item_type=CUBA.THERMOSTAT):
-            if isinstance(termo, api.TemperatureRescaling):
+        # TODO: add thermo check.
+        # TODO: else?
+        for thermo in cuds.iter(item_type=CUBA.THERMOSTAT):
+            if isinstance(thermo, api.TemperatureRescaling):
                 self.CM_extension[CUBA.THERMODYNAMIC_ENSEMBLE] = 'NVE'
-                continue
-
-        if not cuds.count_of(CUBA.INTEGRATION_TIME):
-            raise Exception('Only one integration time setup is accepted')
 
         for i in cuds.iter(item_type=CUBA.INTEGRATION_TIME):
             self.CM[CUBA.TIME_STEP] = i.step
             self.CM[CUBA.NUMBER_OF_TIME_STEPS] = int(i.final / i.step)
-
-        if cuds.count_of(CUBA.CONDITION) != 1:
-            raise Exception('Sorry only one condition is accepted, not %s' %
-                            cuds.count_of(CUBA.CONDITION))
 
         for c in cuds.iter(item_type=CUBA.CONDITION):
             if isinstance(c, api.Periodic):
@@ -171,9 +191,6 @@ class LammpsWrapper(ABCModelingEngine):
                     'periodic']
                 continue
             raise Exception('Sorry, I am confused!')
-
-        if cuds.count_of(CUBA.INTERATOMIC_POTENTIAL) != 1:
-            raise Exception('Lammps needs one interatomic potention')
 
         for ip in cuds.iter(item_type=CUBA.INTERATOMIC_POTENTIAL):
             pass
@@ -192,7 +209,7 @@ class LammpsWrapper(ABCModelingEngine):
                     cutoff=ip.cutoff_distance)
 
     def add_dataset(self, container):
-        '''Add a CUDS container
+        """Add a CUDS container.
 
         Parameters
         ----------
@@ -206,7 +223,7 @@ class LammpsWrapper(ABCModelingEngine):
         ValueError:
             If there is already a dataset with the given name.
 
-        '''
+        """
         if not isinstance(container, ABCParticles):
             raise TypeError(
                 'The type of the dataset container is not supported')
@@ -216,7 +233,7 @@ class LammpsWrapper(ABCModelingEngine):
         self._data_manager.new_particles(container)
 
     def get_dataset(self, name):
-        ''' Get the dataset
+        """Get the dataset.
 
         The returned particle container can be used to query
         and change the related data inside LAMMPS.
@@ -237,7 +254,7 @@ class LammpsWrapper(ABCModelingEngine):
         ValueError:
             If there is no dataset with the given name
 
-        '''
+        """
         if name in self._data_manager:
             return self._data_manager[name]
 
@@ -245,12 +262,11 @@ class LammpsWrapper(ABCModelingEngine):
                          .format(name))
 
     def get_dataset_names(self):
-        ''' Returns the names of all the datasets
-        '''
+        """Return the names of all the datasets."""
         return [name for name in self._data_manager]
 
     def remove_dataset(self, name):
-        ''' Remove a dataset
+        """Remove a dataset.
 
         Parameters
         ----------
@@ -262,14 +278,14 @@ class LammpsWrapper(ABCModelingEngine):
         ValueError:
             If there is no dataset with the given name
 
-        '''
+        """
         if name in self._data_manager:
             del self._data_manager[name]
         else:
             raise ValueError("Particles '{}\\' does not exist".format(name))
 
     def iter_datasets(self, names=None):
-        ''' Returns an iterator over a subset or all of the containers.
+        """Return an iterator over a subset or all of the containers.
 
         Parameters
         ----------
@@ -277,7 +293,7 @@ class LammpsWrapper(ABCModelingEngine):
             names of specific containers to be iterated over. If names is not
             given, then all containers will be iterated over.
 
-        '''
+        """
         if not names:
             for name in self._data_manager:
                 yield self._data_manager[name]
@@ -290,9 +306,10 @@ class LammpsWrapper(ABCModelingEngine):
                                  .format(name))
 
     def run(self):
-        ''' Run lammps-engine based on configuration and data
+        """Run lammps-engine based on configuration and data."""
+        if self._run_count > 0:
+            self._load_cuds()
 
-        '''
         if self._use_internal_interface:
             self._data_manager.flush()
             commands = ''
@@ -332,10 +349,19 @@ class LammpsWrapper(ABCModelingEngine):
 
                 process.run(commands)
                 self._data_manager.read(output_data_filename)
+        # A naive flag for the next run.
+        self._run_count += 1
+
+        # Replace datasets in CUDS with proxy ones.
+        for ds_name in self._data_manager:
+            proxy_dataset = self.get_dataset(ds_name)
+            cuds_dataset = self._cuds.get_by_name(ds_name)
+            proxy_dataset._uid = cuds_dataset.uid
+            self._cuds.update([self.get_dataset(ds_name)])
 
 
 def _combine(data_container, data_container_extension):
-    ''' Combine a the approved CUBA with non-approved CUBA key-values
+    """Combine a the approved CUBA with non-approved CUBA key-values.
 
     Parameters
     ----------
@@ -350,7 +376,7 @@ def _combine(data_container, data_container_extension):
         dictionary containing the approved adn non-approved
         CUBA key-values
 
-    '''
+    """
     result = dict(data_container_extension)
     result.update(data_container)
     return result

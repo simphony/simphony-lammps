@@ -1,9 +1,8 @@
-# Demonstration of the SimPhoNy Lammps-md Wrapper using the
-# final CUDS specifications
+"""Demonstration of the SimPhoNy Lammps-md Wrapper usingCUDS."""
 
 from __future__ import print_function
-import sys
 import numpy
+import simphony.engine  # noqa
 
 from simphony.api import CUDS, Simulation
 from simphony.core.cuba import CUBA
@@ -61,6 +60,8 @@ for i in range(0, 3):
 # have seed so the validation can be reproduced
 numpy.random.seed(42)
 
+input_particles = []
+
 for pos in atoms1:
     pos2 = [pos[0] * a_latt, pos[1] * a_latt, pos[2] * a_latt]
     p = Particle(coordinates=pos2)
@@ -75,6 +76,7 @@ for pos in atoms1:
         numpy.random.uniform(-0.5, 0.5)
     ]
     pc.add([p])
+    input_particles.append(p)
 
 
 # Calculate the velocity of center of mass and reset it to zero to
@@ -185,20 +187,20 @@ cuds.add([lj])
 # initialization of the simulation
 sim = Simulation(cuds, "LAMMPS", engine_interface=EngineInterface.Internal)
 sim.run()
-sys.exit()
 
-
-# newcuds= sim.get_cuds()
-# newcuds.remove('thermo')
-# thermo = NoseHoover(name='thermo')
-# thermo.temperature= [ 1.0, 1.2]
-# thermo.coupling_time=0.00000025
-# thermo.material=[newcuds.get('mat')]
-# newcuds.add(thermo)
-# pc=newcuds.get('Test')
+thermo = api.NoseHoover(name='thermo')
+thermo.temperature = [1.0, 1.2]
+thermo.coupling_time = 0.00000025
+thermo.material = [cuds.get(mat.uid)]
+cuds.add([thermo])
+pc = cuds.get_by_name('Test')
 # pc is now a proxy to the pc in the "wrapper" managed by the sim.
-# particle = pc.get_particle(112324)
-# particle.data[CUBA.VELOCITY]= -5.0
-# pc.update_particles([particle,])
+particle = pc.get(input_particles[0].uid)
 
-# sim.run()
+particle.data[CUBA.VELOCITY] = [
+    numpy.random.uniform(-0.5, 0.5),
+    numpy.random.uniform(-0.5, 0.5),
+    numpy.random.uniform(-0.5, 0.5)
+]
+pc.update([particle])
+sim.run()
