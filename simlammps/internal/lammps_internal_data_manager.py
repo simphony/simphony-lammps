@@ -104,9 +104,16 @@ class LammpsInternalDataManager(ABCDataManager):
 
         self._lammps = lammps
         self._state_data = state_data
+        # this is the whole CUDS.  todo: infer the atom type form the
+        # wrappr type or from the information in the data sets itselg
         self._atom_style = atom_style
 
+        
+
         materials = [m for m in state_data.iter(item_type=CUBA.MATERIAL)]
+
+        #here it takes materials which are objects, not uuids! while the 
+        #material atom type manager expects uids! 
         self._material_atom_type_manager = MaterialAtomTypeManager(materials)
 
         dummy_bc = {CUBAExtension.BOX_FACES: ("periodic",
@@ -116,6 +123,8 @@ class LammpsInternalDataManager(ABCDataManager):
         script_writer = ScriptWriter(self._atom_style)
         commands = script_writer.get_initial_setup()
 
+        #todo: use actual boundary in cuds, for this the cuds has 
+        # to be passed here instead of SD. 
         commands += ScriptWriter.get_boundary(dummy_bc)
         for command in commands.splitlines():
             self._lammps.command(command)
@@ -131,6 +140,7 @@ class LammpsInternalDataManager(ABCDataManager):
         # due to not being able to alter the number of types (issue #66),
         # we set the number of supported types to a high number and then
         # give dummy values for the unused types
+        # see http://lammps.sandia.gov/doc/create_box.html
         self._lammps.command(
             "create_box {} box".format(globals.MAX_NUMBER_TYPES))
 

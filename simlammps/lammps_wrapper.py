@@ -67,12 +67,12 @@ class LammpsWrapper(ABCModelingEngine):
         self.SD = kwargs.get('cuds', CUDS())
         # we already have the CUDS here! why do we need to reload it later too..
         for i in self.SD.iter():
-            print i 
+            print i
 
 
         self._use_internal_interface = use_internal_interface
-        # todo: atomic style can be deduced from the properties of the particles 
-        # in the datasets in cuds. 
+        # todo: atomic style can be deduced from the properties of the particles
+        # in the datasets in cuds.
         atom_style = AtomStyle.ATOMIC
         self._executable_name = 'lammps'
         self._script_writer = ScriptWriter(atom_style)
@@ -96,13 +96,13 @@ class LammpsWrapper(ABCModelingEngine):
         # Call the base class in order to load CUDS
         # currently this is essenially getting cuds from super._cuds
         super(LammpsWrapper, self).__init__(**kwargs)
-        # why do we use self.get_cuds below then? and why 
-        # do we have already cuds in self.SD above at line 66?  
+        # this is redundant as we already have it above near line 66.
+        # final version will only use one way.
 
 
     def _count_of(self, cuds, item_type):
         """Workaround for broken CUDS counter.
-        for the non metadata generated classes """
+        for the non metadata generated classes (datasets)"""
         count = 0
         for c in cuds.iter():
             if isinstance(c, item_type):
@@ -149,6 +149,8 @@ class LammpsWrapper(ABCModelingEngine):
         # Move checks to a separate method
         self._check_cuds(cuds)
 
+        # assuming the number of different atom types = numbner of different
+        # materials:
         material_to_atom = {}
         number_atom_types = 0
         for mat in cuds.iter(item_type=CUBA.MATERIAL):
@@ -158,10 +160,9 @@ class LammpsWrapper(ABCModelingEngine):
             material_to_atom[mat.uid] = number_atom_types
 
         # temporary hack:
-        # add depreciated material_id to each atom based on the MATERIAL 
-        # of each particle mapped to a material_id.
-        # to do, map material class directly to element number in lammps
-        # and git rid of cuba.material_it
+        # add depreciated material_id to each atom based on the MATERIAL objects
+        # to do: map material class directly to element number in lammps
+        # and get rid of cuba.material_id
         for particle_container in cuds.iter(item_type=CUBA.PARTICLES):
             update_list = []
             for single_particle in particle_container.iter():
@@ -178,17 +179,24 @@ class LammpsWrapper(ABCModelingEngine):
         particle_sum = 0
         for ds in cuds.iter(item_type=CUBA.PARTICLES):
             particle_sum += len(ds)
-            # copy the mass to the data set, this is the old hack. 
-            # in the new cuds, the mass of the ds is the total mass of the 
-            # dataset, not of each particle inside of it. 
-            ds.data=DataContainer(MASS=mat.data[CUBA.MASS])
+            # copy the mass to the dataset ''data'', this is the old way.
+            # in the new cuds, the mass of the ds is the total mass of the
+            # dataset, not of each particle inside of it.
+            #ds.data=DataContainer(MASS=mat.data[CUBA.MASS])
+            print type(ds), ds
+            print '3. DBG: ds.data to chekc if ds has the mass from mat', ds.data
+            d = ds.data
+            d[CUBA.MASS]=mat.data[CUBA.MASS]
+            ds.data = d
+            # to do: fix .data in particles and then just use line 189.
+            print '4. DBG: ds.data to chekc if ds has the mass from mat', ds.data
             # ds.data.update(MASS=mat.data[CUBA.MASS])
             # there should be a better way to do this, the update method
             # of the data container does not seems to work properly
 
-            # add the box from the metadata to the hack in simphony 
+            # add the box from the metadata to the hack in simphony
             # lammps wrapper
-            # to do: map the metadata class Box directly to the box in 
+            # to do: map the metadata class Box directly to the box in
             # lammps
             ds.data_extension = {
                 CUBAExtension.BOX_VECTORS: b.vector}
@@ -197,9 +205,9 @@ class LammpsWrapper(ABCModelingEngine):
                 self.add_dataset(ds)
                 self._dataset_uids.append(ds.uid)
                 # Replace dataset in CUDS with proxy one.
-                # proxy_dataset = self.get_dataset(ds.name)
-                # proxy_dataset._uid = ds.uid
-                # cuds.update([self.get_dataset(ds.name)])
+                #proxy_dataset = self.get_dataset(ds.name)
+                #proxy_dataset._uid = ds.uid
+                #cuds.update([self.get_dataset(ds.name)])
 
         if particle_sum == 0:
             raise Exception('simlammps needs some particles')
@@ -214,7 +222,8 @@ class LammpsWrapper(ABCModelingEngine):
             self.CM[CUBA.TIME_STEP] = i.step
             self.CM[CUBA.NUMBER_OF_TIME_STEPS] = int(i.final / i.step)
 
-        
+
+        # todo: this should be first a chekc of the condition on each box
         for c in cuds.iter(item_type=CUBA.CONDITION):
             if isinstance(c, api.Periodic):
                 self.BC_extension[CUBAExtension.BOX_FACES] = [
@@ -222,7 +231,7 @@ class LammpsWrapper(ABCModelingEngine):
                     'periodic',
                     'periodic']
                 continue
-            raise Exception('Sorry, I am confused!')
+            raise Exception('check conditions on the box')
 
         for ip in cuds.iter(item_type=CUBA.INTERATOMIC_POTENTIAL):
             pass
@@ -385,13 +394,22 @@ class LammpsWrapper(ABCModelingEngine):
         # A naive flag for the next run.
         self._run_count += 1
 
+        _pds =[]
+        _cds=[]
         # Replace datasets in CUDS with proxy ones.
         for ds_name in self._data_manager:
             proxy_dataset = self.get_dataset(ds_name)
             cuds_dataset = self._cuds.get_by_name(ds_name)
-            proxy_dataset._uid = cuds_dataset.uid
-            self._cuds.update([self.get_dataset(ds_name)])
 
+            #for _par in proxy_dataset.iter():
+            #    _pds.append([ _par.uid, _par.coordinates[0], _par.data[CUBA.VELOCITY][0]])
+            #for _par in cuds_dataset.iter():
+            #    _cds.append([ _par.uid, _par.coordinates[0], _par.data[CUBA.VELOCITY][0]])
+            proxy_dataset._uid = cuds_dataset.uid
+            self._cuds.update([proxy_dataset])
+
+             # todo: return the missing attributes such as material and potentially others that the current lammps wrapper ignores (see the get attributes stuff).
+# what exactly is the proxy here?
 
 def _combine(data_container, data_container_extension):
     """Combine a the approved CUBA with non-approved CUBA key-values.

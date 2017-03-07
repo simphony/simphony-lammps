@@ -31,7 +31,7 @@ basis = [
 ]
 # The number of periodic images, or duplications of the unit cell in
 # each cubic lattice direction
-N_dup = [4, 4, 4]
+N_dup = [2, 2, 2]
 # total number of atoms after duplication
 natoms = len(basis) * N_dup[0] * N_dup[1] * N_dup[2]
 
@@ -189,19 +189,19 @@ cuds.add([lj])
 sim = Simulation(cuds, "LAMMPS", engine_interface=EngineInterface.Internal)
 sim.run()
 
-#thermo = api.NoseHoover(name='thermo')
-#thermo.temperature = [1.0, 1.2]
-#thermo.coupling_time = 0.00000025
-#thermo.material = [cuds.get(mat.uid)]
-#cuds.add([thermo])
-#pc = cuds.get_by_name('Test')
-## pc is now a proxy to the pc in the "wrapper" managed by the sim.
-#particle = pc.get(input_particles[0].uid)
-#
-#particle.data[CUBA.VELOCITY] = [
-#    numpy.random.uniform(-0.5, 0.5),
-#    numpy.random.uniform(-0.5, 0.5),
-#    numpy.random.uniform(-0.5, 0.5)
-#]
-#pc.update([particle])
-##sim.run()
+thermo = api.NoseHoover(name='thermo')
+thermo.temperature = [1.0, 1.2]
+thermo.coupling_time = 0.00000025
+thermo.material = [cuds.get(mat.uid)]
+cuds.add([thermo])
+pc = cuds.get_by_name('Test')
+# pc is now a proxy to the pc in the "wrapper" managed by the sim.
+particle = pc.get(input_particles[0].uid)
+
+particle.data[CUBA.VELOCITY] = [
+    numpy.random.uniform(-0.5, 0.5),
+    numpy.random.uniform(-0.5, 0.5),
+    numpy.random.uniform(-0.5, 0.5)
+]
+pc.update([particle])
+sim.run()
