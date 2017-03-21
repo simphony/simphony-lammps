@@ -9,7 +9,7 @@ class LammpsParticles(Particles):
     ----------
     name : string
         name of particles
-OB    data : DataContainer
+    data : DataContainer
         holds data
     data_extension : dict
         holds non-approved CUBA keywords
