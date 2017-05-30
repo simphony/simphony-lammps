@@ -15,6 +15,9 @@ The LAMMPS engine-wrapper for the SimPhoNy framework (www.simphony-project.eu).
    :target: https://readthedocs.org/projects/simphony-lammps/?badge=master
    :alt: Documentation Status
 
+.. image:: https://img.shields.io/docker/automated/jrottenberg/ffmpeg.svg
+   :target: https://hub.docker.com/r/simphony/simphony-lammps/
+   :alt: Docker Image
 
 Repository
 ----------
