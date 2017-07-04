@@ -112,3 +112,14 @@ Directory structure
       using the ``make`` script in the ``doc`` directory.
 
 .. _simphony-common: https://github.com/simphony/simphony-common
+
+
+EDM deployment
+--------------
+
+Enthought Deployment Manager packages can be created with::
+
+    python edmsetup.py egg
+
+
+See documentation in simphony/buildrecipes-common for more information
