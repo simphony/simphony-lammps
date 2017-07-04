@@ -54,3 +54,5 @@ docs/_build/
 # PyBuilder
 target/
 log.lammps
+.devenv
+simlammps/version.py
