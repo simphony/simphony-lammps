@@ -1,13 +1,9 @@
 git+https://github.com/simphony/simphony-common.git
-enum34
-coverage
-flake8
 numpy
-click
+enum34
+stevedore
 sphinx
 sphinxcontrib-napoleon
-stevedore
-mock
-#pyyaml >= 3.11
-#sphinxcontrib-napoleon >= 0.2.10
+pytest
+coverage
 mock
