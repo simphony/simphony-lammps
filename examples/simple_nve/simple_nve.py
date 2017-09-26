@@ -2,13 +2,10 @@
 
 from __future__ import print_function
 import numpy
-import simphony.engine  # noqa
 
-from simphony.api import CUDS, Simulation
-from simphony.core.cuba import CUBA
+from simphony import CUBA, CUDS, Simulation
 from simphony.cuds.meta import api
 from simphony.cuds.particles import Particle, Particles
-
 from simphony.engine import EngineInterface
 
 # ########################################################
