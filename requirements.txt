@@ -1,0 +1,9 @@
+git+https://github.com/simphony/simphony-common.git
+numpy
+enum34
+stevedore
+sphinx
+sphinxcontrib-napoleon
+pytest
+coverage
+mock
