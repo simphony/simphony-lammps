@@ -5,15 +5,14 @@ import unittest
 
 import numpy
 from numpy.testing import assert_almost_equal
+from simphony.api import CUBA
+from simphony.core.keywords import KEYWORDS
 
 from simlammps.common.atom_style import AtomStyle
 from simlammps.common.atom_style_description import get_all_cuba_attributes
-from simlammps.cuba_extension import CUBAExtension
 from simlammps.io.file_utility import (read_data_file,
                                        write_data_file)
 
-from simphony.core.cuba import CUBA
-from simphony.core.keywords import KEYWORDS
 
 
 class TestFileUtility(unittest.TestCase):
@@ -40,7 +39,7 @@ class TestFileUtility(unittest.TestCase):
 
         self.assertEqual(4, particles.count_of(CUBA.PARTICLE))
         assert_almost_equal(
-            particles.data_extension[CUBAExtension.BOX_ORIGIN],
+            particles.data[CUBA.ORIGIN],
             (0.0000000000000000e+00,
              -2.2245711031688635e-03,
              -3.2108918131150160e-01))
@@ -48,7 +47,7 @@ class TestFileUtility(unittest.TestCase):
                (0.0, 2.2247935602791809e+01 + 2.2245711031688635e-03, 0.0),
                (0.0, 0.0, 3.2108918131150160e-01 - (-3.210891813115016e-01))]
         assert_almost_equal(
-            particles.data_extension[CUBAExtension.BOX_VECTORS],
+            particles.data[CUBA.VECTOR],
             box)
 
         for p in particles.iter(item_type=CUBA.PARTICLE):
@@ -63,13 +62,13 @@ class TestFileUtility(unittest.TestCase):
         self.assertEqual(3, particles.count_of(CUBA.PARTICLE))
 
         assert_almost_equal(
-            particles.data_extension[CUBAExtension.BOX_ORIGIN],
+            particles.data[CUBA.ORIGIN],
             (-10.0, -7.500, -0.500))
         box = [(25.0, 0.0, 0.0),
                (0.0, 15.0, 0.0),
                (0.0, 0.0, 1.0)]
         assert_almost_equal(
-            particles.data_extension[CUBAExtension.BOX_VECTORS],
+            particles.data[CUBA.VECTOR],
             box)
 
         for p in particles.iter(item_type=CUBA.PARTICLE):

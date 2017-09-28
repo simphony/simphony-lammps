@@ -69,9 +69,6 @@ class LammpsFileIoDataManager(ABCDataManager):
         # cache of particle containers
         self._pc_cache = {}
 
-        # cache of data container extensions
-        self._dc_extension_cache = {}
-
         self._supported_cuba = get_all_cuba_attributes(self._atom_style)
 
     def get_data(self, uname):
@@ -96,28 +93,6 @@ class LammpsFileIoDataManager(ABCDataManager):
         """
         self._pc_cache[uname].data = DataContainer(data)
 
-    def get_data_extension(self, uname):
-        """Returns data container extension associated with particle container
-
-        Parameters
-        ----------
-        uname : string
-            non-changing unique name of particles
-
-        """
-        return dict(self._dc_extension_cache[uname])
-
-    def set_data_extension(self, data, uname):
-        """Sets data container extension associated with particle container
-
-        Parameters
-        ----------
-        uname : string
-            non-changing unique name of particles
-
-        """
-        self._dc_extension_cache[uname] = dict(data)
-
     def _handle_delete_particles(self, uname):
         """Handle when a Particles is deleted
 
@@ -128,7 +103,6 @@ class LammpsFileIoDataManager(ABCDataManager):
 
         """
         del self._pc_cache[uname]
-        del self._dc_extension_cache[uname]
 
     def _handle_new_particles(self, uname, particles):
         """Add new particle container to this manager.
@@ -154,12 +128,6 @@ class LammpsFileIoDataManager(ABCDataManager):
             pc.add([b])
 
         self._pc_cache[uname] = pc
-
-        if hasattr(particles, 'data_extension'):
-            self._dc_extension_cache[uname] = dict(particles.data_extension)
-        else:
-            # create empty dc extension
-            self._dc_extension_cache[uname] = {}
 
     def get_particle(self, uid, uname):
         """Get particle
@@ -269,7 +237,6 @@ class LammpsFileIoDataManager(ABCDataManager):
         """
         self._update_from_lammps(output_data_filename)
 
-# Private methods #######################################################
     def _update_from_lammps(self, output_data_filename):
         """read from file and update cache
 
@@ -320,7 +287,7 @@ class LammpsFileIoDataManager(ABCDataManager):
         self._material_to_atom = create_material_to_atom_type_map(
             self._state_data)
 
-        box = get_box([de for _, de in self._dc_extension_cache.iteritems()])
+        box = get_box([pc.data for uid, pc in self._pc_cache.iteritems()])
 
         mass = self._get_mass() \
             if ATOM_STYLE_DESCRIPTIONS[self._atom_style].has_mass_per_type \

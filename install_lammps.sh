@@ -7,7 +7,7 @@ git checkout tags/stable_11Aug2017
 echo "Building LAMMPS executable"
 cd src
 make -j 5 ubuntu_simple
-ln -s lmp_ubuntu_simple lammps
+sudo cp ./lmp_ubuntu_simple /usr/bin/lammps
 
 echo "Building LAMMPS shared library"
 make -j 5 ubuntu_simple mode=shlib
@@ -15,4 +15,11 @@ make -j 5 ubuntu_simple mode=shlib
 echo "Installing LAMMPS shared library and python package"
 make install-python
 
-python -c 'import lammps as l;l.lammps(cmdargs=["-l", "none"]).command("print `He from LAMMPS`")'
+echo "Cleaning up"
+cd ../..
+rm -rf lammps
+
+echo "Checker whether LAMMPS is available in python"
+python -c 'import lammps as l;l.lammps(cmdargs=["-l", "none"]).command("print \"Hi from LAMMPS\"")'
+
+echo "LAMMPS installation complete. Bye."

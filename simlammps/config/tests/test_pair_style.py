@@ -1,7 +1,8 @@
 import unittest
 
+from simphony.api import CUBA
+
 from simlammps.config.pair_style import PairStyle
-from simlammps.cuba_extension import CUBAExtension
 
 
 class TestPairStyle(unittest.TestCase):
@@ -37,7 +38,7 @@ class TestPairStyle(unittest.TestCase):
                       "    epsilon: 1.0\n"
                       "    sigma: 1.0\n"
                       "    cutoff: 1.0001\n")
-        SP[CUBAExtension.PAIR_POTENTIALS] = potentials
+        SP[CUBA.PAIR_POTENTIAL] = potentials
 
         pair_style = PairStyle(SP)
         self.assertEqual(
@@ -56,7 +57,7 @@ class TestPairStyle(unittest.TestCase):
 
     def test_lj_cut_error(self):
         SP = {}
-        SP[CUBAExtension.PAIR_POTENTIALS] = "lj:\n"
+        SP[CUBA.PAIR_POTENTIAL] = "lj:\n"
         with self.assertRaises(RuntimeError):
             PairStyle(SP)
 
@@ -74,7 +75,7 @@ class TestPairStyle(unittest.TestCase):
                       "  parameters:\n"
                       "  - pair: [1, 1]\n"
                       "    cutoff: 1.2246\n")
-        SP[CUBAExtension.PAIR_POTENTIALS] = potentials
+        SP[CUBA.PAIR_POTENTIAL] = potentials
 
         pair_style = PairStyle(SP)
         self.assertEqual(
