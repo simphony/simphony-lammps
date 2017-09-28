@@ -24,7 +24,7 @@ install:
 
 script:
   - pytest
-  - pylint
+  - pylint simlammps
 
 after_success:
   - pip install codecov
