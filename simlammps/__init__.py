@@ -5,7 +5,7 @@ from simphony.engine.decorators import register
 from .lammps_wrapper import LammpsWrapper
 from .io.file_utility import read_data_file
 
-__all__ = ["LammpsWrapper", "EngineType", "read_data_file"]
+__all__ = ["LammpsWrapper", "read_data_file"]
 
 
 @register

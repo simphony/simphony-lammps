@@ -258,4 +258,4 @@ def _get_count(keyword):
     elif keyword.shape == [3]:
         return 3
     else:
-        raise RuntimeError("Unsupported shape: ".format(keyword.shape))
+        raise RuntimeError("Unsupported shape: {0}".format(keyword.shape))

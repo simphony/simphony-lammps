@@ -161,7 +161,7 @@ class LammpsWrapper(ABCModelingEngine):
         # TODO: add thermo check. else?
         for thermo in cuds.iter(item_type=CUBA.THERMOSTAT):
             if isinstance(thermo, api.TemperatureRescaling):
-                self.computational_model_extension[CUBA.THERMODYNAMIC_ENSEMBLE] = 'NVE'
+                self.computational_model[CUBA.THERMODYNAMIC_ENSEMBLE] = 'NVE'
 
         for integration_time in cuds.iter(item_type=CUBA.INTEGRATION_TIME):
             self.computational_model[CUBA.TIME_STEP] = integration_time.step
