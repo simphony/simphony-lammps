@@ -38,16 +38,6 @@ class LammpsParticles(Particles):
     def data(self, value):
         self._manager.set_data(value, self._uname)
 
-    @property
-    def data_extension(self):
-        return self._manager.get_data_extension(self._uname)
-
-    @data_extension.setter
-    def data_extension(self, value):
-        self._manager.set_data_extension(value, self._uname)
-
-    # Particle methods ######################################################
-
     def _add_particles(self, iterable):
         """Adds a set of particles from the provided iterable
         to the container.

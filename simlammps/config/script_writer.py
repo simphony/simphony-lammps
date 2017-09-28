@@ -1,9 +1,8 @@
-from simphony.core.cuba import CUBA
+from simphony.api import CUBA
 
 
 from .pair_style import PairStyle
 from .atom_type_fixes import get_per_atom_type_fixes
-from ..cuba_extension import CUBAExtension
 from ..common.atom_style import (get_lammps_string, AtomStyle)
 
 
@@ -191,7 +190,7 @@ def _get_thermodynamic_ensemble(CM):
         return "fix 1 all nve\n"
     else:
         message = ("Unsupported ensemble was provided "
-                   "CM[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = {}")
+                   "CM[CUBA.THERMODYNAMIC_ENSEMBLE] = {}")
         ConfigurationError(message.format(esemble))
 
 
@@ -200,7 +199,7 @@ def _get_boundary(BC, change_existing_boundary):
 
     The boundary command can be either fixed or periodic.
 
-    >> BC[CUBAExtension.BOX_FACES] = ("periodic", "fixed", "periodic"]
+    >> BC[CUBA.FACE] = ("periodic", "fixed", "periodic"]
 
     """
 
@@ -214,19 +213,19 @@ def _get_boundary(BC, change_existing_boundary):
     # mapping of cuds-value to lammps string
     mappings = {'periodic': 'p', 'fixed': 'f'}
 
-    if len(BC[CUBAExtension.BOX_FACES]) != 3:
+    if len(BC[CUBA.FACE]) != 3:
         error_message += "3 dimensions need to be given.\n"
-    for b in BC[CUBAExtension.BOX_FACES]:
+    for b in BC[CUBA.FACE]:
         if b in mappings:
             boundary_command += " {}".format(mappings[b])
         else:
             error_message += "'{}' is not supported\n"
     if error_message:
         message = ("Unsupported boundary was provided "
-                   "BC[CUBAExtension.BOX_FACES] = {}\n"
+                   "BC[CUBA.FACE] = {}\n"
                    "{}")
         ConfigurationError(message.format(
-            BC[CUBAExtension.BOX_FACES], error_message))
+            BC[CUBA.FACE], error_message))
     boundary_command += "\n"
     return boundary_command
 

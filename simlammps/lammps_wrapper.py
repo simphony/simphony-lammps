@@ -16,7 +16,6 @@ import simphony.cuds.particles as scp
 
 from simlammps.common.atom_style import AtomStyle
 from simlammps.config.script_writer import ScriptWriter
-from simlammps.cuba_extension import CUBAExtension
 from simlammps.internal.lammps_internal_data_manager import LammpsInternalDataManager
 
 from simlammps.io.lammps_fileio_data_manager import LammpsFileIoDataManager
@@ -53,15 +52,11 @@ class LammpsWrapper(ABCModelingEngine):
             used where input/output files are used to communicate with LAMMPS
         """
         self.boundary_condition = DataContainer()
+        self.BC = self.boundary_condition
         self.computational_model = DataContainer()
         self.CM = self.computational_model
         self.solver_parameters = DataContainer()
-        self.computational_model_extension = {}
-        self.CM_extension = self.computational_model_extension
-        self.solver_parameters_extension = {}
-        self.SP_extension = self.solver_parameters_extension
-        self.boundary_condition_extension = {}
-        self.BC_extension = self.boundary_condition_extension
+        self.SP = self.solver_parameters
         self.cuds_sd = kwargs.get('cuds', CUDS())
         self.SD = self.cuds_sd
 
@@ -152,9 +147,9 @@ class LammpsWrapper(ABCModelingEngine):
         for particle_container in cuds.iter(item_type=CUBA.PARTICLES):
             particle_sum += len(particle_container)
             self._assign_material_to_particles(particle_container, materials[0])
-            particle_container.data = materials[0].data
-            particle_container.data_extension = {
-                CUBAExtension.BOX_VECTORS: box.vector}
+            data = materials[0].data
+            data.update({CUBA.VECTOR: box.vector})
+            particle_container.data = data
             # Add dataset when it is not already there. Rely on uid.
             if particle_container.uid not in self._dataset_uids:
                 self.add_dataset(particle_container)
@@ -175,7 +170,7 @@ class LammpsWrapper(ABCModelingEngine):
 
         for condition in cuds.iter(item_type=CUBA.CONDITION):
             if isinstance(condition, api.Periodic):
-                self.boundary_condition_extension[CUBAExtension.BOX_FACES] = [
+                self.boundary_condition[CUBA.FACE] = [
                     'periodic',
                     'periodic',
                     'periodic']
@@ -184,7 +179,7 @@ class LammpsWrapper(ABCModelingEngine):
 
         interatomic_potential = self._get_interatomic_potential(cuds)
 
-        self.solver_parameters_extension[CUBAExtension.PAIR_POTENTIALS] =\
+        self.solver_parameters[CUBA.PAIR_POTENTIAL] =\
             'lj:\n  global_cutoff: {global_cutoff}\n'\
             '  parameters:\n  - pair: [{mat1}, {mat2}]\n'\
             '    epsilon: {energy_well_depth}\n'\
@@ -329,16 +324,11 @@ class LammpsWrapper(ABCModelingEngine):
         if self._use_internal_interface:
             self._data_manager.flush()
             commands = ''
-            commands += ScriptWriter.get_pair_style(
-                _combine(self.solver_parameters, self.solver_parameters_extension))
-            commands += ScriptWriter.get_fix(CM=_combine(self.computational_model,
-                                                         self.computational_model_extension))
-            commands += ScriptWriter.get_pair_coeff(_combine(
-                self.solver_parameters, self.solver_parameters_extension))
-            commands += ScriptWriter.get_boundary(_combine(
-                self.boundary_condition, self.boundary_condition_extension), change_existing_boundary=True)
-            commands += ScriptWriter.get_run(CM=_combine(
-                self.computational_model, self.computational_model_extension))
+            commands += ScriptWriter.get_pair_style(self.solver_parameters)
+            commands += ScriptWriter.get_fix(CM=self.computational_model)
+            commands += ScriptWriter.get_pair_coeff(self.solver_parameters)
+            commands += ScriptWriter.get_boundary(self.boundary_condition, change_existing_boundary=True)
+            commands += ScriptWriter.get_run(CM=self.computational_model)
             for command in commands.splitlines():
                 self._lammps.command(command)
             # after running, we read any changes from lammps
@@ -353,9 +343,9 @@ class LammpsWrapper(ABCModelingEngine):
                 commands = self._script_writer.get_configuration(
                     input_data_file=input_data_filename,
                     output_data_file=output_data_filename,
-                    BC=_combine(self.boundary_condition, self.boundary_condition_extension),
-                    CM=_combine(self.computational_model, self.computational_model_extension),
-                    SP=_combine(self.solver_parameters, self.solver_parameters_extension),
+                    BC=self.boundary_condition,
+                    CM=self.computational_model,
+                    SP=self.solver_parameters,
                     materials=[mat for mat in self.cuds_sd.iter(item_type=CUBA.MATERIAL)])
 
                 process = LammpsProcess(lammps_name=os.environ.get('SIM_LAMMPS_BIN', 'lammps'),
@@ -374,25 +364,3 @@ class LammpsWrapper(ABCModelingEngine):
                 # FIXME: don't touch internal state of proxy_dataset. Add a param.
                 proxy_dataset._uid = cuds_dataset.uid
                 self.get_cuds().update([self.get_dataset(ds_name)])
-
-
-def _combine(data_container, data_container_extension):
-    """Combine a the approved CUBA with non-approved CUBA key-values.
-
-    Parameters
-    ----------
-    data_container : DataContainer
-        data container with CUBA attributes
-    data_container_extension : dict
-        data container with non-approved CUBA attributes
-
-    Returns
-    ----------
-    dict
-        dictionary containing the approved adn non-approved
-        CUBA key-values
-
-    """
-    result = dict(data_container_extension)
-    result.update(data_container)
-    return result

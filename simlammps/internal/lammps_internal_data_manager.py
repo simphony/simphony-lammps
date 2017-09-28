@@ -10,7 +10,6 @@ from ..common import globals
 from ..common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 from ..config.domain import get_box
 from ..config.script_writer import ScriptWriter
-from ..cuba_extension import CUBAExtension
 
 
 class MaterialAtomTypeManager(object):
@@ -109,9 +108,9 @@ class LammpsInternalDataManager(ABCDataManager):
         materials = [m for m in state_data.iter(item_type=CUBA.MATERIAL)]
         self._material_atom_type_manager = MaterialAtomTypeManager(materials)
 
-        dummy_bc = {CUBAExtension.BOX_FACES: ("periodic",
-                                              "periodic",
-                                              "periodic")}
+        dummy_bc = {CUBA.FACE: ("periodic",
+                                "periodic",
+                                "periodic")}
         commands = "dimension 3\n"
         script_writer = ScriptWriter(self._atom_style)
         commands = script_writer.get_initial_setup()
@@ -124,8 +123,8 @@ class LammpsInternalDataManager(ABCDataManager):
         vectors = [(25.0, 0.0, 0.0),
                    (0.0, 22.0, 0.0),
                    (0.0, 0.0, 6.196)]
-        dummy_box_data = {CUBAExtension.BOX_VECTORS: vectors,
-                          CUBAExtension.BOX_ORIGIN: (0.0, 0.0, 0.0)}
+        dummy_box_data = {CUBA.VECTOR: vectors,
+                          CUBA.ORIGIN: (0.0, 0.0, 0.0)}
         self._lammps.command(get_box([dummy_box_data], command_format=True))
 
         # due to not being able to alter the number of types (issue #66),
@@ -145,7 +144,6 @@ class LammpsInternalDataManager(ABCDataManager):
 
         # cache of data containers for each Particles-container
         self._pc_data = {}
-        self._pc_data_extension = {}
 
     def get_data(self, uname):
         """Returns data container associated with particle container
@@ -169,28 +167,6 @@ class LammpsInternalDataManager(ABCDataManager):
         """
         self._pc_data[uname] = DataContainer(data)
 
-    def get_data_extension(self, uname):
-        """Returns data container extension associated with particle container
-
-        Parameters
-        ----------
-        uname : string
-            non-changing unique name of particles
-
-        """
-        return dict(self._pc_data_extension[uname])
-
-    def set_data_extension(self, data, uname):
-        """Sets data container extension associated with particle container
-
-        Parameters
-        ----------
-        uname : string
-            non-changing unique name of particles
-
-        """
-        self._pc_data_extension[uname] = dict(data)
-
     def _handle_delete_particles(self, uname):
         """Handle when a Particles is deleted
 
@@ -206,7 +182,6 @@ class LammpsInternalDataManager(ABCDataManager):
             self.remove_particle(uid, uname)
 
         del self._pc_data[uname]
-        del self._pc_data_extension[uname]
         del self._particles[uname]
 
     def _handle_new_particles(self, uname, particles):
@@ -225,12 +200,6 @@ class LammpsInternalDataManager(ABCDataManager):
 
         self._pc_data[uname] = DataContainer(particles.data)
 
-        if hasattr(particles, 'data_extension'):
-            self._pc_data_extension[uname] = dict(particles.data_extension)
-        else:
-            # create empty dc extension
-            self._pc_data_extension[uname] = {}
-
         self._update_simulation_box()
 
         self._add_atoms(iterable=particles.iter(item_type=CUBA.PARTICLE),
@@ -243,7 +212,7 @@ class LammpsInternalDataManager(ABCDataManager):
         """Update simulation box
 
         """
-        cmd = get_box([de for _, de in self._pc_data_extension.iteritems()],
+        cmd = get_box([de for _, de in self._pc_data.iteritems()],
                       command_format=True,
                       change_existing=True)
         self._lammps.command(cmd)

@@ -11,7 +11,6 @@ from ..common.atom_style import (AtomStyle, get_atom_style)
 from ..common.atom_style_description import ATOM_STYLE_DESCRIPTIONS
 from ..common.utils import create_material_to_atom_type_map
 from ..config.domain import get_box
-from ..cuba_extension import CUBAExtension
 
 
 def read_data_file(filename, atom_style=None, name=None):
@@ -92,8 +91,10 @@ def read_data_file(filename, atom_style=None, name=None):
 
     # create particles
     particles = Particles(name=name if name else filename)
-    particles.data_extension = {CUBAExtension.BOX_ORIGIN: box_origin,
-                                CUBAExtension.BOX_VECTORS: box_vectors}
+    data = particles.data
+    data.update({CUBA.ORIGIN: box_origin,
+                 CUBA.VECTOR: box_vectors})
+    particles.data = data
 
     # add each particle
     for lammps_id, values in atoms.iteritems():
@@ -144,7 +145,7 @@ def write_data_file(filename,
 
     # get a mapping from material_type to atom_type
     material_to_atom_type = create_material_to_atom_type_map(state_data)
-    box = get_box([pc.data_extension for pc in particles])
+    box = get_box([pc.data for pc in particles])
 
     material_type_to_mass = None if not _style_has_masses(
         atom_style) else _get_mass(state_data)

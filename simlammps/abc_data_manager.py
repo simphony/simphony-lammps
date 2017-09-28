@@ -163,27 +163,6 @@ class ABCDataManager(object):
             non-changing unique name of particles
 
         """
-    @abc.abstractmethod
-    def get_data_extension(self, uname):
-        """Returns extension data container associated with particle container
-
-        Parameters
-        ----------
-        uname : string
-            non-changing unique name of particles
-
-        """
-
-    @abc.abstractmethod
-    def set_data_extension(self, data, uname):
-        """Sets extension data container associated with particle container
-
-        Parameters
-        ----------
-        uname : string
-            non-changing unique name of particles
-
-        """
 
     @abc.abstractmethod
     def get_particle(self, uid, uname):

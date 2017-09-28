@@ -3,10 +3,9 @@ from simphony.engine import EngineInterface
 from simphony.engine.decorators import register
 
 from .lammps_wrapper import LammpsWrapper
-from .cuba_extension import CUBAExtension
 from .io.file_utility import read_data_file
 
-__all__ = ["LammpsWrapper", "EngineType", "CUBAExtension", 'read_data_file']
+__all__ = ["LammpsWrapper", "EngineType", "read_data_file"]
 
 
 @register

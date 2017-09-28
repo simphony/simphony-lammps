@@ -1,9 +1,9 @@
 import unittest
 
 from numpy.testing import assert_almost_equal
+from simphony.api import CUBA
 
 from simlammps.config.domain import get_box
-from simlammps.cuba_extension import CUBAExtension
 
 
 class TestDomain(unittest.TestCase):
@@ -23,22 +23,22 @@ class TestDomain(unittest.TestCase):
                     (0.0, 0.0, 1.0)]
 
         with self.assertRaises(RuntimeError):
-            get_box([{CUBAExtension.BOX_VECTORS: vectors1}, {}])
+            get_box([{CUBA.VECTOR: vectors1}, {}])
 
         vectors2 = [(2.0, 0.0, 0.0),
                     (0.0, 1.0, 0.0),
                     (0.0, 0.0, 1.0)]
 
         with self.assertRaises(RuntimeError):
-            get_box([{CUBAExtension.BOX_VECTORS: vectors1},
-                    {CUBAExtension.BOX_VECTORS: vectors2}])
+            get_box([{CUBA.VECTOR: vectors1},
+                    {CUBA.VECTOR: vectors2}])
 
     def test_get_box_command_format(self):
         vectors = [(10.0, 0.0, 0.0),
                    (0.0, 10.0, 0.0),
                    (0.0, 0.0, 10.0)]
 
-        results = get_box([{CUBAExtension.BOX_VECTORS: vectors}]).split()
+        results = get_box([{CUBA.VECTOR: vectors}]).split()
 
         assert_almost_equal(float(results[0]), 0.0)
         assert_almost_equal(float(results[4]), 0.0)
@@ -57,8 +57,8 @@ class TestDomain(unittest.TestCase):
         self.assertEqual(results[11], "zhi")
 
         origin = (-1.0, 1.0, -1.0)
-        results = get_box([{CUBAExtension.BOX_VECTORS: vectors,
-                            CUBAExtension.BOX_ORIGIN: origin}]).split()
+        results = get_box([{CUBA.VECTOR: vectors,
+                            CUBA.ORIGIN: origin}]).split()
 
         assert_almost_equal(float(results[0]), origin[0])
         assert_almost_equal(float(results[4]), origin[1])

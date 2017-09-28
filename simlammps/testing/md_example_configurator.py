@@ -4,8 +4,6 @@ from simphony.core.cuba import CUBA
 from simphony.cuds.meta.api import Material
 from simphony.cuds.particles import Particle, Particles
 
-from ..cuba_extension import CUBAExtension
-
 
 class MDExampleConfigurator:
     """  Class which handles configuration of MD examples
@@ -80,7 +78,7 @@ class MDExampleConfigurator:
         # CM
         wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = self._number_time_steps
         wrapper.CM[CUBA.TIME_STEP] = 0.003
-        wrapper.CM_extension[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
+        wrapper.CM[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
 
         # SP
         pair_potential = ("lj:\n"
@@ -98,10 +96,10 @@ class MDExampleConfigurator:
                 pair_potential += ("    epsilon: 1.0\n"
                                    "    sigma: 1.0\n"
                                    "    cutoff: 1.2246\n")
-        wrapper.SP_extension[CUBAExtension.PAIR_POTENTIALS] = pair_potential
+        wrapper.SP[CUBA.PAIR_POTENTIAL] = pair_potential
 
         # BC
-        wrapper.BC_extension[CUBAExtension.BOX_FACES] = (
+        wrapper.BC[CUBA.FACE] = (
             "periodic", "periodic", "periodic")
 
         wrapper.SD.add(self._materials)
@@ -175,6 +173,6 @@ class MDExampleConfigurator:
 
         """
         pc = Particles(name=name)
-        pc.data_extension = {CUBAExtension.BOX_VECTORS: self._box_vectors,
-                             CUBAExtension.BOX_ORIGIN: self._box_origin}
+        pc.data = {CUBA.VECTOR: self._box_vectors,
+                   CUBA.ORIGIN: self._box_origin}
         return pc

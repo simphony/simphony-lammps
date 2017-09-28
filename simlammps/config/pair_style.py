@@ -1,6 +1,6 @@
 import yaml
 
-from ..cuba_extension import CUBAExtension
+from simphony.api import CUBA
 
 
 # here is the info to create the different pair info handlers
@@ -132,10 +132,10 @@ class PairStyle(object):
 
         """
         styles = []
-        if (CUBAExtension.PAIR_POTENTIALS in SP and
-                SP[CUBAExtension.PAIR_POTENTIALS]):
-            keywords = yaml.safe_load(SP[CUBAExtension.PAIR_POTENTIALS])
-            my_pair_style = SP[CUBAExtension.PAIR_POTENTIALS]
+        if (CUBA.PAIR_POTENTIAL in SP and
+                SP[CUBA.PAIR_POTENTIAL]):
+            keywords = yaml.safe_load(SP[CUBA.PAIR_POTENTIAL])
+            my_pair_style = SP[CUBA.PAIR_POTENTIAL]
 
             for key in keywords:
                 my_pair_style = key

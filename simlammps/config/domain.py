@@ -1,4 +1,4 @@
-from ..cuba_extension import CUBAExtension
+from simphony.api import CUBA
 
 
 def get_box(particle_data_containers,
@@ -6,7 +6,7 @@ def get_box(particle_data_containers,
             change_existing=False):
     """ Get simulation box commands
 
-    Using CUBA.BOX_VECTORS and CUBA.BOX_ORIGIN, return the
+    Using CUBA.VECTOR and CUBA.ORIGIN, return the
     string used by LAMMPS to define the simulation box in
     the LAMMPS data file or as a command.
 
@@ -31,19 +31,19 @@ def get_box(particle_data_containers,
     for dc in particle_data_containers:
         # find box vectors (and origin) and ensure
         # that they are the same for each particle container
-        if CUBAExtension.BOX_VECTORS in dc:
+        if CUBA.VECTOR in dc:
             if (vectors and
-                    vectors != dc[CUBAExtension.BOX_VECTORS]):
+                    vectors != dc[CUBA.VECTOR]):
                 raise RuntimeError(
                     "Box vectors of each Particles need to match")
-            vectors = dc[CUBAExtension.BOX_VECTORS]
+            vectors = dc[CUBA.VECTOR]
         else:
-            raise RuntimeError("CUBAExtension.BOX_VECTORS  was not set")
-        if CUBAExtension.BOX_ORIGIN in dc:
-            if origin and origin != dc[CUBAExtension.BOX_ORIGIN]:
+            raise RuntimeError("CUBA.VECTOR  was not set")
+        if CUBA.ORIGIN in dc:
+            if origin and origin != dc[CUBA.ORIGIN]:
                 raise RuntimeError(
                     "Box origin of each Particles need to match")
-            origin = dc[CUBAExtension.BOX_ORIGIN]
+            origin = dc[CUBA.ORIGIN]
 
     # origin is optional
     if not origin:
@@ -60,7 +60,7 @@ def get_box(particle_data_containers,
     # and c form a complete right-handed basis."
 
     if not vectors:
-        raise RuntimeError("CUBAExtension.BOX_VECTORS was not set")
+        raise RuntimeError("CUBA.VECTOR was not set")
     else:
         _check_vectors(vectors)
 
