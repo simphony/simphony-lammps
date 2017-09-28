@@ -20,6 +20,6 @@ cd ../..
 rm -rf lammps
 
 echo "Checker whether LAMMPS is available in python"
-python -c 'import lammps as l;l.lammps(cmdargs=["-l", "none"]).command("print `Hi from LAMMPS`")'
+python -c 'import lammps as l;l.lammps(cmdargs=["-l", "none"]).command("print \"Hi from LAMMPS\"")'
 
 echo "LAMMPS installation complete. Bye."
