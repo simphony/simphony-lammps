@@ -205,7 +205,7 @@ class ParticleDataCache(object):
             index = index * 3
             self._cache[cuba_key][index:index+3] = value[0:3]
         else:
-            raise RuntimeError("Unsupported shape: ".format(shape))
+            raise RuntimeError("Unsupported shape: {0}".format(shape))
 
 
 def _get_ctype(keyword):
