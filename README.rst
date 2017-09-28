@@ -27,7 +27,6 @@ simphony-lammps is hosted on github: https://github.com/simphony/simphony-lammps
 Requirements
 ------------
 
-- pyyaml >= 3.11
 - `simphony-common`_ >= 0.2.0
 
 Optional requirements
@@ -55,12 +54,14 @@ LAMMPS installation
 ~~~~~~~~~~~~~~~~~~~
 
 This engine-wrapper uses LAMMPS Molecular Dynamics Simulator. A recent stable
-version (10 Aug 2015, tagged r13864) of LAMMPS is supported and has been
-tested. See ``install_lammps.sh`` for an example installation instructions.
+version (11 Aug 2017) of LAMMPS is supported and has been tested. 
+See ``install_lammps.sh`` for an example installation instructions.
 For general LAMMPS install information, see http://lammps.sandia.gov/index.html
 
 LAMMPS installation varies depending on which interface is being used.  See the
-manual for more details.
+manual for more details. SimPhoNy-lammps in file-mode will look for LAMMPS binary
+named ``lammps``. You can change this by setting the ``SIM_LAMMPS_BIN`` environment
+variable.
 
 
 Usage

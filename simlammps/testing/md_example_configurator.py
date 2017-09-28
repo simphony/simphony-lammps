@@ -80,7 +80,7 @@ class MDExampleConfigurator:
         # CM
         wrapper.CM[CUBA.NUMBER_OF_TIME_STEPS] = self._number_time_steps
         wrapper.CM[CUBA.TIME_STEP] = 0.003
-        wrapper.CM_extension[CUBAExtension.THERMODYNAMIC_ENSEMBLE] = "NVE"
+        wrapper.CM_extension[CUBA.THERMODYNAMIC_ENSEMBLE] = "NVE"
 
         # SP
         pair_potential = ("lj:\n"
